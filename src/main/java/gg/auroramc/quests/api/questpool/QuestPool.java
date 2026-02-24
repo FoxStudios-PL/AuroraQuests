@@ -206,7 +206,7 @@ public class QuestPool {
         var difficulties = definition.getDifficulties();
 
         var questsToSelectFrom = quests.values().stream()
-                .filter(q -> difficulties.containsKey(q.getDefinition().getDifficulty()) && q.canStart())
+                .filter(q -> difficulties.containsKey(q.getDefinition().getDifficulty()) && (q.canStart() || q.getDefinition().getRequirements().isAlwaysShowInMenu()))
                 .toList();
 
         AuroraQuests.logger().debug("Picking quests from pool " + definition.getId() + " for player " + profile.getPlayer().getName() + " with " + questsToSelectFrom.size() + " quests");

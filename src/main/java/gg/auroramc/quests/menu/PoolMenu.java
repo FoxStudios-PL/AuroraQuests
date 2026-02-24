@@ -134,15 +134,17 @@ public class PoolMenu {
             var extraLore = new ArrayList<String>();
 
             if (quest.isCompleted()) {
-                extraLore.addAll(quest.getDefinition().getCompletedLore());
+                if (quest.getDefinition().getCompletedLore() != null) {
+                    extraLore.addAll(quest.getDefinition().getCompletedLore());
+                }
+            } else if (!quest.isUnlocked()) {
+                if (quest.getDefinition().getLockedLore() != null) {
+                    extraLore.addAll(quest.getDefinition().getLockedLore());
+                }
             } else {
                 if (quest.getDefinition().getUncompletedLore() != null) {
                     extraLore.addAll(quest.getDefinition().getUncompletedLore());
                 }
-            }
-
-            if (!quest.isUnlocked() && pool.isGlobal()) {
-                extraLore.addAll(quest.getDefinition().getLockedLore());
             }
 
             var qPlaceholders = quest.getPlaceholders();
@@ -153,7 +155,7 @@ public class PoolMenu {
                     .localization(localization)
                     .placeholder(qPlaceholders).extraLore(extraLore);
 
-            if ((quest.isUnlocked() || !pool.isGlobal()) && !quest.isCompleted() && quest.getDefinition().getTasks().values().stream().anyMatch(t -> t.getTask().equals(ObjectiveType.TAKE_ITEM))) {
+            if (quest.isUnlocked() && !quest.isCompleted() && quest.getDefinition().getTasks().values().stream().anyMatch(t -> t.getTask().equals(ObjectiveType.TAKE_ITEM))) {
                 menu.addItem(builder.build(player), (e) -> {
                     Bukkit.getPluginManager().callEvent(new PlayerTakeItemEvent(player, quest));
                     createMenu().open(player);
