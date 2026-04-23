@@ -28,6 +28,10 @@ public class QuestParser {
                 .uncompletedLore(config.getUncompletedLore())
                 .questCompleteMessage(config.getQuestCompleteMessage())
                 .questCompleteSound(config.getQuestCompleteSound())
+                .linearObjectives(config.getLinearObjectives() != null && config.getLinearObjectives())
+                .lockedObjectiveLore(config.getLockedObjectiveLore())
+                .onTrack(config.getOnTrack())
+                .onUntrack(config.getOnUntrack())
                 .build();
     }
 

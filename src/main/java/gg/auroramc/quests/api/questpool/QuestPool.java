@@ -5,6 +5,7 @@ import gg.auroramc.aurora.api.message.Chat;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.aurora.api.reward.RewardExecutor;
 import gg.auroramc.quests.AuroraQuests;
+import gg.auroramc.quests.api.data.QuestData;
 import gg.auroramc.quests.api.event.EventType;
 import gg.auroramc.quests.api.event.QuestPoolLevelUpEvent;
 import gg.auroramc.quests.api.profile.Profile;
@@ -236,6 +237,7 @@ public class QuestPool {
         var questIds = pickedQuests.values().stream().flatMap(List::stream).map(Quest::getId).toList();
 
         if (data.getPoolRollData(getId()) != null) {
+            clearTrackingIfNeeded(data);
             for (var quest : getActiveQuests()) {
                 quest.dispose();
             }
@@ -305,6 +307,21 @@ public class QuestPool {
         }
 
         RewardExecutor.execute(rewards, player, level, placeholders);
+    }
+
+    private void clearTrackingIfNeeded(QuestData questData) {
+        if (!questData.hasTrackedQuest()) {
+          return;
+        }
+        if (!getId().equals(questData.getTrackedPoolId())) {
+          return;
+        }
+        Quest trackedQuest = quests.get(questData.getTrackedQuestId());
+
+        if (trackedQuest != null) {
+            trackedQuest.executeUntrackCommands();
+        }
+        questData.clearTrackedQuest();
     }
 
 }
