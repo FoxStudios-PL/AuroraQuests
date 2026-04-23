@@ -7,10 +7,15 @@ import gg.auroramc.aurora.api.message.Chat;
 import gg.auroramc.aurora.api.message.Text;
 import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.questpool.PoolConfig;
+import gg.auroramc.quests.config.Config;
+import gg.auroramc.quests.config.MessageConfig;
+import gg.auroramc.quests.config.quest.QuestConfig;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CommandManager {
@@ -30,8 +35,8 @@ public class CommandManager {
             commandManager.getLocales().setDefaultLocale(Locale.ENGLISH);
             commandManager.usePerIssuerLocale(false);
 
-            var aliases = plugin.getConfigManager().getConfig().getCommandAliases();
-            var pools = plugin.getConfigManager().getQuestPools();
+            Config.CommandAliasConfig aliases = plugin.getConfigManager().getConfig().getCommandAliases();
+            Map<String, PoolConfig> pools = plugin.getConfigManager().getQuestPools();
 
             commandManager.getCommandCompletions().registerCompletion("pools", c ->
                     pools.values().stream().map(PoolConfig::getId).collect(Collectors.toList()));
@@ -42,10 +47,27 @@ public class CommandManager {
                             .flatMap(pool -> pool.getQuests().keySet().stream())
                             .collect(Collectors.toList()));
 
+            commandManager.getCommandCompletions().registerCompletion("objectives", c -> {
+                String args = c.getContextValue(String.class);
+
+                if (args == null) {
+                  return List.of("all");
+                }
+                for (PoolConfig pool : pools.values()) {
+                    QuestConfig questConfig = pool.getQuests().get(args);
+
+                    if (questConfig != null) {
+                        ArrayList<String> keys = new ArrayList<>(questConfig.getTasks().keySet().stream().toList());
+                        keys.addFirst("all");
+                        return keys;
+                    }
+                }
+                return List.of("all");
+            });
             commandManager.getCommandReplacements().addReplacement("questsAlias", a(aliases.getQuests()));
         }
+        MessageConfig msg = plugin.getConfigManager().getMessageConfig(null);
 
-        var msg = plugin.getConfigManager().getMessageConfig(null);
         commandManager.getLocales().addMessage(Locale.ENGLISH, MinecraftMessageKeys.NO_PLAYER_FOUND, m(msg.getPlayerNotFound()));
         commandManager.getLocales().addMessage(Locale.ENGLISH, MinecraftMessageKeys.NO_PLAYER_FOUND_OFFLINE, m(msg.getPlayerNotFound()));
         commandManager.getLocales().addMessage(Locale.ENGLISH, MinecraftMessageKeys.NO_PLAYER_FOUND_SERVER, m(msg.getPlayerNotFound()));
