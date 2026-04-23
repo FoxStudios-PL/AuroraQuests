@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 4
+config-version: 5
 
 reloaded: "&aReloaded configuration!"
 data-not-loaded-yet: "&cData for this player hasn't loaded yet, try again later!"
@@ -24,6 +24,12 @@ quest-completed: "&aQuest {quest} marked completed for {player}."
 quest-already-completed: "&cPlayer {player} has already completed quest {quest}."
 quest-reset: "&aQuest {quest} reset for {player}."
 error-prefix: "&cError: {message}"
+quest-tracked: "&aYou are now tracking: {quest}"
+quest-untracked: "&aYou stopped tracking: {quest}"
+quest-track-toggled: "&aTracking toggled for {quest} on player {player}."
+quest-not-active: "&cQuest {quest} is not active for player {player}."
+objective-not-found: "&cObjective {objective} not found in quest {quest}."
+objective-already-completed: "&cObjective {objective} is already completed for player {player}."
 
 timer-format:
   short-format:

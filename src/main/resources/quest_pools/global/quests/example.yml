@@ -1,6 +1,19 @@
 name: "Global Example"
 difficulty: "easy"
 
+# Set to true to make objectives unlock sequentially (objective 2 starts only after objective 1 is completed)
+#linear-objectives: false
+
+# Custom lore line displayed for objectives that are still locked (only used when linear-objectives is true)
+#locked-objective-lore: "&c&l✘ &7Locked"
+
+# Commands to execute when this quest is tracked/untracked (supports {player}, {quest}, {quest_id}, {pool_id} placeholders)
+# These are executed in addition to the global tracking commands in config.yml
+#on-track:
+#  - "[console] waypoint set {player} {quest_id}"
+#on-untrack:
+#  - "[console] waypoint remove {player} {quest_id}"
+
 menu-item:
   material: paper
   name: "&f{name}"

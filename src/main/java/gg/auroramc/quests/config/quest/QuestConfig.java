@@ -25,6 +25,10 @@ public class QuestConfig extends AuroraConfig {
     private StartRequirementConfig startRequirements;
     private QuestConfig.LevelUpSound questCompleteSound;
     private QuestConfig.LevelUpMessage questCompleteMessage;
+    private Boolean linearObjectives;
+    private String lockedObjectiveLore;
+    private List<String> onTrack;
+    private List<String> onUntrack;
 
     @Setter
     @IgnoreField
