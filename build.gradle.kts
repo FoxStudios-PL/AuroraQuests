@@ -77,8 +77,11 @@ dependencies {
     compileOnly("de.oliver:FancyNpcs:2.6.0")
     compileOnly("ink.ptms.adyeshach:all:2.0.0-snapshot-1")
     compileOnly("com.nexomc:nexo:1.8.0")
-    compileOnly("su.nightexpress.excellentshop:Core:4.20.0") {
-        exclude(group = "com.github.Xyness", module = "SimpleClaimSystem")
+    compileOnly("su.nightexpress.excellentshop:api:5.1.2") {
+        isTransitive = false
+    }
+    compileOnly("su.nightexpress.nightcore:main:2.16.2") {
+        isTransitive = false
     }
 
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
