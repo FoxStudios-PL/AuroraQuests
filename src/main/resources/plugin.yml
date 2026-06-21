@@ -45,6 +45,7 @@ permissions:
       - aurora.quests.admin.complete
       - aurora.quests.admin.reset
       - aurora.quests.admin.track
+      - aurora.quests.admin.notify
 
 libraries:
   - org.quartz-scheduler:quartz:2.3.2

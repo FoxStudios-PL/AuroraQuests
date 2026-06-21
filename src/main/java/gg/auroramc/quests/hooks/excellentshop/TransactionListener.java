@@ -6,24 +6,34 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import su.nightexpress.nexshop.api.shop.Transaction;
-import su.nightexpress.nexshop.api.shop.event.ShopTransactionEvent;
-import su.nightexpress.nexshop.api.shop.type.TradeType;
+import su.nightexpress.excellentshop.api.event.TransactionCompletedEvent;
+import su.nightexpress.excellentshop.api.product.TradeType;
+
+import java.util.Map;
 
 public class TransactionListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onTransaction(ShopTransactionEvent event) {
+    public void onTransaction(TransactionCompletedEvent event) {
         var transaction = event.getTransaction();
-        if (transaction.getResult() == Transaction.Result.FAILURE) return;
-        var price = transaction.getPrice() * transaction.getAmount();
+        if (!transaction.successful()) return;
 
-        String currencyName = transaction.getCurrency().getName();
+        var player = transaction.player();
+        if (player == null) return;
 
-        if (transaction.getTradeType() == TradeType.BUY) {
-            Bukkit.getPluginManager().callEvent(new PlayerSpendOnPurchaseEvent(event.getPlayer(), price, currencyName));
-        } else {
-            Bukkit.getPluginManager().callEvent(new PlayerEarnFromSellEvent(event.getPlayer(), price, currencyName));
+        boolean buy = transaction.type() == TradeType.BUY;
+
+        // A transaction can involve several currencies; fire one event per currency.
+        for (Map.Entry<String, Double> entry : transaction.worth().getBalanceMap().entrySet()) {
+            String currency = entry.getKey();
+            double amount = entry.getValue() == null ? 0D : entry.getValue();
+            if (amount <= 0D) continue;
+
+            if (buy) {
+                Bukkit.getPluginManager().callEvent(new PlayerSpendOnPurchaseEvent(player, amount, currency));
+            } else {
+                Bukkit.getPluginManager().callEvent(new PlayerEarnFromSellEvent(player, amount, currency));
+            }
         }
     }
 }

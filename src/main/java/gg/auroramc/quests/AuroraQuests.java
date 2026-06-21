@@ -23,6 +23,10 @@ import gg.auroramc.quests.menu.PoolMenu;
 import gg.auroramc.quests.objective.*;
 import gg.auroramc.quests.parser.PoolParser;
 import gg.auroramc.quests.placeholder.QuestPlaceholderHandler;
+import gg.auroramc.quests.questbook.QuestBookData;
+import gg.auroramc.quests.questbook.QuestBookInventoryListener;
+import gg.auroramc.quests.questbook.QuestBookListener;
+import gg.auroramc.quests.questbook.QuestBookManager;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.Getter;
 import org.bstats.bukkit.Metrics;
@@ -58,6 +62,7 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
     private LocalizationProvider localizationProvider;
     private CommandManager commandManager;
     private ScheduledTask unlockTask;
+    private QuestBookManager questBookManager;
 
     private BukkitEventBus bukkitEventBus;
 
@@ -103,6 +108,8 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         AuroraAPI.getUserManager().registerUserDataHolder(QuestData.class);
         AuroraAPI.registerPlaceholderHandler(new QuestPlaceholderHandler());
         Bukkit.getPluginManager().registerEvents(this, this);
+
+        setupQuestBook();
 
         commandManager = new CommandManager(this);
         commandManager.reload();
@@ -174,10 +181,18 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
 
         reloadUnlockTask();
         profileManager.getProfiles().forEach(p -> p.reload(true));
+
+        if (questBookManager != null) {
+            questBookManager.reload();
+        }
     }
 
     @Override
     public void onDisable() {
+        if (questBookManager != null) {
+            questBookManager.shutdown();
+        }
+
         commandManager.unregisterCommands();
 
         try {
@@ -288,11 +303,29 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         }
     }
 
+    private void setupQuestBook() {
+        var qbConfig = configManager.getConfig().getQuestBook();
+        if (qbConfig == null || !Boolean.TRUE.equals(qbConfig.getEnabled())) {
+            return;
+        }
+
+        questBookManager = new QuestBookManager(this);
+        // Register the data holder before players load so persisted state is read.
+        AuroraAPI.getUserManager().registerUserDataHolder(QuestBookData.class);
+        Bukkit.getPluginManager().registerEvents(new QuestBookListener(questBookManager), this);
+        Bukkit.getPluginManager().registerEvents(new QuestBookInventoryListener(questBookManager), this);
+        l.info("Quest book feature enabled.");
+    }
+
     private void loadPlayers() {
         for (var player : toLoad) {
             var user = AuroraUser.get(player.getUniqueId());
             profileManager.createProfile(user);
         }
         toLoad.clear();
+
+        if (questBookManager != null) {
+            questBookManager.refreshAll();
+        }
     }
 }

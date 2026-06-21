@@ -83,3 +83,57 @@ level-up-sound:
   sound: "entity.player.levelup"
   volume: 1
   pitch: 1
+
+# ===========================================================================
+# Quest Book
+# ---------------------------------------------------------------------------
+# Places a clickable "quest book" item in a fixed inventory slot of every
+# player. Clicking it runs the configured command(s) (e.g. opens the quest
+# menu). The item is protected: it cannot be dropped, moved, swapped to the
+# off-hand or lost on death.
+#
+# NOTE: Enabling this feature requires a server restart. Once enabled, you can
+#       tweak the settings (or temporarily disable it) live with /quests reload.
+# ===========================================================================
+quest-book:
+  enabled: false
+
+  # Inventory slot the book is locked to (0-8 = hotbar, 9-35 = main inventory).
+  slot: 17
+
+  # Command(s) run when the player clicks the book. Supports Aurora action
+  # prefixes ([player], [console], [open-gui], ...), {player} and PlaceholderAPI.
+  click-commands:
+    - "[player] quests"
+
+  # Appearance of the book in its default state.
+  initial-state:
+    item:
+      material: WRITTEN_BOOK
+      custom-model-data: 0
+      name: "&6&lQuest Book"
+      lore:
+        - ""
+        - "&7Click to open your quests"
+        - ""
+    sound:
+      sound: "item.book.page_turn"
+      volume: 1.0
+      pitch: 1.0
+
+  # Appearance when a "new quest" notification is active.
+  # Toggle it with /quests notify <player>. Reset to initial on click.
+  new-quest-state:
+    item:
+      material: WRITTEN_BOOK
+      custom-model-data: 1
+      name: "&a&lQuest Book &e⭐"
+      lore:
+        - ""
+        - "&aA new quest is available!"
+        - "&7Click to open your quests"
+        - ""
+    sound:
+      sound: "item.book.page_turn"
+      volume: 1.0
+      pitch: 1.2

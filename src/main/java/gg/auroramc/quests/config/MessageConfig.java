@@ -41,6 +41,9 @@ public class MessageConfig extends AuroraConfig {
     private String questReset = "&aQuest {quest} reset for {player}.";
     private String questAlreadyUnlocked = "&cPlayer {player} has already unlocked quest {quest}.";
     private String questAlreadyCompleted = "&cPlayer {player} has already completed quest {quest}.";
+    private String questBookNotifyOn = "&aQuest book notification &lenabled&r&a for &f{player}&a.";
+    private String questBookNotifyOff = "&cQuest book notification &ldisabled&r&c for &f{player}&c.";
+    private String questBookDisabled = "&cThe quest book feature is disabled.";
     private String errorPrefix = "&cError: {message}";
     private String questTracked = "&aYou are now tracking: {quest}";
     private String questUntracked = "&aYou stopped tracking: {quest}";
@@ -187,6 +190,9 @@ public class MessageConfig extends AuroraConfig {
                     yaml.set("quest-not-active", "&cQuest {quest} is not active for player {player}.");
                     yaml.set("objective-not-found", "&cObjective {objective} not found in quest {quest}.");
                     yaml.set("objective-already-completed", "&cObjective {objective} is already completed for player {player}.");
+                    yaml.set("quest-book-notify-on", "&aQuest book notification &lenabled&r&a for &f{player}&a.");
+                    yaml.set("quest-book-notify-off", "&cQuest book notification &ldisabled&r&c for &f{player}&c.");
+                    yaml.set("quest-book-disabled", "&cThe quest book feature is disabled.");
                     yaml.set("config-version", 5);
                 }
         );

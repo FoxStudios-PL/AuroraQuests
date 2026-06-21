@@ -18,7 +18,7 @@ public class ExcellentShopHook implements Hook, Listener {
 
     public static boolean canHook() {
         try {
-            Class.forName("su.nightexpress.nightcore.bridge.currency.Currency");
+            Class.forName("su.nightexpress.excellentshop.api.event.TransactionCompletedEvent");
             return true;
         } catch (ClassNotFoundException e) {
             return false;

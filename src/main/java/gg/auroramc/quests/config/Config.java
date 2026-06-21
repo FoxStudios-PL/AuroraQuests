@@ -2,6 +2,7 @@ package gg.auroramc.quests.config;
 
 import gg.auroramc.aurora.api.config.AuroraConfig;
 import gg.auroramc.aurora.api.config.decorators.IgnoreField;
+import gg.auroramc.aurora.api.config.premade.ItemConfig;
 import gg.auroramc.quests.AuroraQuests;
 import lombok.Getter;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -30,6 +31,7 @@ public class Config extends AuroraConfig {
     private List<String> sortOrder;
     private UnlockTaskConfig unlockTask = new UnlockTaskConfig();
     private TrackingConfig tracking = new TrackingConfig();
+    private QuestBookConfig questBook = new QuestBookConfig();
 
     @IgnoreField
     private Map<String, Integer> sortOderMap;
@@ -65,6 +67,33 @@ public class Config extends AuroraConfig {
     public static final class UnlockTaskConfig {
         private Boolean enabled = false;
         private Integer interval = 5;
+    }
+
+    @Getter
+    public static final class QuestBookConfig {
+        // Whether the whole quest book module is active. Enabling it requires a
+        // restart; once enabled it can be tuned/disabled live with /quests reload.
+        private Boolean enabled = false;
+        // Inventory slot the book is locked to (0-8 hotbar, 9-35 main inventory).
+        private Integer slot = 17;
+        // Commands run on click. Supports Aurora action prefixes
+        // ([player], [console], [open-gui], ...), {player} and PlaceholderAPI.
+        private List<String> clickCommands = List.of("[player] quests");
+        private QuestBookStateConfig initialState = new QuestBookStateConfig();
+        private QuestBookStateConfig newQuestState = new QuestBookStateConfig();
+    }
+
+    @Getter
+    public static final class QuestBookStateConfig {
+        private ItemConfig item;
+        private QuestBookSound sound = new QuestBookSound();
+    }
+
+    @Getter
+    public static final class QuestBookSound {
+        private String sound = "";
+        private Float volume = 1.0f;
+        private Float pitch = 1.0f;
     }
 
     @Getter
@@ -148,6 +177,37 @@ public class Config extends AuroraConfig {
                             "on-untrack: commands to execute when a player untracks a quest",
                             "tracked-lore: extra lore lines appended to the quest menu item when it is being tracked"
                     ));
+                    yaml.set("quest-book.enabled", false);
+                    yaml.setComments("quest-book", List.of(
+                            "Places a clickable \"quest book\" item in a fixed inventory slot of every",
+                            "player. Clicking it runs the configured command(s) (e.g. opens the quest menu).",
+                            "The item is protected: it cannot be dropped, moved or lost on death.",
+                            "NOTE: enabling this requires a restart. Once enabled you can tune it",
+                            "      (or temporarily disable it) live with /quests reload."));
+                    yaml.set("quest-book.slot", 17);
+                    yaml.setComments("quest-book.slot", List.of("0-8 = hotbar, 9-35 = main inventory"));
+                    yaml.set("quest-book.click-commands", List.of("[player] quests"));
+                    yaml.setComments("quest-book.click-commands", List.of(
+                            "Command(s) run when the player clicks the book.",
+                            "Supports Aurora action prefixes ([player], [console], [open-gui], ...),",
+                            "{player} and PlaceholderAPI."));
+
+                    yaml.set("quest-book.initial-state.item.material", "WRITTEN_BOOK");
+                    yaml.set("quest-book.initial-state.item.custom-model-data", 0);
+                    yaml.set("quest-book.initial-state.item.name", "&6&lQuest Book");
+                    yaml.set("quest-book.initial-state.item.lore", List.of("", "&7Click to open your quests", ""));
+                    yaml.set("quest-book.initial-state.sound.sound", "item.book.page_turn");
+                    yaml.set("quest-book.initial-state.sound.volume", 1.0);
+                    yaml.set("quest-book.initial-state.sound.pitch", 1.0);
+
+                    yaml.set("quest-book.new-quest-state.item.material", "WRITTEN_BOOK");
+                    yaml.set("quest-book.new-quest-state.item.custom-model-data", 1);
+                    yaml.set("quest-book.new-quest-state.item.name", "&a&lQuest Book &e⭐");
+                    yaml.set("quest-book.new-quest-state.item.lore", List.of("", "&aA new quest is available!", "&7Click to open your quests", ""));
+                    yaml.set("quest-book.new-quest-state.sound.sound", "item.book.page_turn");
+                    yaml.set("quest-book.new-quest-state.sound.volume", 1.0);
+                    yaml.set("quest-book.new-quest-state.sound.pitch", 1.2);
+
                     yaml.set("config-version", 5);
                 }
         );

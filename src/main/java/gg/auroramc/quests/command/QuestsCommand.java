@@ -13,6 +13,7 @@ import gg.auroramc.quests.api.quest.Quest;
 import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.menu.MainMenu;
 import gg.auroramc.quests.menu.PoolMenu;
+import gg.auroramc.quests.questbook.QuestBookState;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -198,6 +199,37 @@ public class QuestsCommand extends BaseCommand {
                         Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId + "/" + targetObjective));
             }
         }
+    }
+
+    @Subcommand("notify")
+    @Description("Toggles the quest book 'new quest' notification for a player")
+    @CommandCompletion("@players true|false")
+    @CommandPermission("aurora.quests.admin.notify")
+    public void onQuestBookNotify(CommandSender sender, @Flags("other") Player target, @Default("toggle") String value) {
+        var manager = plugin.getQuestBookManager();
+        if (manager == null || !manager.isActive()) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestBookDisabled());
+            return;
+        }
+
+        QuestBookState newState;
+        if (value.equalsIgnoreCase("true")) {
+            newState = manager.setNotification(target, true);
+        } else if (value.equalsIgnoreCase("false")) {
+            newState = manager.setNotification(target, false);
+        } else {
+            newState = manager.toggleNotification(target);
+        }
+
+        if (newState == null) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            return;
+        }
+
+        var msg = newState == QuestBookState.NEW_QUEST
+                ? plugin.getConfigManager().getMessageConfig(sender).getQuestBookNotifyOn()
+                : plugin.getConfigManager().getMessageConfig(sender).getQuestBookNotifyOff();
+        Chat.sendMessage(sender, msg, Placeholder.of("{player}", target.getName()));
     }
 
     @Subcommand("reset")
