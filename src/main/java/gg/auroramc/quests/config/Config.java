@@ -30,6 +30,7 @@ public class Config extends AuroraConfig {
     private CommandAliasConfig commandAliases;
     private List<String> sortOrder;
     private UnlockTaskConfig unlockTask = new UnlockTaskConfig();
+    private TrackingConfig tracking = new TrackingConfig();
     private QuestBookConfig questBook = new QuestBookConfig();
 
     @IgnoreField
@@ -114,6 +115,13 @@ public class Config extends AuroraConfig {
         private List<String> quests = List.of("quests");
     }
 
+    @Getter
+    public static final class TrackingConfig {
+        private List<String> onTrack = List.of();
+        private List<String> onUntrack = List.of();
+        private List<String> trackedLore = List.of();
+    }
+
     public static File getFile(AuroraQuests plugin) {
         return new File(plugin.getDataFolder(), "config.yml");
     }
@@ -160,6 +168,15 @@ public class Config extends AuroraConfig {
                     yaml.set("config-version", 4);
                 },
                 (yaml) -> {
+                    yaml.set("tracking.on-track", List.of());
+                    yaml.set("tracking.on-untrack", List.of());
+                    yaml.set("tracking.tracked-lore", List.of("&e&l► TRACKED"));
+                    yaml.setComments("tracking", List.of(
+                            "Global tracking configuration",
+                            "on-track: commands to execute when a player tracks a quest (supports {player}, {quest}, {quest_id}, {pool_id} placeholders)",
+                            "on-untrack: commands to execute when a player untracks a quest",
+                            "tracked-lore: extra lore lines appended to the quest menu item when it is being tracked"
+                    ));
                     yaml.set("quest-book.enabled", false);
                     yaml.setComments("quest-book", List.of(
                             "Places a clickable \"quest book\" item in a fixed inventory slot of every",

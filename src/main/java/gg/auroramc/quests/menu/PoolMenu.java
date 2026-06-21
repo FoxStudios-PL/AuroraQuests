@@ -3,16 +3,21 @@ package gg.auroramc.quests.menu;
 import gg.auroramc.aurora.api.AuroraAPI;
 import gg.auroramc.aurora.api.menu.AuroraMenu;
 import gg.auroramc.aurora.api.menu.ItemBuilder;
+import gg.auroramc.aurora.api.message.Chat;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.quests.AuroraQuests;
+import gg.auroramc.quests.api.data.QuestData;
 import gg.auroramc.quests.api.event.objective.PlayerTakeItemEvent;
 import gg.auroramc.quests.api.objective.ObjectiveType;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
 import gg.auroramc.quests.api.questpool.QuestPool;
+import gg.auroramc.quests.config.Config;
+import gg.auroramc.quests.config.MessageConfig;
 import gg.auroramc.quests.util.RomanNumber;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -122,6 +127,8 @@ public class PoolMenu {
 
         // Display quests
         var quests = getPage(page, mc.getDisplayArea().size());
+        QuestData questData = AuroraAPI.getUser(player.getUniqueId()).getData(QuestData.class);
+        Config.TrackingConfig trackingConfig = AuroraQuests.getInstance().getConfigManager().getConfig().getTracking();
 
         for (int i = 0; i < mc.getDisplayArea().size(); i++) {
             var slot = mc.getDisplayArea().get(i);
@@ -146,7 +153,13 @@ public class PoolMenu {
                     extraLore.addAll(quest.getDefinition().getUncompletedLore());
                 }
             }
+            boolean isTracked = questData.hasTrackedQuest()
+                    && pool.getId().equals(questData.getTrackedPoolId())
+                    && quest.getId().equals(questData.getTrackedQuestId());
 
+            if (isTracked && trackingConfig.getTrackedLore() != null) {
+                extraLore.addAll(trackingConfig.getTrackedLore());
+            }
             var qPlaceholders = quest.getPlaceholders();
 
             var builder = ItemBuilder.of(quest.getDefinition().getMenuItem()).slot(slot)
@@ -155,9 +168,14 @@ public class PoolMenu {
                     .localization(localization)
                     .placeholder(qPlaceholders).extraLore(extraLore);
 
-            if (quest.isUnlocked() && !quest.isCompleted() && quest.getDefinition().getTasks().values().stream().anyMatch(t -> t.getTask().equals(ObjectiveType.TAKE_ITEM))) {
+            if (quest.isUnlocked() && !quest.isCompleted()) {
                 menu.addItem(builder.build(player), (e) -> {
-                    Bukkit.getPluginManager().callEvent(new PlayerTakeItemEvent(player, quest));
+                    boolean hasTakeItem = quest.getDefinition().getTasks().values().stream()
+                            .anyMatch(t -> t.getTask().equals(ObjectiveType.TAKE_ITEM));
+                    if (hasTakeItem) {
+                        Bukkit.getPluginManager().callEvent(new PlayerTakeItemEvent(player, quest));
+                    }
+                    toggleTracking(player, quest, questData);
                     createMenu().open(player);
                 });
             } else {
@@ -244,6 +262,34 @@ public class PoolMenu {
 
 
         return menu;
+    }
+
+    private void toggleTracking(Player player, Quest quest, QuestData questData) {
+        MessageConfig msgConfig = AuroraQuests.getInstance().getConfigManager().getMessageConfig(player);
+        boolean isCurrentlyTracked = questData.hasTrackedQuest()
+                && pool.getId().equals(questData.getTrackedPoolId())
+                && quest.getId().equals(questData.getTrackedQuestId());
+
+        if (isCurrentlyTracked) {
+            quest.executeUntrackCommands();
+            questData.clearTrackedQuest();
+            Chat.sendMessage(player, msgConfig.getQuestUntracked(), Placeholder.of("{quest}", quest.getDefinition().getName()));
+        } else {
+            if (questData.hasTrackedQuest()) {
+                QuestPool oldPool = profile.getQuestPool(questData.getTrackedPoolId());
+
+                if (oldPool != null) {
+                    Quest oldQuest = oldPool.getQuest(questData.getTrackedQuestId());
+
+                    if (oldQuest != null) {
+                        oldQuest.executeUntrackCommands();
+                    }
+                }
+            }
+            questData.setTrackedQuest(pool.getId(), quest.getId());
+            quest.executeTrackCommands();
+            Chat.sendMessage(player, msgConfig.getQuestTracked(), Placeholder.of("{quest}", quest.getDefinition().getName()));
+        }
     }
 
     private Collection<Quest> getQuests() {

@@ -3,14 +3,16 @@ package gg.auroramc.quests.placeholder;
 import gg.auroramc.aurora.api.AuroraAPI;
 import gg.auroramc.aurora.api.placeholder.PlaceholderHandler;
 import gg.auroramc.quests.AuroraQuests;
+import gg.auroramc.quests.api.data.QuestData;
+import gg.auroramc.quests.api.objective.Objective;
+import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
 import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.util.DurationFormatter;
 import gg.auroramc.quests.util.RomanNumber;
-import org.bukkit.entity.Player;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.bukkit.entity.Player;
 
 public class QuestPlaceholderHandler implements PlaceholderHandler {
     @Override
@@ -24,6 +26,10 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         var profile = AuroraQuests.getInstance().getProfileManager().getProfile(player);
         if(profile == null) return "";
         var full = String.join("_", args);
+
+        if (full.startsWith("tracked_")) {
+            return handleTrackedPlaceholder(player, full.substring(8));
+        }
 
         if (full.endsWith("total_completed_raw")) {
             var sum = profile.getQuestPools().stream().mapToLong(QuestPool::getCompletedQuestCount).sum();
@@ -74,14 +80,100 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         return null;
     }
 
+    private String handleTrackedPlaceholder(Player player, String key) {
+        QuestData questData = AuroraAPI.getUser(player.getUniqueId()).getData(QuestData.class);
+
+        if (!questData.hasTrackedQuest()) {
+          return "";
+        }
+        Profile profile = AuroraQuests.getInstance().getProfileManager().getProfile(player);
+
+        if (profile == null) {
+          return "";
+        }
+        QuestPool pool = profile.getQuestPool(questData.getTrackedPoolId());
+
+        if (pool == null) {
+          return "";
+        }
+        Quest quest = pool.getQuest(questData.getTrackedQuestId());
+
+        if (quest == null) {
+          return "";
+        }
+      return switch (key) {
+        case "name" -> quest.getDefinition().getName();
+        case "quest_id" -> quest.getId();
+        case "pool_id" -> pool.getId();
+        case "objective_current" -> String.valueOf(quest.getCurrentObjectiveIndex() + 1);
+        case "objective_total" -> String.valueOf(quest.getObjectives().size());
+        case "current_amount" -> {
+          Objective obj = getCurrentObjective(quest);
+          yield obj != null ? AuroraAPI.formatNumber(obj.getProgress()) : "";
+        }
+        case "required_amount" -> {
+          Objective obj = getCurrentObjective(quest);
+          yield obj != null ? AuroraAPI.formatNumber(obj.getTarget()) : "";
+        }
+        case "current_amount_raw" -> {
+          Objective obj = getCurrentObjective(quest);
+          yield obj != null ? String.valueOf((long) obj.getProgress()) : "";
+        }
+        case "required_amount_raw" -> {
+          Objective obj = getCurrentObjective(quest);
+          yield obj != null ? String.valueOf((long) obj.getTarget()) : "";
+        }
+        default -> {
+          if (key.startsWith("objective_")) {
+            try {
+              int index = Integer.parseInt(key.substring(10)) - 1;
+
+              if (index < 0 || index >= quest.getObjectives().size()) {
+                yield "";
+              }
+              Objective obj = quest.getObjectives().get(index);
+
+              if (quest.isObjectiveLocked(index)) {
+                String lockedLore = quest.getDefinition().getLockedObjectiveLore();
+                yield lockedLore != null ? lockedLore : "";
+              }
+              yield obj.display();
+            } catch (NumberFormatException exception) {
+              yield null;
+            }
+          }
+          yield null;
+        }
+      };
+    }
+
+    private Objective getCurrentObjective(Quest quest) {
+        int index = quest.getCurrentObjectiveIndex();
+
+        if (index >= 0 && index < quest.getObjectives().size()) {
+            return quest.getObjectives().get(index);
+        }
+        return null;
+    }
+
     @Override
     public List<String> getPatterns() {
         var manager = AuroraQuests.getInstance().getPoolManager();
 
-        var list = new ArrayList<String>(manager.getPoolIds().size() * 7 + 2);
+        var list = new ArrayList<String>(manager.getPoolIds().size() * 7 + 15);
 
         list.add("total_completed_raw");
         list.add("total_completed");
+        list.add("tracked_name");
+        list.add("tracked_quest_id");
+        list.add("tracked_pool_id");
+        list.add("tracked_objective_current");
+        list.add("tracked_objective_total");
+        list.add("tracked_objective_<number>");
+        list.add("tracked_current_amount");
+        list.add("tracked_required_amount");
+        list.add("tracked_current_amount_raw");
+        list.add("tracked_required_amount_raw");
 
         for (var pool : manager.getPoolIds()) {
             list.add(pool + "_level");

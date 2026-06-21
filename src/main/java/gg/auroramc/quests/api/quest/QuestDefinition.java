@@ -25,4 +25,8 @@ public class QuestDefinition {
     private final QuestRequirement requirements;
     private final QuestConfig.LevelUpMessage questCompleteMessage;
     private final QuestConfig.LevelUpSound questCompleteSound;
+    private final boolean linearObjectives;
+    private final String lockedObjectiveLore;
+    private final List<String> onTrack;
+    private final List<String> onUntrack;
 }
