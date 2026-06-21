@@ -24,14 +24,27 @@ public class PermissionCorrector implements RewardCorrector {
             // Correct global quests
             if (pool.isGlobal()) {
                 for (var quest : pool.getQuests()) {
-                    if (!quest.isCompleted()) continue;
+                    if (quest.isCompleted()) {
+                        for (var reward : quest.getDefinition().getRewards().values()) {
+                            if (reward instanceof PermissionReward permissionReward) {
+                                if (permissionReward.getPermissions() == null || permissionReward.getPermissions().isEmpty())
+                                    continue;
+                                var nodes = permissionReward.buildNodes(player, quest.getPlaceholders());
+                                nodesToAdd.addAll(nodes);
+                            }
+                        }
+                    }
 
-                    for (var reward : quest.getDefinition().getRewards().values()) {
-                        if (reward instanceof PermissionReward permissionReward) {
-                            if (permissionReward.getPermissions() == null || permissionReward.getPermissions().isEmpty())
-                                continue;
-                            var nodes = permissionReward.buildNodes(player, quest.getPlaceholders());
-                            nodesToAdd.addAll(nodes);
+                    // Per-step rewards on completed tasks (linear / per-task rewards)
+                    for (var objective : quest.getObjectives()) {
+                        if (!objective.isCompleted()) continue;
+                        for (var reward : objective.getDefinition().getRewards().values()) {
+                            if (reward instanceof PermissionReward permissionReward) {
+                                if (permissionReward.getPermissions() == null || permissionReward.getPermissions().isEmpty())
+                                    continue;
+                                var nodes = permissionReward.buildNodes(player, quest.getPlaceholders());
+                                nodesToAdd.addAll(nodes);
+                            }
                         }
                     }
                 }

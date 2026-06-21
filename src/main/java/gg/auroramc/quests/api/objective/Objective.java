@@ -217,11 +217,29 @@ public abstract class Objective extends EventBus {
         var gc = AuroraQuests.getInstance().getConfigManager().getCommonMenuConfig().getTaskStatuses();
         var count = isCompleted() ? target : Math.min(data.getProgress(), target);
 
+        String status;
+        if (isCompleted()) {
+            status = gc.getCompleted();
+        } else if (isLocked()) {
+            status = gc.getLocked();
+        } else {
+            status = gc.getNotCompleted();
+        }
+
         return Placeholder.execute(definition.getDisplay(),
-                Placeholder.of("{status}", isCompleted() ? gc.getCompleted() : gc.getNotCompleted()),
+                Placeholder.of("{status}", status),
                 Placeholder.of("{current}", AuroraAPI.formatNumber(count)),
                 Placeholder.of("{required}", AuroraAPI.formatNumber(target))
         );
+    }
+
+    /**
+     * A task is "locked" when it belongs to a linear quest (PR #1's
+     * linear-objectives) and its step has not been reached yet (neither active
+     * nor completed). Always false for regular (parallel) quests.
+     */
+    public boolean isLocked() {
+        return !started && !isCompleted() && quest.getDefinition().isLinearObjectives();
     }
 
     protected ObjectiveMeta meta() {

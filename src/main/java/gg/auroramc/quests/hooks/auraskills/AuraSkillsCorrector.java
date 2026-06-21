@@ -43,11 +43,21 @@ public class AuraSkillsCorrector implements RewardCorrector {
             // Correct global quests
             if (pool.isGlobal()) {
                 for (var quest : pool.getQuests()) {
-                    if (!quest.isCompleted()) continue;
+                    if (quest.isCompleted()) {
+                        for (var reward : quest.getDefinition().getRewards().values()) {
+                            if (reward instanceof AuraSkillsStatReward statReward) {
+                                statMap.merge(statReward.getStat(), statReward.getValue(quest.getPlaceholders()), Double::sum);
+                            }
+                        }
+                    }
 
-                    for (var reward : quest.getDefinition().getRewards().values()) {
-                        if (reward instanceof AuraSkillsStatReward statReward) {
-                            statMap.merge(statReward.getStat(), statReward.getValue(quest.getPlaceholders()), Double::sum);
+                    // Per-step rewards on completed tasks (linear / per-task rewards)
+                    for (var objective : quest.getObjectives()) {
+                        if (!objective.isCompleted()) continue;
+                        for (var reward : objective.getDefinition().getRewards().values()) {
+                            if (reward instanceof AuraSkillsStatReward statReward) {
+                                statMap.merge(statReward.getStat(), statReward.getValue(quest.getPlaceholders()), Double::sum);
+                            }
                         }
                     }
                 }

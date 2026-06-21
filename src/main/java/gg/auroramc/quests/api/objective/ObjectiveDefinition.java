@@ -1,10 +1,12 @@
 package gg.auroramc.quests.api.objective;
 
+import gg.auroramc.aurora.api.reward.Reward;
 import gg.auroramc.quests.api.objective.filter.ObjectiveFilter;
 import lombok.Builder;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Getter
@@ -17,4 +19,5 @@ public class ObjectiveDefinition {
     private final List<ObjectiveFilter> filters;
     private final List<String> onProgress;
     private final List<String> onComplete;
+    private final LinkedHashMap<String, Reward> rewards;
 }

@@ -48,4 +48,5 @@ public class ObjectiveType {
     public static final String BREAK_ITEM = "BREAK_ITEM";
     public static final String TRAVEL = "TRAVEL";
     public static final String PLAY_TIME = "PLAY_TIME";
+    public static final String EPICCRAFTINGS_CRAFT = "EPICCRAFTINGS_CRAFT";
 }

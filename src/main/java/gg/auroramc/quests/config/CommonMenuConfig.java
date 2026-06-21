@@ -31,6 +31,13 @@ public class CommonMenuConfig extends AuroraConfig {
     public static class TaskStatuses {
         private String completed = "";
         private String notCompleted = "";
+        private String locked = "";
+
+        // Falls back to the not-completed status when not configured, so existing
+        // setups are visually unchanged unless an admin opts into a locked style.
+        public String getLocked() {
+            return (locked == null || locked.isEmpty()) ? notCompleted : locked;
+        }
     }
 
     public static File getFile(AuroraQuests plugin) {

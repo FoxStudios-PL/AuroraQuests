@@ -14,4 +14,5 @@ public class TaskConfig {
     private FilterConfig filters;
     private List<String> onProgress = new ArrayList<>();
     private List<String> onComplete = new ArrayList<>();
+    private ConfigurationSection rewards;
 }

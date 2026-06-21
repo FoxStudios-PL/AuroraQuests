@@ -73,6 +73,7 @@ dependencies {
     compileOnly(name = "Shopkeepers-2.23.3", group = "com.nisovin.shopkeepers", version = "2.23.3")
     compileOnly(name = "SuperiorSkyblock2-2025.1", group = "com.bgsoftware", version = "2025.1")
     //compileOnly("com.bgsoftware:SuperiorSkyblockAPI:2025.1")
+    compileOnly(name = "EpicCraftingsPlus-7.36.2", group = "ecp.ajneb97", version = "7.36.2")
     compileOnly("lol.pyr:znpcsplus-api:2.1.0-SNAPSHOT")
     compileOnly("de.oliver:FancyNpcs:2.6.0")
     compileOnly("ink.ptms.adyeshach:all:2.0.0-snapshot-1")

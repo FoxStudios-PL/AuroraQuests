@@ -4,6 +4,9 @@ config-version: 0
 task-statuses:
   completed: "&a&l✔&r"
   not-completed: "&c&l✖&r"
+  # Shown for objectives of a linear quest (linear-objectives) that aren't
+  # unlocked yet. If left empty, the not-completed status is used instead.
+  locked: "&8&l🔒&r"
 
 display-components:
   rewards:

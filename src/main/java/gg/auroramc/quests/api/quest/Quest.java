@@ -70,6 +70,8 @@ public class Quest extends EventBus {
                     }
                 }
 
+                grantTaskRewards(objective);
+
                 if (definition.isLinearObjectives()) {
                     startNextObjective();
                 }
@@ -96,6 +98,12 @@ public class Quest extends EventBus {
         dispose();
 
         this.publish(EventType.QUEST_COMPLETED, trigger);
+    }
+
+    private void grantTaskRewards(Objective objective) {
+        var rewards = objective.getDefinition().getRewards();
+        if (rewards == null || rewards.isEmpty()) return;
+        RewardExecutor.execute(rewards.values().stream().toList(), data.profile().getPlayer(), 1, getPlaceholders());
     }
 
     public boolean isUnlocked() {
@@ -143,24 +151,15 @@ public class Quest extends EventBus {
     }
 
     public void reset() {
+        boolean wasStarted = started;
         for (var obj : objectives) {
+            obj.dispose();
             obj.resetProgress();
         }
-
-        if (started) {
-            if (definition.isLinearObjectives()) {
-                for (Objective obj : objectives) {
-                    obj.dispose();
-                }
-                startNextObjective();
-            } else {
-                for (Objective obj : objectives) {
-                    obj.start();
-                }
-            }
-        }
-
         data.reset();
+        started = false;
+        // start(true) re-activates correctly for both linear and parallel quests.
+        if (wasStarted) start(true);
     }
 
     public boolean isCompleted() {
