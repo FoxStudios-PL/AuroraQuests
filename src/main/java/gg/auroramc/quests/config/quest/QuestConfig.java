@@ -21,6 +21,7 @@ public class QuestConfig extends AuroraConfig {
     private List<String> completedLore;
     private List<String> uncompletedLore;
     private Map<String, TaskConfig> tasks;
+    private boolean sequential;
     private ConfigurationSection rewards;
     private StartRequirementConfig startRequirements;
     private QuestConfig.LevelUpSound questCompleteSound;

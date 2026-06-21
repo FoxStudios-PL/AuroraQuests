@@ -21,7 +21,8 @@ public class QuestParser {
                 .difficulty(config.getDifficulty())
                 .requirements(parseRequirement(config.getStartRequirements()))
                 .rewards(parseRewards(config.getRewards(), rewardFactory))
-                .tasks(parseTasks(config.getTasks()))
+                .tasks(parseTasks(config.getTasks(), rewardFactory))
+                .sequential(config.isSequential())
                 .menuItem(config.getMenuItem())
                 .completedLore(config.getCompletedLore())
                 .lockedLore(config.getLockedLore())
@@ -51,11 +52,11 @@ public class QuestParser {
         return rewards;
     }
 
-    private static LinkedHashMap<String, ObjectiveDefinition> parseTasks(Map<String, TaskConfig> map) {
+    private static LinkedHashMap<String, ObjectiveDefinition> parseTasks(Map<String, TaskConfig> map, RewardFactory rewardFactory) {
         LinkedHashMap<String, ObjectiveDefinition> tasks = new LinkedHashMap<>();
 
         for (String key : map.keySet()) {
-            tasks.put(key, ObjectiveParser.parse(key, map.get(key)));
+            tasks.put(key, ObjectiveParser.parse(key, map.get(key), rewardFactory));
         }
 
         return tasks;

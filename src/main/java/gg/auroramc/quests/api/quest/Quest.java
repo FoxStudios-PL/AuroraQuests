@@ -67,13 +67,26 @@ public class Quest extends EventBus {
                     }
                 }
 
-                var completed = true;
+                grantTaskRewards(objective);
 
-                for (var obj2 : objectives) {
-                    completed = completed && obj2.isCompleted();
+                if (definition.isSequential()) {
+                    // Sequential quests track one step at a time: start the next
+                    // unfinished step, or complete the quest if none remain.
+                    var next = nextObjective();
+                    if (next == null) {
+                        this.handleCompletion(objective);
+                    } else {
+                        next.start();
+                    }
+                } else {
+                    var completed = true;
+
+                    for (var obj2 : objectives) {
+                        completed = completed && obj2.isCompleted();
+                    }
+
+                    if (completed) this.handleCompletion(objective);
                 }
-
-                if (completed) this.handleCompletion(objective);
             });
         }
     }
@@ -87,6 +100,24 @@ public class Quest extends EventBus {
         dispose();
 
         this.publish(EventType.QUEST_COMPLETED, trigger);
+    }
+
+    /**
+     * Returns the first objective (in declaration order) that is not yet completed,
+     * which is the active step of a sequential quest. Null if all are completed.
+     */
+    @Nullable
+    public Objective nextObjective() {
+        for (var obj : objectives) {
+            if (!obj.isCompleted()) return obj;
+        }
+        return null;
+    }
+
+    private void grantTaskRewards(Objective objective) {
+        var rewards = objective.getDefinition().getRewards();
+        if (rewards == null || rewards.isEmpty()) return;
+        RewardExecutor.execute(rewards.values().stream().toList(), data.profile().getPlayer(), 1, getPlaceholders());
     }
 
     public boolean isUnlocked() {
@@ -108,8 +139,14 @@ public class Quest extends EventBus {
             return false;
         }
 
-        for (var obj : objectives) {
-            obj.start();
+        if (definition.isSequential()) {
+            // Only the current step listens for events; future steps stay dormant.
+            var current = nextObjective();
+            if (current != null) current.start();
+        } else {
+            for (var obj : objectives) {
+                obj.start();
+            }
         }
 
         if (pool.isGlobal()) {
@@ -130,11 +167,14 @@ public class Quest extends EventBus {
     }
 
     public void reset() {
+        boolean wasStarted = started;
         for (var obj : objectives) {
+            obj.dispose();
             obj.resetProgress();
-            if (started) obj.start();
         }
         data.reset();
+        started = false;
+        if (wasStarted) start(true);
     }
 
     public boolean isCompleted() {

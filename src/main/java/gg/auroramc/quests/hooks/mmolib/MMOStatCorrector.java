@@ -36,16 +36,31 @@ public class MMOStatCorrector implements RewardCorrector {
         for (var pool : profile.getQuestPools()) {
             if (pool.isGlobal()) {
                 for (var quest : pool.getQuests()) {
-                    if (!quest.isCompleted()) continue;
+                    if (quest.isCompleted()) {
+                        for (var reward : quest.getDefinition().getRewards().values()) {
+                            if (reward instanceof MMOStatReward statReward && statReward.isValid()) {
+                                var key = NamespacedId.of(MMOStatReward.getMMO_STAT(), statReward.getStat()).toString();
+                                var current = statReward.getCurrentModifier(key, stats);
+                                UUID uuid = current != null ? current.getUniqueId() : UUID.randomUUID();
+                                statMap.merge(statReward.getStat(),
+                                        new MMOStat(statReward.getModifierType(), statReward.getValue(quest.getPlaceholders()), key, uuid),
+                                        (a, b) -> new MMOStat(statReward.getModifierType(), a.value() + b.value(), a.key(), a.uuid()));
+                            }
+                        }
+                    }
 
-                    for (var reward : quest.getDefinition().getRewards().values()) {
-                        if (reward instanceof MMOStatReward statReward && statReward.isValid()) {
-                            var key = NamespacedId.of(MMOStatReward.getMMO_STAT(), statReward.getStat()).toString();
-                            var current = statReward.getCurrentModifier(key, stats);
-                            UUID uuid = current != null ? current.getUniqueId() : UUID.randomUUID();
-                            statMap.merge(statReward.getStat(),
-                                    new MMOStat(statReward.getModifierType(), statReward.getValue(quest.getPlaceholders()), key, uuid),
-                                    (a, b) -> new MMOStat(statReward.getModifierType(), a.value() + b.value(), a.key(), a.uuid()));
+                    // Per-step rewards on completed tasks (sequential / per-task rewards)
+                    for (var objective : quest.getObjectives()) {
+                        if (!objective.isCompleted()) continue;
+                        for (var reward : objective.getDefinition().getRewards().values()) {
+                            if (reward instanceof MMOStatReward statReward && statReward.isValid()) {
+                                var key = NamespacedId.of(MMOStatReward.getMMO_STAT(), statReward.getStat()).toString();
+                                var current = statReward.getCurrentModifier(key, stats);
+                                UUID uuid = current != null ? current.getUniqueId() : UUID.randomUUID();
+                                statMap.merge(statReward.getStat(),
+                                        new MMOStat(statReward.getModifierType(), statReward.getValue(quest.getPlaceholders()), key, uuid),
+                                        (a, b) -> new MMOStat(statReward.getModifierType(), a.value() + b.value(), a.key(), a.uuid()));
+                            }
                         }
                     }
                 }
