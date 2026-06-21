@@ -5,6 +5,7 @@ import gg.auroramc.aurora.api.command.CommandDispatcher;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.aurora.api.reward.RewardExecutor;
 import gg.auroramc.quests.AuroraQuests;
+import gg.auroramc.quests.api.data.QuestData;
 import gg.auroramc.quests.api.event.EventBus;
 import gg.auroramc.quests.api.event.EventType;
 import gg.auroramc.quests.api.event.QuestCompletedEvent;
@@ -12,10 +13,12 @@ import gg.auroramc.quests.api.factory.ObjectiveFactory;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.api.objective.Objective;
+import gg.auroramc.quests.config.Config;
 import gg.auroramc.quests.util.RewardUtil;
 import gg.auroramc.quests.util.SoundUtil;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -69,24 +72,17 @@ public class Quest extends EventBus {
 
                 grantTaskRewards(objective);
 
-                if (definition.isSequential()) {
-                    // Sequential quests track one step at a time: start the next
-                    // unfinished step, or complete the quest if none remain.
-                    var next = nextObjective();
-                    if (next == null) {
-                        this.handleCompletion(objective);
-                    } else {
-                        next.start();
-                    }
-                } else {
-                    var completed = true;
-
-                    for (var obj2 : objectives) {
-                        completed = completed && obj2.isCompleted();
-                    }
-
-                    if (completed) this.handleCompletion(objective);
+                if (definition.isLinearObjectives()) {
+                    startNextObjective();
                 }
+
+                var completed = true;
+
+                for (var obj2 : objectives) {
+                    completed = completed && obj2.isCompleted();
+                }
+
+                if (completed) this.handleCompletion(objective);
             });
         }
     }
@@ -94,24 +90,14 @@ public class Quest extends EventBus {
     private void handleCompletion(@Nullable Objective trigger) {
         data.complete();
 
+        autoUntrackOnComplete();
+
         Bukkit.getPluginManager().callEvent(new QuestCompletedEvent(data.profile().getPlayer(), pool, this));
 
         reward();
         dispose();
 
         this.publish(EventType.QUEST_COMPLETED, trigger);
-    }
-
-    /**
-     * Returns the first objective (in declaration order) that is not yet completed,
-     * which is the active step of a sequential quest. Null if all are completed.
-     */
-    @Nullable
-    public Objective nextObjective() {
-        for (var obj : objectives) {
-            if (!obj.isCompleted()) return obj;
-        }
-        return null;
     }
 
     private void grantTaskRewards(Objective objective) {
@@ -139,10 +125,8 @@ public class Quest extends EventBus {
             return false;
         }
 
-        if (definition.isSequential()) {
-            // Only the current step listens for events; future steps stay dormant.
-            var current = nextObjective();
-            if (current != null) current.start();
+        if (definition.isLinearObjectives()) {
+            startNextObjective();
         } else {
             for (var obj : objectives) {
                 obj.start();
@@ -174,6 +158,7 @@ public class Quest extends EventBus {
         }
         data.reset();
         started = false;
+        // start(true) re-activates correctly for both linear and parallel quests.
         if (wasStarted) start(true);
     }
 
@@ -220,8 +205,13 @@ public class Quest extends EventBus {
         placeholders.add(Placeholder.of("{player}", data.profile().getPlayer().getName()));
         placeholders.add(Placeholder.of("{pool_level}", pool.getLevel()));
 
-        for (var objective : objectives) {
-            placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", objective.display()));
+        for (int i = 0; i < objectives.size(); i++) {
+            var objective = objectives.get(i);
+            if (isObjectiveLocked(i) && definition.getLockedObjectiveLore() != null) {
+                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", definition.getLockedObjectiveLore()));
+            } else {
+                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", objective.display()));
+            }
         }
 
         for (var reward : definition.getRewards().entrySet()) {
@@ -229,6 +219,88 @@ public class Quest extends EventBus {
         }
 
         return placeholders;
+    }
+
+    private void startNextObjective() {
+        for (Objective obj : objectives) {
+            if (!obj.isCompleted()) {
+                obj.start();
+                return;
+            }
+        }
+    }
+
+    private void autoUntrackOnComplete() {
+        Player player = data.profile().getPlayer();
+        QuestData questData = AuroraAPI.getUser(player.getUniqueId()).getData(QuestData.class);
+
+        if (questData.hasTrackedQuest()
+                && pool.getId().equals(questData.getTrackedPoolId())
+                && definition.getId().equals(questData.getTrackedQuestId())) {
+            executeUntrackCommands();
+            questData.clearTrackedQuest();
+        }
+    }
+
+    public void executeTrackCommands() {
+        Player player = data.profile().getPlayer();
+        List<Placeholder<?>> placeholders = getPlaceholders();
+        Config config = AuroraQuests.getInstance().getConfigManager().getConfig();
+        List<String> questCommands = definition.getOnTrack();
+
+        if (questCommands != null && !questCommands.isEmpty()) {
+            for (String command : questCommands) {
+                CommandDispatcher.dispatch(player, command, placeholders);
+            }
+        }
+        List<String> globalCommands = config.getTracking().getOnTrack();
+
+        if (!globalCommands.isEmpty()) {
+            for (String command : globalCommands) {
+                CommandDispatcher.dispatch(player, command, placeholders);
+            }
+        }
+    }
+
+    public void executeUntrackCommands() {
+        Player player = data.profile().getPlayer();
+        List<Placeholder<?>> placeholders = getPlaceholders();
+        Config config = AuroraQuests.getInstance().getConfigManager().getConfig();
+        List<String> questCommands = definition.getOnUntrack();
+
+        if (questCommands != null && !questCommands.isEmpty()) {
+            for (String command : questCommands) {
+                CommandDispatcher.dispatch(player, command, placeholders);
+            }
+        }
+        List<String> globalCommands = config.getTracking().getOnUntrack();
+
+        if (!globalCommands.isEmpty()) {
+            for (var command : globalCommands) {
+                CommandDispatcher.dispatch(player, command, placeholders);
+            }
+        }
+    }
+
+    public int getCurrentObjectiveIndex() {
+        for (int i = 0; i < objectives.size(); i++) {
+            if (!objectives.get(i).isCompleted()) {
+                return i;
+            }
+        }
+        return objectives.size() - 1;
+    }
+
+    public boolean isObjectiveLocked(int index) {
+        if (!definition.isLinearObjectives()) {
+          return false;
+        }
+        for (int i = 0; i < index; i++) {
+            if (!objectives.get(i).isCompleted()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void reward() {

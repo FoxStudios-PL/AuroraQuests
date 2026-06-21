@@ -41,7 +41,7 @@ public class MythicStatCorrector implements RewardCorrector {
                         }
                     }
 
-                    // Per-step rewards on completed tasks (sequential / per-task rewards)
+                    // Per-step rewards on completed tasks (linear / per-task rewards)
                     for (var objective : quest.getObjectives()) {
                         if (!objective.isCompleted()) continue;
                         for (var reward : objective.getDefinition().getRewards().values()) {

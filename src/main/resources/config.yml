@@ -26,6 +26,16 @@ difficulties:
 
 sort-order: [ "easy", "medium", "hard" ]
 
+# Global tracking configuration
+# on-track: commands to execute when a player tracks a quest (supports {player}, {quest}, {quest_id}, {pool_id} placeholders)
+# on-untrack: commands to execute when a player untracks a quest
+# tracked-lore: extra lore lines appended to the quest menu item when it is being tracked
+tracking:
+  on-track: []
+  on-untrack: []
+  tracked-lore:
+    - "&e&l► TRACKED"
+
 leaderboards:
   # How many players should be cached for each quest pool?
   # Only for these players you will have top placeholders

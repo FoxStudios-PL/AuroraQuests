@@ -234,12 +234,12 @@ public abstract class Objective extends EventBus {
     }
 
     /**
-     * A task is "locked" when it belongs to a sequential quest and its step has
-     * not been reached yet (neither active nor completed). Always false for
-     * regular (parallel) quests, preserving existing behavior.
+     * A task is "locked" when it belongs to a linear quest (PR #1's
+     * linear-objectives) and its step has not been reached yet (neither active
+     * nor completed). Always false for regular (parallel) quests.
      */
     public boolean isLocked() {
-        return !started && !isCompleted() && quest.getDefinition().isSequential();
+        return !started && !isCompleted() && quest.getDefinition().isLinearObjectives();
     }
 
     protected ObjectiveMeta meta() {

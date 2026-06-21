@@ -22,13 +22,16 @@ public class QuestParser {
                 .requirements(parseRequirement(config.getStartRequirements()))
                 .rewards(parseRewards(config.getRewards(), rewardFactory))
                 .tasks(parseTasks(config.getTasks(), rewardFactory))
-                .sequential(config.isSequential())
                 .menuItem(config.getMenuItem())
                 .completedLore(config.getCompletedLore())
                 .lockedLore(config.getLockedLore())
                 .uncompletedLore(config.getUncompletedLore())
                 .questCompleteMessage(config.getQuestCompleteMessage())
                 .questCompleteSound(config.getQuestCompleteSound())
+                .linearObjectives(config.getLinearObjectives() != null && config.getLinearObjectives())
+                .lockedObjectiveLore(config.getLockedObjectiveLore())
+                .onTrack(config.getOnTrack())
+                .onUntrack(config.getOnUntrack())
                 .build();
     }
 

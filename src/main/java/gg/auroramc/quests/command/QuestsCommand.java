@@ -6,7 +6,11 @@ import gg.auroramc.aurora.api.AuroraAPI;
 import gg.auroramc.aurora.api.message.Chat;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.quests.AuroraQuests;
-import gg.auroramc.quests.api.questpool.Pool;
+import gg.auroramc.quests.api.data.QuestData;
+import gg.auroramc.quests.api.objective.Objective;
+import gg.auroramc.quests.api.profile.Profile;
+import gg.auroramc.quests.api.quest.Quest;
+import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.menu.MainMenu;
 import gg.auroramc.quests.menu.PoolMenu;
 import gg.auroramc.quests.questbook.QuestBookState;
@@ -131,11 +135,22 @@ public class QuestsCommand extends BaseCommand {
     }
 
     @Subcommand("complete")
-    @Description("Completes a quest for a player")
-    @CommandCompletion("@players @pools @quests true|false")
+    @Description("Completes a quest or objective for a player")
+    @CommandCompletion("@players @pools @quests @objectives true|false")
     @CommandPermission("aurora.quests.admin.complete")
-    public void onQuestComplete(CommandSender sender, @Flags("other") Player target, String poolId, String questId, @Default("false") Boolean silent) {
-        var profile = plugin.getProfileManager().getProfile(target);
+    public void onQuestComplete(CommandSender sender, @Flags("other") Player target, String poolId, String questId, @Default("all") String objectiveId, @Default("false") Boolean silent) {
+        String targetObjective;
+        boolean isSilent;
+
+        if (objectiveId.equalsIgnoreCase("true") || objectiveId.equalsIgnoreCase("false")) {
+            isSilent = Boolean.parseBoolean(objectiveId);
+            targetObjective = "all";
+        } else {
+            targetObjective = objectiveId;
+            isSilent = silent;
+        }
+        Profile profile = plugin.getProfileManager().getProfile(target);
+
         if (profile == null) {
             Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
@@ -153,13 +168,36 @@ public class QuestsCommand extends BaseCommand {
             return;
         }
 
-        if (!quest.isCompleted()) {
-            quest.complete();
-            if (!silent) {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+        if (targetObjective.equals("all")) {
+            if (!quest.isCompleted()) {
+                quest.complete();
+                if (!isSilent) {
+                    Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+                }
+            } else {
+                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
             }
         } else {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+            Objective objective = quest.getObjectives().stream()
+                    .filter(o -> o.getId().equals(targetObjective))
+                    .findFirst().orElse(null);
+
+            if (objective == null) {
+                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveNotFound(),
+                        Placeholder.of("{objective}", targetObjective), Placeholder.of("{quest}", questId));
+                return;
+            }
+            if (objective.isCompleted()) {
+                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveAlreadyCompleted(),
+                        Placeholder.of("{objective}", targetObjective), Placeholder.of("{player}", target.getName()));
+                return;
+            }
+            objective.complete(isSilent);
+
+            if (!isSilent) {
+                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(),
+                        Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId + "/" + targetObjective));
+            }
         }
     }
 
@@ -233,5 +271,60 @@ public class QuestsCommand extends BaseCommand {
         if (!silent) {
             Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestReset(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
         }
+    }
+
+    @Subcommand("track")
+    @Description("Toggles quest tracking for a player")
+    @CommandCompletion("@players @pools @quests")
+    @CommandPermission("aurora.quests.admin.track")
+    public void onQuestTrack(CommandSender sender, @Flags("other") Player target, String poolId, String questId) {
+        Profile profile = plugin.getProfileManager().getProfile(target);
+
+        if (profile == null) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            return;
+        }
+        QuestPool pool = profile.getQuestPool(poolId);
+
+        if (pool == null) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            return;
+        }
+        Quest quest = pool.getQuest(questId);
+
+        if (quest == null) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            return;
+        }
+        if (quest.isCompleted() || !quest.isStarted()) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotActive(),
+                    Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
+            return;
+        }
+        QuestData questData = AuroraAPI.getUser(target.getUniqueId()).getData(QuestData.class);
+        boolean isCurrentlyTracked = questData.hasTrackedQuest()
+                && poolId.equals(questData.getTrackedPoolId())
+                && questId.equals(questData.getTrackedQuestId());
+
+        if (isCurrentlyTracked) {
+            quest.executeUntrackCommands();
+            questData.clearTrackedQuest();
+        } else {
+            if (questData.hasTrackedQuest()) {
+                QuestPool oldPool = profile.getQuestPool(questData.getTrackedPoolId());
+
+                if (oldPool != null) {
+                    Quest oldQuest = oldPool.getQuest(questData.getTrackedQuestId());
+
+                    if (oldQuest != null) {
+                        oldQuest.executeUntrackCommands();
+                    }
+                }
+            }
+            questData.setTrackedQuest(poolId, questId);
+            quest.executeTrackCommands();
+        }
+        Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackToggled(),
+                Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
     }
 }

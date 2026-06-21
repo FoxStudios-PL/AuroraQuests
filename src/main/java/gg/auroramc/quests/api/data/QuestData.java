@@ -6,11 +6,11 @@ import gg.auroramc.aurora.api.user.UserDataHolder;
 import gg.auroramc.aurora.api.util.NamespacedId;
 import gg.auroramc.quests.api.quest.QuestDefinition;
 import gg.auroramc.quests.api.questpool.Pool;
-import org.bukkit.configuration.ConfigurationSection;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 
 public class QuestData extends UserDataHolder {
     private final Map<String, PoolRollData> rolledQuests = Maps.newConcurrentMap();
@@ -19,6 +19,10 @@ public class QuestData extends UserDataHolder {
     private final Map<String, Long> completedCount = Maps.newConcurrentMap();
     private final Map<String, Set<String>> questUnlocks = Maps.newConcurrentMap();
     private final Set<String> poolUnlocks = Sets.newConcurrentHashSet();
+    @Getter
+    private volatile String trackedPoolId;
+    @Getter
+    private volatile String trackedQuestId;
 
     public PoolRollData getPoolRollData(String poolId) {
         return rolledQuests.get(poolId);
@@ -31,6 +35,22 @@ public class QuestData extends UserDataHolder {
 
     public boolean isPoolUnlocked(String poolId) {
         return poolUnlocks.contains(poolId);
+    }
+
+    public void setTrackedQuest(String poolId, String questId) {
+        this.trackedPoolId = poolId;
+        this.trackedQuestId = questId;
+        dirty.set(true);
+    }
+
+    public void clearTrackedQuest() {
+        this.trackedPoolId = null;
+        this.trackedQuestId = null;
+        dirty.set(true);
+    }
+
+    public boolean hasTrackedQuest() {
+        return trackedPoolId != null && trackedQuestId != null;
     }
 
     public void setRolledQuests(String poolId, List<String> quests) {
@@ -167,6 +187,12 @@ public class QuestData extends UserDataHolder {
         for (var entry : completedCount.entrySet()) {
             completedCountSection.set(entry.getKey(), entry.getValue());
         }
+
+        // Tracked quest
+        if (trackedPoolId != null && trackedQuestId != null) {
+            data.set("tracked.pool", trackedPoolId);
+            data.set("tracked.quest", trackedQuestId);
+        }
     }
 
     @Override
@@ -213,6 +239,13 @@ public class QuestData extends UserDataHolder {
         }
 
         poolUnlocks.addAll(data.getStringList("pool_unlocks"));
+
+        ConfigurationSection trackedSection = data.getConfigurationSection("tracked");
+
+        if (trackedSection != null) {
+            trackedPoolId = trackedSection.getString("pool");
+            trackedQuestId = trackedSection.getString("quest");
+        }
     }
 
     public void purgeInvalidData(Collection<Pool> pools) {
@@ -238,6 +271,21 @@ public class QuestData extends UserDataHolder {
 
             if (completedQuests.containsKey(pool.getId())) {
                 completedQuests.get(pool.getId()).removeIf(id -> !questIds.contains(id));
+            }
+        }
+        if (trackedPoolId != null && trackedQuestId != null) {
+            if (!poolIds.contains(trackedPoolId)) {
+                trackedPoolId = null;
+                trackedQuestId = null;
+            } else {
+                Pool trackedPool = pools.stream()
+                        .filter(p -> p.getId().equals(trackedPoolId))
+                        .findFirst().orElse(null);
+
+                if (trackedPool != null && !trackedPool.getDefinition().getQuests().containsKey(trackedQuestId)) {
+                    trackedPoolId = null;
+                    trackedQuestId = null;
+                }
             }
         }
 

@@ -45,6 +45,12 @@ public class MessageConfig extends AuroraConfig {
     private String questBookNotifyOff = "&cQuest book notification &ldisabled&r&c for &f{player}&c.";
     private String questBookDisabled = "&cThe quest book feature is disabled.";
     private String errorPrefix = "&cError: {message}";
+    private String questTracked = "&aYou are now tracking: {quest}";
+    private String questUntracked = "&aYou stopped tracking: {quest}";
+    private String questTrackToggled = "&aTracking toggled for {quest} on player {player}.";
+    private String questNotActive = "&cQuest {quest} is not active for player {player}.";
+    private String objectiveNotFound = "&cObjective {objective} not found in quest {quest}.";
+    private String objectiveAlreadyCompleted = "&cObjective {objective} is already completed for player {player}.";
     private TimerFormatConfig timerFormat = new TimerFormatConfig();
     private ConfigurationSection custom;
 
@@ -178,6 +184,12 @@ public class MessageConfig extends AuroraConfig {
                     yaml.set("config-version", 4);
                 },
                 (yaml) -> {
+                    yaml.set("quest-tracked", "&aYou are now tracking: {quest}");
+                    yaml.set("quest-untracked", "&aYou stopped tracking: {quest}");
+                    yaml.set("quest-track-toggled", "&aTracking toggled for {quest} on player {player}.");
+                    yaml.set("quest-not-active", "&cQuest {quest} is not active for player {player}.");
+                    yaml.set("objective-not-found", "&cObjective {objective} not found in quest {quest}.");
+                    yaml.set("objective-already-completed", "&cObjective {objective} is already completed for player {player}.");
                     yaml.set("quest-book-notify-on", "&aQuest book notification &lenabled&r&a for &f{player}&a.");
                     yaml.set("quest-book-notify-off", "&cQuest book notification &ldisabled&r&c for &f{player}&c.");
                     yaml.set("quest-book-disabled", "&cThe quest book feature is disabled.");

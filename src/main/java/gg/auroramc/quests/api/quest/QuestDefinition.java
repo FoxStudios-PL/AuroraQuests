@@ -22,8 +22,11 @@ public class QuestDefinition {
     private final List<String> uncompletedLore;
     private final LinkedHashMap<String, ObjectiveDefinition> tasks;
     private final LinkedHashMap<String, Reward> rewards;
-    private final boolean sequential;
     private final QuestRequirement requirements;
     private final QuestConfig.LevelUpMessage questCompleteMessage;
     private final QuestConfig.LevelUpSound questCompleteSound;
+    private final boolean linearObjectives;
+    private final String lockedObjectiveLore;
+    private final List<String> onTrack;
+    private final List<String> onUntrack;
 }

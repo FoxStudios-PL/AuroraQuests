@@ -27,6 +27,12 @@ quest-book-notify-on: "&aQuest book notification &lenabled&r&a for &f{player}&a.
 quest-book-notify-off: "&cQuest book notification &ldisabled&r&c for &f{player}&c."
 quest-book-disabled: "&cThe quest book feature is disabled."
 error-prefix: "&cError: {message}"
+quest-tracked: "&aYou are now tracking: {quest}"
+quest-untracked: "&aYou stopped tracking: {quest}"
+quest-track-toggled: "&aTracking toggled for {quest} on player {player}."
+quest-not-active: "&cQuest {quest} is not active for player {player}."
+objective-not-found: "&cObjective {objective} not found in quest {quest}."
+objective-already-completed: "&cObjective {objective} is already completed for player {player}."
 
 timer-format:
   short-format:

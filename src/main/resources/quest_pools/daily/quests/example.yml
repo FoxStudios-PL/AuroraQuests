@@ -26,18 +26,17 @@ completed-lore:
   - ""
   - "&aYou have completed this quest."
 
-# Optional: set "sequential: true" to make the tasks below behave as ordered
-# steps. Only the first unfinished task is tracked at a time; finishing it
-# unlocks the next one, in the order they are declared. Omit it (or set false)
-# to keep the default behavior where all tasks are tracked at once.
-#sequential: true
+# Optional: set "linear-objectives: true" to make the tasks below behave as
+# ordered steps (only the first unfinished task is tracked at a time, finishing
+# it unlocks the next). Omit it to keep the default where all tasks run at once.
+#linear-objectives: true
 
 tasks:
   # Task 1
   # Optional: a "rewards:" block can be added to ANY task (same format as the
   # quest "rewards:" at the bottom). It is granted the moment that task is
   # completed, instead of only at the end of the quest. Works with or without
-  # "sequential". Example:
+  # "linear-objectives". Example:
   #   rewards:
   #     money:
   #       type: money
