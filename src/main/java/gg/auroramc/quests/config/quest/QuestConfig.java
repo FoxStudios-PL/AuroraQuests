@@ -15,6 +15,7 @@ import java.util.Map;
 @Getter
 public class QuestConfig extends AuroraConfig {
     private String name;
+    private String chapter;
     private String difficulty;
     private ItemConfig menuItem;
     private List<String> lockedLore;

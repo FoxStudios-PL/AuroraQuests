@@ -15,6 +15,7 @@ public class ObjectiveDefinition {
     private final String id;
     private final String task;
     private final String display;
+    private final List<String> description;
     private final ConfigurationSection args;
     private final List<ObjectiveFilter> filters;
     private final List<String> onProgress;

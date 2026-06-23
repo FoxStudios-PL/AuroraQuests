@@ -14,6 +14,7 @@ These reflect the quest the player is currently tracking (`/quests track`).
 | Placeholder | Description |
 |---|---|
 | `%aurora_quests_tracked_name%` | Name of the currently tracked quest |
+| `%aurora_quests_tracked_chapter_name%` | `chapter` of the tracked quest (see Quest scoreboard) |
 | `%aurora_quests_tracked_quest_id%` | ID of the tracked quest |
 | `%aurora_quests_tracked_pool_id%` | Pool ID of the tracked quest |
 | `%aurora_quests_tracked_objective_current%` | Current objective number (1-based) |
@@ -36,6 +37,60 @@ All tracked placeholders return an empty string when no quest is being tracked.
 - Ids may contain underscores (e.g. `tutoriel_edynn`); they are resolved against the real ids.
 - An explicit colon form is also accepted: `%aurora_quests_is_at:<pool>:<quest>:<objective>%`.
 - Most meaningful for `linear-objectives` quests, where there is a single current step.
+
+---
+
+## Quest scoreboard
+
+An optional sidebar shown **only while a player is tracking a quest** (`/quests track`). Configured entirely in `config.yml` under `scoreboard:` and rendered with legacy (`&`), MiniMessage (`<#hex>`, `<yellow>`) and PlaceholderAPI support. Max 15 lines (Minecraft limit).
+
+### New quest fields
+
+```yaml
+name: "&6Tutoriel d'Edynn"
+chapter: "&eChapitre 1"          # optional; exposed as {chapter} and %aurora_quests_tracked_chapter_name%
+linear-objectives: true
+tasks:
+  choisir_classe:
+    display: "{status} &fChoose your class"
+    description:                  # optional; detailed lines for the current step on the scoreboard
+      - "&7Go to Hortense at spawn."
+      - "&7Pick the class that suits you."
+```
+
+### `config.yml`
+
+```yaml
+scoreboard:
+  enabled: false                 # turning on requires a restart; then /quests reload tunes it live
+  refresh-interval: 20           # ticks (20 = 1s)
+  title: "&6&lQUEST"
+  lines:
+    - ""
+    - "<#F7B700>{chapter} &7(&f{step}&7/&f{step_total}&7)"
+    - "<#dedede>{quest_name}"
+    - ""
+    - " &8• &fObjective: <yellow>{display}"
+    - " &8• &fRewards:"
+    - "    &7- &f{reward}"        # this line repeats once per reward of the current step
+    - ""
+    - "<#F7B700>Description"
+    - "{description}"             # this line repeats once per description line of the current step
+    - ""
+```
+
+### Tokens
+
+| Token | Value |
+|---|---|
+| `{chapter}` | the quest's `chapter` |
+| `{quest_name}` | the quest's `name` |
+| `{step}` / `{step_total}` | current step number / total steps |
+| `{display}` | current step's `display`, without the `{status}` icon and `{current}`/`{required}` counters |
+| `{reward}` | repeats the line once per reward of the current step (its `display`) |
+| `{description}` | repeats the line once per `description` line of the current step |
+
+Performance: only players with a tracked quest own a (per-player, Folia-safe) refresh task; everyone else costs nothing.
 
 ---
 

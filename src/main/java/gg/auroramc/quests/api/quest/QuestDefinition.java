@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 public class QuestDefinition {
     private final String id;
     private final String name;
+    private final String chapter;
     private final String difficulty;
     private final ItemConfig menuItem;
     private final List<String> lockedLore;

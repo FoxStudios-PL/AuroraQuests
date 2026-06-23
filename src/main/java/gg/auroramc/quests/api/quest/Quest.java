@@ -239,6 +239,10 @@ public class Quest extends EventBus {
                 && definition.getId().equals(questData.getTrackedQuestId())) {
             executeUntrackCommands();
             questData.clearTrackedQuest();
+            var scoreboardManager = AuroraQuests.getInstance().getScoreboardManager();
+            if (scoreboardManager != null) {
+                scoreboardManager.refresh(player);
+            }
         }
     }
 

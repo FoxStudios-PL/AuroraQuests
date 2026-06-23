@@ -326,5 +326,9 @@ public class QuestsCommand extends BaseCommand {
         }
         Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackToggled(),
                 Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
+
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
+        }
     }
 }

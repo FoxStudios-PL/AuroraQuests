@@ -107,6 +107,7 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         }
       return switch (key) {
         case "name" -> quest.getDefinition().getName();
+        case "chapter_name" -> quest.getDefinition().getChapter() != null ? quest.getDefinition().getChapter() : "";
         case "quest_id" -> quest.getId();
         case "pool_id" -> pool.getId();
         case "objective_current" -> String.valueOf(quest.getCurrentObjectiveIndex() + 1);
@@ -224,6 +225,7 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         list.add("total_completed_raw");
         list.add("total_completed");
         list.add("tracked_name");
+        list.add("tracked_chapter_name");
         list.add("tracked_quest_id");
         list.add("tracked_pool_id");
         list.add("tracked_objective_current");
