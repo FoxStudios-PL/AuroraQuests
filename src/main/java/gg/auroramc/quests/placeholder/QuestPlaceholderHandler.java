@@ -31,6 +31,10 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
             return handleTrackedPlaceholder(player, full.substring(8));
         }
 
+        if (full.startsWith("is_at:")) {
+            return handleIsAtPlaceholder(profile, full.substring(6));
+        }
+
         if (full.endsWith("total_completed_raw")) {
             var sum = profile.getQuestPools().stream().mapToLong(QuestPool::getCompletedQuestCount).sum();
             return String.valueOf(sum);
@@ -156,6 +160,33 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         return null;
     }
 
+    /**
+     * %quests_is_at:&lt;pool&gt;:&lt;quest&gt;:&lt;objective&gt;%  ->  "true" / "false"
+     * <p>
+     * Returns "true" only when the quest is active (started, not completed) and the
+     * player's current step is exactly the given objective. Colon-separated so that
+     * pool/quest/objective ids may freely contain underscores. Returns "false" for
+     * any not-applicable case, or null if the placeholder is malformed.
+     */
+    private String handleIsAtPlaceholder(Profile profile, String params) {
+        String[] parts = params.split(":", 3);
+        if (parts.length != 3) return null;
+
+        var pool = profile.getQuestPool(parts[0]);
+        if (pool == null) return "false";
+
+        var quest = pool.getQuest(parts[1]);
+        if (quest == null || quest.isCompleted() || !quest.isStarted()) return "false";
+
+        var objectives = quest.getObjectives();
+        for (int i = 0; i < objectives.size(); i++) {
+            if (objectives.get(i).getId().equals(parts[2])) {
+                return String.valueOf(quest.getCurrentObjectiveIndex() == i);
+            }
+        }
+        return "false";
+    }
+
     @Override
     public List<String> getPatterns() {
         var manager = AuroraQuests.getInstance().getPoolManager();
@@ -174,6 +205,7 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         list.add("tracked_required_amount");
         list.add("tracked_current_amount_raw");
         list.add("tracked_required_amount_raw");
+        list.add("is_at:<pool>:<quest>:<objective>");
 
         for (var pool : manager.getPoolIds()) {
             list.add(pool + "_level");
