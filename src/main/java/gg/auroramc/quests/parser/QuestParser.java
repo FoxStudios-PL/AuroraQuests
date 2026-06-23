@@ -7,11 +7,9 @@ import gg.auroramc.quests.api.quest.QuestRequirement;
 import gg.auroramc.quests.api.objective.ObjectiveDefinition;
 import gg.auroramc.quests.config.quest.QuestConfig;
 import gg.auroramc.quests.config.quest.StartRequirementConfig;
-import gg.auroramc.quests.config.quest.TaskConfig;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class QuestParser {
     public static QuestDefinition parse(QuestConfig config, RewardFactory rewardFactory) {
@@ -21,7 +19,7 @@ public class QuestParser {
                 .difficulty(config.getDifficulty())
                 .requirements(parseRequirement(config.getStartRequirements()))
                 .rewards(parseRewards(config.getRewards(), rewardFactory))
-                .tasks(parseTasks(config.getTasks(), rewardFactory))
+                .tasks(parseTasks(config, rewardFactory))
                 .menuItem(config.getMenuItem())
                 .completedLore(config.getCompletedLore())
                 .lockedLore(config.getLockedLore())
@@ -55,11 +53,31 @@ public class QuestParser {
         return rewards;
     }
 
-    private static LinkedHashMap<String, ObjectiveDefinition> parseTasks(Map<String, TaskConfig> map, RewardFactory rewardFactory) {
+    private static LinkedHashMap<String, ObjectiveDefinition> parseTasks(QuestConfig config, RewardFactory rewardFactory) {
         LinkedHashMap<String, ObjectiveDefinition> tasks = new LinkedHashMap<>();
 
-        for (String key : map.keySet()) {
-            tasks.put(key, ObjectiveParser.parse(key, map.get(key), rewardFactory));
+        var map = config.getTasks();
+        if (map == null || map.isEmpty()) return tasks;
+
+        // Aurora deserializes Map config fields into a HashMap, which loses the YAML
+        // declaration order. Recover the real order from the raw config (getKeys
+        // preserves it), so task display AND linear-objectives progression follow
+        // the order the tasks are written in.
+        var rawSection = config.getRawConfig() != null ? config.getRawConfig().getConfigurationSection("tasks") : null;
+        var order = rawSection != null ? rawSection.getKeys(false) : map.keySet();
+
+        for (String key : order) {
+            var taskConfig = map.get(key);
+            if (taskConfig != null) {
+                tasks.put(key, ObjectiveParser.parse(key, taskConfig, rewardFactory));
+            }
+        }
+
+        // Safety net: include any tasks not present in the raw order (should not happen).
+        for (var entry : map.entrySet()) {
+            if (!tasks.containsKey(entry.getKey())) {
+                tasks.put(entry.getKey(), ObjectiveParser.parse(entry.getKey(), entry.getValue(), rewardFactory));
+            }
         }
 
         return tasks;
