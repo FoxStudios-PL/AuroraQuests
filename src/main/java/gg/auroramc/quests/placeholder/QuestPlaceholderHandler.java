@@ -31,6 +31,10 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
             return handleTrackedPlaceholder(player, full.substring(8));
         }
 
+        if (full.startsWith("is_at_") || full.startsWith("is_at:")) {
+            return handleIsAtPlaceholder(profile, full.substring(6));
+        }
+
         if (full.endsWith("total_completed_raw")) {
             var sum = profile.getQuestPools().stream().mapToLong(QuestPool::getCompletedQuestCount).sum();
             return String.valueOf(sum);
@@ -156,6 +160,61 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         return null;
     }
 
+    /**
+     * Tells whether the player's current step in a quest is exactly a given objective.
+     * <pre>
+     *   %aurora_quests_is_at_&lt;pool&gt;_&lt;quest&gt;_&lt;objective&gt;%   (natural form)
+     *   %aurora_quests_is_at:&lt;pool&gt;:&lt;quest&gt;:&lt;objective&gt;%   (explicit form)
+     * </pre>
+     * Returns "true" only when the quest is active (started, not completed) and its
+     * current step (Quest#getCurrentObjectiveIndex) is that objective; "false" for any
+     * not-applicable case; null only if the placeholder is malformed.
+     * <p>
+     * The underscore form is resolved against the player's real pool/quest/objective
+     * ids, so ids may freely contain underscores (e.g. "tutoriel_edynn").
+     */
+    private String handleIsAtPlaceholder(Profile profile, String params) {
+        // Explicit colon form — unambiguous, O(1).
+        if (params.indexOf(':') >= 0) {
+            String[] parts = params.split(":", 3);
+            if (parts.length != 3) return null;
+            var pool = profile.getQuestPool(parts[0]);
+            var result = pool == null ? null : isAtResult(pool.getQuest(parts[1]), parts[2]);
+            return result != null ? result : "false";
+        }
+
+        // Natural underscore form — resolve greedily against known ids, since pool,
+        // quest and objective ids can all contain underscores.
+        for (var pool : profile.getQuestPools()) {
+            var poolPrefix = pool.getId() + "_";
+            if (!params.startsWith(poolPrefix)) continue;
+            var afterPool = params.substring(poolPrefix.length());
+            for (var quest : pool.getQuests()) {
+                var questPrefix = quest.getId() + "_";
+                if (!afterPool.startsWith(questPrefix)) continue;
+                var result = isAtResult(quest, afterPool.substring(questPrefix.length()));
+                if (result != null) return result;
+            }
+        }
+        return "false";
+    }
+
+    /**
+     * "true"/"false" if {@code objectiveId} belongs to the quest, otherwise null so the
+     * underscore resolver can keep trying other pool/quest splits.
+     */
+    private String isAtResult(Quest quest, String objectiveId) {
+        if (quest == null) return null;
+        var objectives = quest.getObjectives();
+        for (int i = 0; i < objectives.size(); i++) {
+            if (objectives.get(i).getId().equals(objectiveId)) {
+                if (quest.isCompleted() || !quest.isStarted()) return "false";
+                return String.valueOf(quest.getCurrentObjectiveIndex() == i);
+            }
+        }
+        return null;
+    }
+
     @Override
     public List<String> getPatterns() {
         var manager = AuroraQuests.getInstance().getPoolManager();
@@ -174,6 +233,7 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         list.add("tracked_required_amount");
         list.add("tracked_current_amount_raw");
         list.add("tracked_required_amount_raw");
+        list.add("is_at_<pool>_<quest>_<objective>");
 
         for (var pool : manager.getPoolIds()) {
             list.add(pool + "_level");
