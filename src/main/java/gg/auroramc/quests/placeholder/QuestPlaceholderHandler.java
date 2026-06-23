@@ -163,8 +163,8 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
     /**
      * Tells whether the player's current step in a quest is exactly a given objective.
      * <pre>
-     *   %quests_is_at_&lt;pool&gt;_&lt;quest&gt;_&lt;objective&gt;%   (natural form)
-     *   %quests_is_at:&lt;pool&gt;:&lt;quest&gt;:&lt;objective&gt;%   (explicit form)
+     *   %aurora_quests_is_at_&lt;pool&gt;_&lt;quest&gt;_&lt;objective&gt;%   (natural form)
+     *   %aurora_quests_is_at:&lt;pool&gt;:&lt;quest&gt;:&lt;objective&gt;%   (explicit form)
      * </pre>
      * Returns "true" only when the quest is active (started, not completed) and its
      * current step (Quest#getCurrentObjectiveIndex) is that objective; "false" for any
