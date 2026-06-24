@@ -121,6 +121,9 @@ public class Config extends AuroraConfig {
         private List<String> onTrack = List.of();
         private List<String> onUntrack = List.of();
         private List<String> trackedLore = List.of();
+        // When true, /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
+        // only if the player has no other quest in progress.
+        private Boolean autoTrackOnUnlock = false;
     }
 
     @Getter
@@ -249,6 +252,13 @@ public class Config extends AuroraConfig {
                             ""
                     ));
                     yaml.set("config-version", 6);
+                },
+                (yaml) -> {
+                    yaml.set("tracking.auto-track-on-unlock", false);
+                    yaml.setComments("tracking.auto-track-on-unlock", List.of(
+                            "When true: unlocking a quest via /quests unlock auto-tracks it (so the",
+                            "scoreboard appears) ONLY if the player has no other quest in progress."));
+                    yaml.set("config-version", 7);
                 }
         );
     }

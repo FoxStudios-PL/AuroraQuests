@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 6
+config-version: 7
 
 debug: false
 language: en
@@ -35,6 +35,9 @@ tracking:
   on-untrack: []
   tracked-lore:
     - "&e&l► TRACKED"
+  # When true: /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
+  # ONLY if the player has no other quest in progress.
+  auto-track-on-unlock: false
 
 leaderboards:
   # How many players should be cached for each quest pool?

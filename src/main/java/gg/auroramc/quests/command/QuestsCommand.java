@@ -126,12 +126,42 @@ public class QuestsCommand extends BaseCommand {
         if (!quest.isUnlocked()) {
             // Will unlock any locked quest, not just the ones that have manual-unlock requirement
             quest.start(true);
+
+            autoTrackOnUnlock(target, profile, pool, quest);
+
             if (!silent) {
                 Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
             }
         } else {
             Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
         }
+    }
+
+    /**
+     * Auto-tracks a freshly unlocked quest (so the scoreboard appears) when enabled in
+     * config and the player has no other quest in progress. Reuses the existing tracked
+     * state (already persisted) — no new data is stored.
+     */
+    private void autoTrackOnUnlock(Player target, Profile profile, QuestPool pool, Quest quest) {
+        if (!Boolean.TRUE.equals(plugin.getConfigManager().getConfig().getTracking().getAutoTrackOnUnlock())) return;
+        if (hasOtherActiveQuest(profile, quest)) return;
+
+        AuroraAPI.getUser(target.getUniqueId()).getData(QuestData.class).setTrackedQuest(pool.getId(), quest.getId());
+        quest.executeTrackCommands();
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
+        }
+    }
+
+    private boolean hasOtherActiveQuest(Profile profile, Quest unlocked) {
+        for (var questPool : profile.getQuestPools()) {
+            for (var q : questPool.getQuests()) {
+                if (q != unlocked && q.isStarted() && !q.isCompleted()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Subcommand("complete")
