@@ -222,7 +222,10 @@ public class QuestsCommand extends BaseCommand {
                         Placeholder.of("{objective}", targetObjective), Placeholder.of("{player}", target.getName()));
                 return;
             }
-            objective.complete(isSilent);
+            // Always complete non-silently so TASK_COMPLETED fires (runs on-complete, grants
+            // rewards and, in linear quests, starts/activates the next objective). The command's
+            // "silent" flag only suppresses the admin chat feedback below, not quest progression.
+            objective.complete(false);
 
             if (!isSilent) {
                 Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(),
