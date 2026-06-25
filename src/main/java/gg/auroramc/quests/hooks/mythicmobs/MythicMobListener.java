@@ -2,8 +2,11 @@ package gg.auroramc.quests.hooks.mythicmobs;
 
 import gg.auroramc.aurora.api.AuroraAPI;
 import gg.auroramc.aurora.api.item.TypeId;
+import gg.auroramc.quests.AuroraQuests;
+import gg.auroramc.quests.api.event.objective.PlayerDealDamageEvent;
 import gg.auroramc.quests.api.event.objective.PlayerKillMobEvent;
 import gg.auroramc.quests.api.event.objective.PlayerLootEvent;
+import io.lumine.mythic.bukkit.events.MythicDamageEvent;
 import io.lumine.mythic.bukkit.events.MythicMobDeathEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -30,5 +33,20 @@ public class MythicMobListener implements Listener {
             var dropId = AuroraAPI.getItemManager().resolveId(drop);
             Bukkit.getPluginManager().callEvent(new PlayerLootEvent(player, dropId, drop.getAmount(), PlayerLootEvent.Source.ENTITY));
         }
+    }
+
+    // Bridges player-cast MythicMobs skill damage into DEAL_DAMAGE objectives (count-skill-damage).
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onMythicDamage(MythicDamageEvent e) {
+        var casterEntity = e.getCaster().getEntity().getBukkitEntity();
+        if (!(casterEntity instanceof Player player)) return;
+        if (e.getTarget() == null) return;
+        var target = e.getTarget().getBukkitEntity();
+        if (target == null) return;
+
+        AuroraQuests.logger().info("[AQ-DEBUG] MythicDamage fired: caster=" + player.getName()
+                + " target=" + target.getType() + " damage=" + e.getDamage());
+
+        Bukkit.getPluginManager().callEvent(new PlayerDealDamageEvent(player, target, e.getDamage()));
     }
 }
