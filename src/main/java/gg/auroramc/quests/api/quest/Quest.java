@@ -235,15 +235,19 @@ public class Quest extends EventBus {
 
     /** Refreshes the scoreboard immediately when this quest is the player's tracked quest. */
     private void refreshScoreboard() {
-        var scoreboardManager = AuroraQuests.getInstance().getScoreboardManager();
-        if (scoreboardManager == null) return;
-        Player player = data.profile().getPlayer();
-        if (player == null) return;
-        QuestData questData = AuroraAPI.getUser(player.getUniqueId()).getData(QuestData.class);
-        if (questData.hasTrackedQuest()
-                && pool.getId().equals(questData.getTrackedPoolId())
-                && definition.getId().equals(questData.getTrackedQuestId())) {
-            scoreboardManager.refresh(player);
+        try {
+            var scoreboardManager = AuroraQuests.getInstance().getScoreboardManager();
+            if (scoreboardManager == null) return;
+            Player player = data.profile().getPlayer();
+            if (player == null) return;
+            QuestData questData = AuroraAPI.getUser(player.getUniqueId()).getData(QuestData.class);
+            if (questData.hasTrackedQuest()
+                    && pool.getId().equals(questData.getTrackedPoolId())
+                    && definition.getId().equals(questData.getTrackedQuestId())) {
+                scoreboardManager.refresh(player);
+            }
+        } catch (Exception e) {
+            AuroraQuests.logger().warning("[AQ] scoreboard refresh failed: " + e);
         }
     }
 
