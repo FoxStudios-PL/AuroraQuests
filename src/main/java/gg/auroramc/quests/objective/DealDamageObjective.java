@@ -1,7 +1,6 @@
 package gg.auroramc.quests.objective;
 
 import gg.auroramc.aurora.api.AuroraAPI;
-import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.event.objective.PlayerDealDamageEvent;
 import gg.auroramc.quests.api.objective.ObjectiveDefinition;
 import gg.auroramc.quests.api.objective.TypedObjective;
@@ -23,9 +22,6 @@ public class DealDamageObjective extends TypedObjective {
 
     @Override
     protected void activate() {
-        AuroraQuests.logger().info("[AQ-DEBUG] DEAL_DAMAGE activate: objective=" + definition.getId()
-                + " countSkillDamage=" + countSkillDamage
-                + " configTypes=" + definition.getArgs().getStringList("types"));
         onEvent(EntityDamageByEntityEvent.class, this::handle, EventPriority.MONITOR);
         if (countSkillDamage) {
             onEvent(PlayerDealDamageEvent.class, this::handleSkillDamage, EventPriority.MONITOR);
@@ -44,17 +40,14 @@ public class DealDamageObjective extends TypedObjective {
         progress(event.getFinalDamage(), meta(id));
     }
 
+    // Counts damage dealt by player-cast MythicMobs skills (bridged via the MythicMobs hook).
+    // Matches the player by UUID since the bridged reference may differ from the live profile player.
     public void handleSkillDamage(PlayerDealDamageEvent event) {
-        boolean mine = event.getPlayer().getUniqueId().equals(data.profile().getPlayer().getUniqueId());
-        AuroraQuests.logger().info("[AQ-DEBUG] DEAL_DAMAGE skill-damage reached: eventPlayer=" + event.getPlayer().getName()
-                + " mine=" + mine + " target=" + event.getTarget().getType() + " damage=" + event.getDamage());
-        if (!mine) return;
+        if (!event.getPlayer().getUniqueId().equals(data.profile().getPlayer().getUniqueId())) return;
         if (event.getTarget() instanceof Player && !countPlayerDamage) {
             return;
         }
         var id = AuroraAPI.getEntityManager().resolveId(event.getTarget());
-        AuroraQuests.logger().info("[AQ-DEBUG] DEAL_DAMAGE skill-damage progress: resolvedId=" + id
-                + " configTypes=" + definition.getArgs().getStringList("types"));
         progress(event.getDamage(), meta(id));
     }
 }

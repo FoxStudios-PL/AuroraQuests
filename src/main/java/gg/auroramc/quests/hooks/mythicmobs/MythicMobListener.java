@@ -2,7 +2,6 @@ package gg.auroramc.quests.hooks.mythicmobs;
 
 import gg.auroramc.aurora.api.AuroraAPI;
 import gg.auroramc.aurora.api.item.TypeId;
-import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.event.objective.PlayerDealDamageEvent;
 import gg.auroramc.quests.api.event.objective.PlayerKillMobEvent;
 import gg.auroramc.quests.api.event.objective.PlayerLootEvent;
@@ -43,9 +42,6 @@ public class MythicMobListener implements Listener {
         if (e.getTarget() == null) return;
         var target = e.getTarget().getBukkitEntity();
         if (target == null) return;
-
-        AuroraQuests.logger().info("[AQ-DEBUG] MythicDamage fired: caster=" + player.getName()
-                + " target=" + target.getType() + " damage=" + e.getDamage());
 
         Bukkit.getPluginManager().callEvent(new PlayerDealDamageEvent(player, target, e.getDamage()));
     }

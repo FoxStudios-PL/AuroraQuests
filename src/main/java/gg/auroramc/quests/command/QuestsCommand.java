@@ -282,6 +282,9 @@ public class QuestsCommand extends BaseCommand {
         var quest = pool.getQuest(questId);
         if (questId.equals("all")) {
             pool.resetAllQuestProgress();
+            if (plugin.getScoreboardManager() != null) {
+                plugin.getScoreboardManager().refresh(target);
+            }
             if (!silent) {
                 Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestReset(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", "all"));
             }
@@ -296,6 +299,10 @@ public class QuestsCommand extends BaseCommand {
             quest.start(false);
         } else if (pool.isRolledQuest(quest)) {
             quest.start(false);
+        }
+
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
         }
 
         if (!silent) {
