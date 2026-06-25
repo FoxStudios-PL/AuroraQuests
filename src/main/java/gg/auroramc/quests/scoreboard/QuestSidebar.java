@@ -1,5 +1,6 @@
 package gg.auroramc.quests.scoreboard;
 
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -38,6 +39,8 @@ public class QuestSidebar {
         this.board = Bukkit.getScoreboardManager().getNewScoreboard();
         this.objective = board.registerNewObjective("aq_quests", Criteria.DUMMY, title);
         this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        // Hide the red score numbers shown on the right of each line (Paper 1.20.3+).
+        this.objective.numberFormat(NumberFormat.blank());
         for (int i = 0; i < ENTRIES.size(); i++) {
             Team team = board.registerNewTeam("aq_line_" + i);
             team.addEntry(ENTRIES.get(i));

@@ -46,10 +46,13 @@ public class ScoreboardRenderer {
                 continue;
             }
             if (line.contains("{reward}")) {
-                if (current != null) {
+                if (current != null && !current.getDefinition().getRewards().isEmpty()) {
                     for (var reward : current.getDefinition().getRewards().values()) {
                         out.add(Text.component(player, line, withExtra(base, Placeholder.of("{reward}", reward.getDisplay(player, base)))));
                     }
+                } else {
+                    // No reward on this step: render the line once with a dash instead of dropping it.
+                    out.add(Text.component(player, line, withExtra(base, Placeholder.of("{reward}", "&c/"))));
                 }
             } else if (line.contains("{description}")) {
                 if (current != null && current.getDefinition().getDescription() != null) {
