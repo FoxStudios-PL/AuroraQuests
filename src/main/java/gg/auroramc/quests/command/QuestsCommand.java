@@ -229,6 +229,10 @@ public class QuestsCommand extends BaseCommand {
                         Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId + "/" + targetObjective));
             }
         }
+
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
+        }
     }
 
     @Subcommand("notify")
