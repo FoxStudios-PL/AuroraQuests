@@ -1,5 +1,6 @@
 package gg.auroramc.quests.scoreboard;
 
+import gg.auroramc.aurora.api.AuroraAPI;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.aurora.api.message.Text;
 import gg.auroramc.quests.api.objective.Objective;
@@ -67,13 +68,13 @@ public class ScoreboardRenderer {
         return out;
     }
 
-    /** The step's display text without the {status} icon and {current}/{required} counters. */
+    /** The step's display with {current}/{required} resolved to live values and the menu-only {status} icon removed. */
     private static String cleanDisplay(Objective objective) {
         String display = objective.getDefinition().getDisplay();
         if (display == null) return "";
         return display.replace("{status}", "")
-                .replace("{current}", "")
-                .replace("{required}", "")
+                .replace("{current}", AuroraAPI.formatNumber(objective.getProgress()))
+                .replace("{required}", AuroraAPI.formatNumber(objective.getTarget()))
                 .trim();
     }
 
