@@ -10,6 +10,7 @@ import java.util.List;
 public class TaskConfig {
     private String task;
     private String display;
+    private List<String> description = new ArrayList<>();
     private ConfigurationSection args;
     private FilterConfig filters;
     private List<String> onProgress = new ArrayList<>();

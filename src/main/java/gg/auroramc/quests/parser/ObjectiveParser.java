@@ -18,6 +18,7 @@ public class ObjectiveParser {
         return ObjectiveDefinition.builder()
                 .id(id)
                 .display(config.getDisplay())
+                .description(config.getDescription())
                 .task(config.getTask())
                 .args(config.getArgs())
                 .filters(parseFilters(config.getFilters()))

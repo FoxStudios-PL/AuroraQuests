@@ -16,6 +16,7 @@ public class QuestParser {
         return QuestDefinition.builder()
                 .id(config.getId())
                 .name(config.getName())
+                .chapter(config.getChapter())
                 .difficulty(config.getDifficulty())
                 .requirements(parseRequirement(config.getStartRequirements()))
                 .rewards(parseRewards(config.getRewards(), rewardFactory))
