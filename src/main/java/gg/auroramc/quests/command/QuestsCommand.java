@@ -126,6 +126,17 @@ public class QuestsCommand extends BaseCommand {
         if (!quest.isUnlocked()) {
             // Will unlock any locked quest, not just the ones that have manual-unlock requirement
             quest.start(true);
+
+            // Auto-track the freshly unlocked quest, but only if the player has no quest tracked yet
+            // (one quest tracked at a time). Other unlock paths and the GUI/track command are untouched.
+            if (plugin.getConfigManager().getConfig().getTracking().isAutoTrackOnUnlock()) {
+                QuestData questData = AuroraAPI.getUser(target.getUniqueId()).getData(QuestData.class);
+                if (!questData.hasTrackedQuest()) {
+                    questData.setTrackedQuest(poolId, questId);
+                    quest.executeTrackCommands();
+                }
+            }
+
             if (!silent) {
                 Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
             }

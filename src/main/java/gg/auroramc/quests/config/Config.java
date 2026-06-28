@@ -120,6 +120,7 @@ public class Config extends AuroraConfig {
         private List<String> onTrack = List.of();
         private List<String> onUntrack = List.of();
         private List<String> trackedLore = List.of();
+        private boolean autoTrackOnUnlock = true;
     }
 
     public static File getFile(AuroraQuests plugin) {
@@ -209,6 +210,14 @@ public class Config extends AuroraConfig {
                     yaml.set("quest-book.new-quest-state.sound.pitch", 1.2);
 
                     yaml.set("config-version", 5);
+                },
+                (yaml) -> {
+                    yaml.set("tracking.auto-track-on-unlock", true);
+                    yaml.setComments("tracking.auto-track-on-unlock", List.of(
+                            "When the unlock command unlocks a quest, automatically track it",
+                            "— but only if the player has no quest currently tracked."));
+
+                    yaml.set("config-version", 6);
                 }
         );
     }
