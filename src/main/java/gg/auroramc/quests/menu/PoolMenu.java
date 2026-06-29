@@ -11,6 +11,7 @@ import gg.auroramc.quests.api.event.objective.PlayerTakeItemEvent;
 import gg.auroramc.quests.api.objective.ObjectiveType;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
+import gg.auroramc.quests.api.quest.QuestTracker;
 import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.config.Config;
 import gg.auroramc.quests.config.MessageConfig;
@@ -153,9 +154,7 @@ public class PoolMenu {
                     extraLore.addAll(quest.getDefinition().getUncompletedLore());
                 }
             }
-            boolean isTracked = questData.hasTrackedQuest()
-                    && pool.getId().equals(questData.getTrackedPoolId())
-                    && quest.getId().equals(questData.getTrackedQuestId());
+            boolean isTracked = questData.isTracking(pool.getId(), quest.getId());
 
             if (isTracked && trackingConfig.getTrackedLore() != null) {
                 extraLore.addAll(trackingConfig.getTrackedLore());
@@ -266,29 +265,17 @@ public class PoolMenu {
 
     private void toggleTracking(Player player, Quest quest, QuestData questData) {
         MessageConfig msgConfig = AuroraQuests.getInstance().getConfigManager().getMessageConfig(player);
-        boolean isCurrentlyTracked = questData.hasTrackedQuest()
-                && pool.getId().equals(questData.getTrackedPoolId())
-                && quest.getId().equals(questData.getTrackedQuestId());
+        int max = AuroraQuests.getInstance().getConfigManager().getConfig().getTracking().getMaxTrackedQuests();
+        var result = QuestTracker.toggle(profile, pool, quest, questData, max);
 
-        if (isCurrentlyTracked) {
-            quest.executeUntrackCommands();
-            questData.clearTrackedQuest();
-            Chat.sendMessage(player, msgConfig.getQuestUntracked(), Placeholder.of("{quest}", quest.getDefinition().getName()));
-        } else {
-            if (questData.hasTrackedQuest()) {
-                QuestPool oldPool = profile.getQuestPool(questData.getTrackedPoolId());
-
-                if (oldPool != null) {
-                    Quest oldQuest = oldPool.getQuest(questData.getTrackedQuestId());
-
-                    if (oldQuest != null) {
-                        oldQuest.executeUntrackCommands();
-                    }
-                }
-            }
-            questData.setTrackedQuest(pool.getId(), quest.getId());
-            quest.executeTrackCommands();
-            Chat.sendMessage(player, msgConfig.getQuestTracked(), Placeholder.of("{quest}", quest.getDefinition().getName()));
+        switch (result) {
+            case UNTRACKED -> Chat.sendMessage(player, msgConfig.getQuestUntracked(),
+                    Placeholder.of("{quest}", quest.getDefinition().getName()));
+            case QUEUE_FULL -> Chat.sendMessage(player, msgConfig.getQuestTrackQueueFull(),
+                    Placeholder.of("{quest}", quest.getDefinition().getName()),
+                    Placeholder.of("{max}", String.valueOf(max)));
+            default -> Chat.sendMessage(player, msgConfig.getQuestTracked(),
+                    Placeholder.of("{quest}", quest.getDefinition().getName()));
         }
     }
 

@@ -120,6 +120,8 @@ public class Config extends AuroraConfig {
         private List<String> onTrack = List.of();
         private List<String> onUntrack = List.of();
         private List<String> trackedLore = List.of();
+        private boolean autoTrackOnUnlock = true;
+        private int maxTrackedQuests = 5;
     }
 
     public static File getFile(AuroraQuests plugin) {
@@ -209,6 +211,23 @@ public class Config extends AuroraConfig {
                     yaml.set("quest-book.new-quest-state.sound.pitch", 1.2);
 
                     yaml.set("config-version", 5);
+                },
+                (yaml) -> {
+                    yaml.set("tracking.auto-track-on-unlock", true);
+                    yaml.setComments("tracking.auto-track-on-unlock", List.of(
+                            "When the unlock command unlocks a quest, automatically track it",
+                            "— but only if the player has no quest currently tracked."));
+
+                    yaml.set("config-version", 6);
+                },
+                (yaml) -> {
+                    yaml.set("tracking.max-tracked-quests", 5);
+                    yaml.setComments("tracking.max-tracked-quests", List.of(
+                            "Maximum number of quests a player can track at once (tracking queue).",
+                            "Only the first tracked quest is shown (placeholders/scoreboard); when it is",
+                            "completed, the next tracked quest takes its place. Use 0 or less for unlimited."));
+
+                    yaml.set("config-version", 7);
                 }
         );
     }

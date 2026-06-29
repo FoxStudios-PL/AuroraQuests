@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 5
+config-version: 7
 
 debug: false
 language: en
@@ -30,11 +30,18 @@ sort-order: [ "easy", "medium", "hard" ]
 # on-track: commands to execute when a player tracks a quest (supports {player}, {quest}, {quest_id}, {pool_id} placeholders)
 # on-untrack: commands to execute when a player untracks a quest
 # tracked-lore: extra lore lines appended to the quest menu item when it is being tracked
+# auto-track-on-unlock: when the unlock command unlocks a quest, automatically track it
+#                       — but only if the player has no quest currently tracked.
+# max-tracked-quests: maximum number of quests a player can track at once (tracking queue).
+#                     Only the first tracked quest is shown (placeholders/scoreboard); when it is
+#                     completed, the next tracked quest takes its place. Use 0 or less for unlimited.
 tracking:
   on-track: []
   on-untrack: []
   tracked-lore:
     - "&e&l► TRACKED"
+  auto-track-on-unlock: true
+  max-tracked-quests: 5
 
 leaderboards:
   # How many players should be cached for each quest pool?

@@ -234,12 +234,13 @@ public class Quest extends EventBus {
         Player player = data.profile().getPlayer();
         QuestData questData = AuroraAPI.getUser(player.getUniqueId()).getData(QuestData.class);
 
-        if (questData.hasTrackedQuest()
-                && pool.getId().equals(questData.getTrackedPoolId())
-                && definition.getId().equals(questData.getTrackedQuestId())) {
-            executeUntrackCommands();
-            questData.clearTrackedQuest();
-        }
+        if (!questData.isTracking(pool.getId(), definition.getId())) return;
+
+        // Removing the completed quest from the queue lets the next tracked quest take its place as head.
+        boolean wasHead = questData.isHeadTrackedQuest(pool.getId(), definition.getId());
+        if (wasHead) executeUntrackCommands();
+        questData.removeTrackedQuest(pool.getId(), definition.getId());
+        if (wasHead) QuestTracker.runHeadTrackCommands(data.profile(), questData);
     }
 
     public void executeTrackCommands() {
