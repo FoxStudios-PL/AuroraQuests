@@ -10,6 +10,7 @@ import gg.auroramc.quests.api.data.QuestData;
 import gg.auroramc.quests.api.objective.Objective;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
+import gg.auroramc.quests.api.quest.QuestTracker;
 import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.menu.MainMenu;
 import gg.auroramc.quests.menu.PoolMenu;
@@ -129,12 +130,10 @@ public class QuestsCommand extends BaseCommand {
 
             // Auto-track the freshly unlocked quest, but only if the player has no quest tracked yet
             // (one quest tracked at a time). Other unlock paths and the GUI/track command are untouched.
-            if (plugin.getConfigManager().getConfig().getTracking().isAutoTrackOnUnlock()) {
+            var trackingConfig = plugin.getConfigManager().getConfig().getTracking();
+            if (trackingConfig.isAutoTrackOnUnlock()) {
                 QuestData questData = AuroraAPI.getUser(target.getUniqueId()).getData(QuestData.class);
-                if (!questData.hasTrackedQuest()) {
-                    questData.setTrackedQuest(poolId, questId);
-                    quest.executeTrackCommands();
-                }
+                QuestTracker.enqueueFromUnlock(profile, pool, quest, questData, trackingConfig.getMaxTrackedQuests());
             }
 
             if (!silent) {
@@ -313,28 +312,16 @@ public class QuestsCommand extends BaseCommand {
             return;
         }
         QuestData questData = AuroraAPI.getUser(target.getUniqueId()).getData(QuestData.class);
-        boolean isCurrentlyTracked = questData.hasTrackedQuest()
-                && poolId.equals(questData.getTrackedPoolId())
-                && questId.equals(questData.getTrackedQuestId());
+        int max = plugin.getConfigManager().getConfig().getTracking().getMaxTrackedQuests();
+        var result = QuestTracker.toggle(profile, pool, quest, questData, max);
 
-        if (isCurrentlyTracked) {
-            quest.executeUntrackCommands();
-            questData.clearTrackedQuest();
-        } else {
-            if (questData.hasTrackedQuest()) {
-                QuestPool oldPool = profile.getQuestPool(questData.getTrackedPoolId());
-
-                if (oldPool != null) {
-                    Quest oldQuest = oldPool.getQuest(questData.getTrackedQuestId());
-
-                    if (oldQuest != null) {
-                        oldQuest.executeUntrackCommands();
-                    }
-                }
-            }
-            questData.setTrackedQuest(poolId, questId);
-            quest.executeTrackCommands();
+        if (result == QuestTracker.ToggleResult.QUEUE_FULL) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackQueueFull(),
+                    Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()),
+                    Placeholder.of("{max}", String.valueOf(max)));
+            return;
         }
+
         Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackToggled(),
                 Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
     }

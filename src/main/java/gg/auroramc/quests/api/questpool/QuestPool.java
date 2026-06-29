@@ -10,6 +10,7 @@ import gg.auroramc.quests.api.event.EventType;
 import gg.auroramc.quests.api.event.QuestPoolLevelUpEvent;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
+import gg.auroramc.quests.api.quest.QuestTracker;
 import gg.auroramc.quests.util.RewardUtil;
 import gg.auroramc.quests.util.RomanNumber;
 import gg.auroramc.quests.util.SoundUtil;
@@ -313,15 +314,22 @@ public class QuestPool {
         if (!questData.hasTrackedQuest()) {
           return;
         }
-        if (!getId().equals(questData.getTrackedPoolId())) {
-          return;
-        }
-        Quest trackedQuest = quests.get(questData.getTrackedQuestId());
+        var head = questData.getHeadTrackedQuest();
+        boolean headInThisPool = head != null && getId().equals(head.poolId());
 
-        if (trackedQuest != null) {
-            trackedQuest.executeUntrackCommands();
+        if (headInThisPool) {
+            Quest trackedQuest = quests.get(head.questId());
+            if (trackedQuest != null) {
+                trackedQuest.executeUntrackCommands();
+            }
         }
-        questData.clearTrackedQuest();
+
+        // Drop every queued quest belonging to this pool (its quests just got rerolled/reset).
+        questData.removeTrackedQuestsByPool(getId());
+
+        if (headInThisPool) {
+            QuestTracker.runHeadTrackCommands(profile, questData);
+        }
     }
 
 }

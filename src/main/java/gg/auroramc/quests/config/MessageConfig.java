@@ -48,6 +48,7 @@ public class MessageConfig extends AuroraConfig {
     private String questTracked = "&aYou are now tracking: {quest}";
     private String questUntracked = "&aYou stopped tracking: {quest}";
     private String questTrackToggled = "&aTracking toggled for {quest} on player {player}.";
+    private String questTrackQueueFull = "&cYou are already tracking the maximum number of quests ({max}).";
     private String questNotActive = "&cQuest {quest} is not active for player {player}.";
     private String objectiveNotFound = "&cObjective {objective} not found in quest {quest}.";
     private String objectiveAlreadyCompleted = "&cObjective {objective} is already completed for player {player}.";
@@ -194,6 +195,10 @@ public class MessageConfig extends AuroraConfig {
                     yaml.set("quest-book-notify-off", "&cQuest book notification &ldisabled&r&c for &f{player}&c.");
                     yaml.set("quest-book-disabled", "&cThe quest book feature is disabled.");
                     yaml.set("config-version", 5);
+                },
+                (yaml) -> {
+                    yaml.set("quest-track-queue-full", "&cYou are already tracking the maximum number of quests ({max}).");
+                    yaml.set("config-version", 6);
                 }
         );
     }
