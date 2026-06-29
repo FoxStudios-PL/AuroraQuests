@@ -210,6 +210,12 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         for (int i = 0; i < objectives.size(); i++) {
             if (objectives.get(i).getId().equals(objectiveId)) {
                 if (quest.isCompleted() || !quest.isStarted()) return "false";
+                // Non-linear quests run every objective in parallel, so the player is "at" any
+                // objective that is still pending; there is no single current step.
+                if (!quest.getDefinition().isLinearObjectives()) {
+                    return String.valueOf(!objectives.get(i).isCompleted());
+                }
+                // Linear quests have exactly one current step: the first not-yet-completed objective.
                 return String.valueOf(quest.getCurrentObjectiveIndex() == i);
             }
         }
