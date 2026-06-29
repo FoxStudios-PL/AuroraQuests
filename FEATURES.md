@@ -11,6 +11,13 @@
 
 These reflect the quest the player is currently tracking (`/quests track`).
 
+> **Tracking queue:** a player can track several quests at once. They form an ordered
+> queue and **only the first one is "visible"** — the `tracked_*` placeholders (and the
+> scoreboard, when available) always reflect the **head** of the queue. When the head
+> quest is completed it is removed and the next tracked quest takes its place
+> automatically. The maximum queue size is set by `tracking.max-tracked-quests` in
+> `config.yml` (default `5`, use `0` or less for unlimited).
+
 | Placeholder | Description |
 |---|---|
 | `%aurora_quests_tracked_name%` | Name of the currently tracked quest |

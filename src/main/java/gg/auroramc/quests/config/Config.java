@@ -123,7 +123,11 @@ public class Config extends AuroraConfig {
         private List<String> trackedLore = List.of();
         // When true, /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
         // only if the player has no other quest in progress.
-        private Boolean autoTrackOnUnlock = false;
+        private boolean autoTrackOnUnlock = false;
+        // Maximum number of quests a player can track at once (tracking queue).
+        // Only the first is shown (placeholders/scoreboard); when it is completed, the
+        // next tracked quest takes its place. Use 0 or less for unlimited.
+        private int maxTrackedQuests = 5;
     }
 
     @Getter
@@ -259,6 +263,14 @@ public class Config extends AuroraConfig {
                             "When true: unlocking a quest via /quests unlock auto-tracks it (so the",
                             "scoreboard appears) ONLY if the player has no other quest in progress."));
                     yaml.set("config-version", 7);
+                },
+                (yaml) -> {
+                    yaml.set("tracking.max-tracked-quests", 5);
+                    yaml.setComments("tracking.max-tracked-quests", List.of(
+                            "Maximum number of quests a player can track at once (tracking queue).",
+                            "Only the first tracked quest is shown (placeholders/scoreboard); when it is",
+                            "completed, the next tracked quest takes its place. Use 0 or less for unlimited."));
+                    yaml.set("config-version", 8);
                 }
         );
     }

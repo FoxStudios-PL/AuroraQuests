@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 7
+config-version: 8
 
 debug: false
 language: en
@@ -38,6 +38,10 @@ tracking:
   # When true: /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
   # ONLY if the player has no other quest in progress.
   auto-track-on-unlock: false
+  # Maximum number of quests a player can track at once (tracking queue).
+  # Only the first tracked quest is shown (placeholders/scoreboard); when it is
+  # completed, the next tracked quest takes its place. Use 0 or less for unlimited.
+  max-tracked-quests: 5
 
 leaderboards:
   # How many players should be cached for each quest pool?
