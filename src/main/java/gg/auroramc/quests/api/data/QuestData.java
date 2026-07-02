@@ -7,6 +7,7 @@ import gg.auroramc.aurora.api.util.NamespacedId;
 import gg.auroramc.quests.api.quest.QuestDefinition;
 import gg.auroramc.quests.api.questpool.Pool;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
@@ -19,10 +20,10 @@ public class QuestData extends UserDataHolder {
     private final Map<String, Long> completedCount = Maps.newConcurrentMap();
     private final Map<String, Set<String>> questUnlocks = Maps.newConcurrentMap();
     private final Set<String> poolUnlocks = Sets.newConcurrentHashSet();
-    @Getter
-    private volatile String trackedPoolId;
-    @Getter
-    private volatile String trackedQuestId;
+    // Ordered tracking queue. Only the head is "visible" (placeholders, scoreboard, on-track commands).
+    private final List<TrackedQuest> trackedQuests = new CopyOnWriteArrayList<>();
+
+    public record TrackedQuest(String poolId, String questId) {}
 
     public PoolRollData getPoolRollData(String poolId) {
         return rolledQuests.get(poolId);
@@ -37,20 +38,74 @@ public class QuestData extends UserDataHolder {
         return poolUnlocks.contains(poolId);
     }
 
-    public void setTrackedQuest(String poolId, String questId) {
-        this.trackedPoolId = poolId;
-        this.trackedQuestId = questId;
-        dirty.set(true);
+    public List<TrackedQuest> getTrackedQuests() {
+        return List.copyOf(trackedQuests);
     }
 
-    public void clearTrackedQuest() {
-        this.trackedPoolId = null;
-        this.trackedQuestId = null;
+    public boolean isTracking(String poolId, String questId) {
+        return trackedQuests.contains(new TrackedQuest(poolId, questId));
+    }
+
+    @Nullable
+    public TrackedQuest getHeadTrackedQuest() {
+        return trackedQuests.isEmpty() ? null : trackedQuests.get(0);
+    }
+
+    public boolean isHeadTrackedQuest(String poolId, String questId) {
+        TrackedQuest head = getHeadTrackedQuest();
+        return head != null && head.poolId().equals(poolId) && head.questId().equals(questId);
+    }
+
+    public int getTrackedCount() {
+        return trackedQuests.size();
+    }
+
+    /**
+     * Appends a quest to the tracking queue if it is not already present.
+     *
+     * @return true if it was added, false if it was already in the queue
+     */
+    public boolean addTrackedQuest(String poolId, String questId) {
+        TrackedQuest entry = new TrackedQuest(poolId, questId);
+        if (trackedQuests.contains(entry)) return false;
+        trackedQuests.add(entry);
         dirty.set(true);
+        return true;
+    }
+
+    /**
+     * Removes a quest from the tracking queue.
+     *
+     * @return true if it was present and removed
+     */
+    public boolean removeTrackedQuest(String poolId, String questId) {
+        boolean removed = trackedQuests.remove(new TrackedQuest(poolId, questId));
+        if (removed) dirty.set(true);
+        return removed;
+    }
+
+    public void removeTrackedQuestsByPool(String poolId) {
+        if (trackedQuests.removeIf(t -> t.poolId().equals(poolId))) {
+            dirty.set(true);
+        }
     }
 
     public boolean hasTrackedQuest() {
-        return trackedPoolId != null && trackedQuestId != null;
+        return !trackedQuests.isEmpty();
+    }
+
+    // Legacy single-tracked accessors kept for backward compatibility: they expose the head of the queue,
+    // so existing placeholders and the scoreboard automatically show only the first tracked quest.
+    @Nullable
+    public String getTrackedPoolId() {
+        TrackedQuest head = getHeadTrackedQuest();
+        return head == null ? null : head.poolId();
+    }
+
+    @Nullable
+    public String getTrackedQuestId() {
+        TrackedQuest head = getHeadTrackedQuest();
+        return head == null ? null : head.questId();
     }
 
     public void setRolledQuests(String poolId, List<String> quests) {
@@ -188,10 +243,16 @@ public class QuestData extends UserDataHolder {
             completedCountSection.set(entry.getKey(), entry.getValue());
         }
 
-        // Tracked quest
-        if (trackedPoolId != null && trackedQuestId != null) {
-            data.set("tracked.pool", trackedPoolId);
-            data.set("tracked.quest", trackedQuestId);
+        // Tracked quest queue (ordered; head is the visible one)
+        if (!trackedQuests.isEmpty()) {
+            List<Map<String, String>> queue = new ArrayList<>(trackedQuests.size());
+            for (var tracked : trackedQuests) {
+                Map<String, String> entry = new LinkedHashMap<>();
+                entry.put("pool", tracked.poolId());
+                entry.put("quest", tracked.questId());
+                queue.add(entry);
+            }
+            data.set("tracked.queue", queue);
         }
     }
 
@@ -240,11 +301,26 @@ public class QuestData extends UserDataHolder {
 
         poolUnlocks.addAll(data.getStringList("pool_unlocks"));
 
-        ConfigurationSection trackedSection = data.getConfigurationSection("tracked");
+        var queue = data.getMapList("tracked.queue");
 
-        if (trackedSection != null) {
-            trackedPoolId = trackedSection.getString("pool");
-            trackedQuestId = trackedSection.getString("quest");
+        if (!queue.isEmpty()) {
+            for (var entry : queue) {
+                Object poolId = entry.get("pool");
+                Object questId = entry.get("quest");
+                if (poolId != null && questId != null) {
+                    addTrackedQuest(poolId.toString(), questId.toString());
+                }
+            }
+        } else {
+            // Backward compatibility: load the old single tracked quest format as a one-element queue
+            ConfigurationSection trackedSection = data.getConfigurationSection("tracked");
+            if (trackedSection != null) {
+                String poolId = trackedSection.getString("pool");
+                String questId = trackedSection.getString("quest");
+                if (poolId != null && questId != null) {
+                    addTrackedQuest(poolId, questId);
+                }
+            }
         }
     }
 
@@ -273,21 +349,13 @@ public class QuestData extends UserDataHolder {
                 completedQuests.get(pool.getId()).removeIf(id -> !questIds.contains(id));
             }
         }
-        if (trackedPoolId != null && trackedQuestId != null) {
-            if (!poolIds.contains(trackedPoolId)) {
-                trackedPoolId = null;
-                trackedQuestId = null;
-            } else {
-                Pool trackedPool = pools.stream()
-                        .filter(p -> p.getId().equals(trackedPoolId))
-                        .findFirst().orElse(null);
-
-                if (trackedPool != null && !trackedPool.getDefinition().getQuests().containsKey(trackedQuestId)) {
-                    trackedPoolId = null;
-                    trackedQuestId = null;
-                }
-            }
-        }
+        trackedQuests.removeIf(tracked -> {
+            if (!poolIds.contains(tracked.poolId())) return true;
+            Pool trackedPool = pools.stream()
+                    .filter(p -> p.getId().equals(tracked.poolId()))
+                    .findFirst().orElse(null);
+            return trackedPool != null && !trackedPool.getDefinition().getQuests().containsKey(tracked.questId());
+        });
 
         dirty.set(true);
     }
