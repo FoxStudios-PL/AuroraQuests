@@ -158,8 +158,11 @@ public class Quest extends EventBus {
         }
         data.reset();
         started = false;
-        // start(true) re-activates correctly for both linear and parallel quests.
-        if (wasStarted) start(true);
+        // Re-activate only if the quest can legitimately start again. For a
+        // manual-unlock quest whose unlock flag was just cleared by data.reset(),
+        // canStart() is false, so it stays locked and leaves the menu instead of
+        // being force-unlocked. Regular quests (no unmet requirements) restart.
+        if (wasStarted) start(false);
     }
 
     public boolean isCompleted() {
