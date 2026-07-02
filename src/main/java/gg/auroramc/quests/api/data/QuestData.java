@@ -152,6 +152,9 @@ public class QuestData extends UserDataHolder {
         var completesQuests = completedQuests.computeIfAbsent(poolId, k -> new HashSet<>());
         completesQuests.remove(questId);
         progression.computeIfAbsent(poolId, k -> Maps.newConcurrentMap()).remove(questId);
+        // A full quest reset must also drop the manual-unlock flag, otherwise the
+        // quest stays visible/unlocked forever. Only reached via Quest.reset().
+        questUnlocks.computeIfAbsent(poolId, k -> Sets.newConcurrentHashSet()).remove(questId);
         dirty.set(true);
     }
 
