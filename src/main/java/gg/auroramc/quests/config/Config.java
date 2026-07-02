@@ -32,6 +32,7 @@ public class Config extends AuroraConfig {
     private UnlockTaskConfig unlockTask = new UnlockTaskConfig();
     private TrackingConfig tracking = new TrackingConfig();
     private QuestBookConfig questBook = new QuestBookConfig();
+    private ScoreboardConfig scoreboard = new ScoreboardConfig();
 
     @IgnoreField
     private Map<String, Integer> sortOderMap;
@@ -120,6 +121,20 @@ public class Config extends AuroraConfig {
         private List<String> onTrack = List.of();
         private List<String> onUntrack = List.of();
         private List<String> trackedLore = List.of();
+        // When true, /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
+        // only if the player has no other quest in progress.
+        private Boolean autoTrackOnUnlock = false;
+    }
+
+    @Getter
+    public static final class ScoreboardConfig {
+        // Shown only while a player is tracking a quest. Requires a restart to turn on;
+        // once on it can be tuned/disabled live with /quests reload.
+        private Boolean enabled = false;
+        // How often (in ticks) the sidebar refreshes (progress + external placeholders).
+        private Integer refreshInterval = 20;
+        private String title = "";
+        private List<String> lines = List.of();
     }
 
     public static File getFile(AuroraQuests plugin) {
@@ -209,6 +224,41 @@ public class Config extends AuroraConfig {
                     yaml.set("quest-book.new-quest-state.sound.pitch", 1.2);
 
                     yaml.set("config-version", 5);
+                },
+                (yaml) -> {
+                    yaml.set("scoreboard.enabled", false);
+                    yaml.setComments("scoreboard", List.of(
+                            "Quest sidebar shown ONLY while a player is tracking a quest (/quests track).",
+                            "Supports legacy (&), MiniMessage (<#hex>, <yellow>) and PlaceholderAPI.",
+                            "Max 15 lines (Minecraft limit). Available tokens:",
+                            "  {chapter} {quest_name} {step} {step_total} {display}",
+                            "  {reward}      -> a line with it repeats once per reward of the current step",
+                            "  {description} -> a line with it repeats once per description line of the current step",
+                            "NOTE: enabling requires a restart; afterwards /quests reload applies changes live."));
+                    yaml.set("scoreboard.refresh-interval", 20);
+                    yaml.setComments("scoreboard.refresh-interval", List.of("In ticks (20 = 1s)"));
+                    yaml.set("scoreboard.title", "&6&lQUEST");
+                    yaml.set("scoreboard.lines", List.of(
+                            "",
+                            "<#F7B700>{chapter} &7(&f{step}&7/&f{step_total}&7)",
+                            "<#dedede>{quest_name}",
+                            "",
+                            " &8• &fObjective: <yellow>{display}",
+                            " &8• &fRewards:",
+                            "    &7- &f{reward}",
+                            "",
+                            "<#F7B700>Description",
+                            "{description}",
+                            ""
+                    ));
+                    yaml.set("config-version", 6);
+                },
+                (yaml) -> {
+                    yaml.set("tracking.auto-track-on-unlock", false);
+                    yaml.setComments("tracking.auto-track-on-unlock", List.of(
+                            "When true: unlocking a quest via /quests unlock auto-tracks it (so the",
+                            "scoreboard appears) ONLY if the player has no other quest in progress."));
+                    yaml.set("config-version", 7);
                 }
         );
     }

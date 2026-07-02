@@ -23,6 +23,7 @@ import gg.auroramc.quests.menu.PoolMenu;
 import gg.auroramc.quests.objective.*;
 import gg.auroramc.quests.parser.PoolParser;
 import gg.auroramc.quests.placeholder.QuestPlaceholderHandler;
+import gg.auroramc.quests.scoreboard.QuestScoreboardManager;
 import gg.auroramc.quests.questbook.QuestBookData;
 import gg.auroramc.quests.questbook.QuestBookInventoryListener;
 import gg.auroramc.quests.questbook.QuestBookListener;
@@ -63,6 +64,7 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
     private CommandManager commandManager;
     private ScheduledTask unlockTask;
     private QuestBookManager questBookManager;
+    private QuestScoreboardManager scoreboardManager;
 
     private BukkitEventBus bukkitEventBus;
 
@@ -111,6 +113,8 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
 
         setupQuestBook();
 
+        scoreboardManager = new QuestScoreboardManager(this);
+
         commandManager = new CommandManager(this);
         commandManager.reload();
 
@@ -125,6 +129,8 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         poolManager.reload(pools);
         loaded = true;
         loadPlayers();
+
+        scoreboardManager.reload();
 
 
         Bukkit.getGlobalRegionScheduler().run(this, (task) -> {
@@ -185,10 +191,18 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         if (questBookManager != null) {
             questBookManager.reload();
         }
+
+        if (scoreboardManager != null) {
+            scoreboardManager.reload();
+        }
     }
 
     @Override
     public void onDisable() {
+        if (scoreboardManager != null) {
+            scoreboardManager.shutdown();
+        }
+
         if (questBookManager != null) {
             questBookManager.shutdown();
         }
@@ -282,6 +296,9 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         if (event.getUser().getPlayer() != null) {
             if (loaded) {
                 profileManager.createProfile(event.getUser());
+                if (scoreboardManager != null) {
+                    scoreboardManager.onJoin(event.getUser().getPlayer());
+                }
             } else {
                 toLoad.add(event.getUser().getPlayer());
             }
@@ -292,6 +309,9 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         profileManager.destroyProfile(event.getPlayer().getUniqueId());
         toLoad.remove(event.getPlayer());
+        if (scoreboardManager != null) {
+            scoreboardManager.onQuit(event.getPlayer());
+        }
     }
 
     @EventHandler

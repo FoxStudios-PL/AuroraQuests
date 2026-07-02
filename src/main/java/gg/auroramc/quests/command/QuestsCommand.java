@@ -126,12 +126,42 @@ public class QuestsCommand extends BaseCommand {
         if (!quest.isUnlocked()) {
             // Will unlock any locked quest, not just the ones that have manual-unlock requirement
             quest.start(true);
+
+            autoTrackOnUnlock(target, profile, pool, quest);
+
             if (!silent) {
                 Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
             }
         } else {
             Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
         }
+    }
+
+    /**
+     * Auto-tracks a freshly unlocked quest (so the scoreboard appears) when enabled in
+     * config and the player has no other quest in progress. Reuses the existing tracked
+     * state (already persisted) — no new data is stored.
+     */
+    private void autoTrackOnUnlock(Player target, Profile profile, QuestPool pool, Quest quest) {
+        if (!Boolean.TRUE.equals(plugin.getConfigManager().getConfig().getTracking().getAutoTrackOnUnlock())) return;
+        if (hasOtherActiveQuest(profile, quest)) return;
+
+        AuroraAPI.getUser(target.getUniqueId()).getData(QuestData.class).setTrackedQuest(pool.getId(), quest.getId());
+        quest.executeTrackCommands();
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
+        }
+    }
+
+    private boolean hasOtherActiveQuest(Profile profile, Quest unlocked) {
+        for (var questPool : profile.getQuestPools()) {
+            for (var q : questPool.getQuests()) {
+                if (q != unlocked && q.isStarted() && !q.isCompleted()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Subcommand("complete")
@@ -192,12 +222,19 @@ public class QuestsCommand extends BaseCommand {
                         Placeholder.of("{objective}", targetObjective), Placeholder.of("{player}", target.getName()));
                 return;
             }
-            objective.complete(isSilent);
+            // Always complete non-silently so TASK_COMPLETED fires (runs on-complete, grants
+            // rewards and, in linear quests, starts/activates the next objective). The command's
+            // "silent" flag only suppresses the admin chat feedback below, not quest progression.
+            objective.complete(false);
 
             if (!isSilent) {
                 Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(),
                         Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId + "/" + targetObjective));
             }
+        }
+
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
         }
     }
 
@@ -252,6 +289,9 @@ public class QuestsCommand extends BaseCommand {
         var quest = pool.getQuest(questId);
         if (questId.equals("all")) {
             pool.resetAllQuestProgress();
+            if (plugin.getScoreboardManager() != null) {
+                plugin.getScoreboardManager().refresh(target);
+            }
             if (!silent) {
                 Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestReset(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", "all"));
             }
@@ -266,6 +306,10 @@ public class QuestsCommand extends BaseCommand {
             quest.start(false);
         } else if (pool.isRolledQuest(quest)) {
             quest.start(false);
+        }
+
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
         }
 
         if (!silent) {
@@ -326,5 +370,9 @@ public class QuestsCommand extends BaseCommand {
         }
         Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackToggled(),
                 Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
+
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
+        }
     }
 }

@@ -290,6 +290,10 @@ public class PoolMenu {
             quest.executeTrackCommands();
             Chat.sendMessage(player, msgConfig.getQuestTracked(), Placeholder.of("{quest}", quest.getDefinition().getName()));
         }
+
+        if (AuroraQuests.getInstance().getScoreboardManager() != null) {
+            AuroraQuests.getInstance().getScoreboardManager().refresh(player);
+        }
     }
 
     private Collection<Quest> getQuests() {
