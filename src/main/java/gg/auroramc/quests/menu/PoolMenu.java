@@ -156,8 +156,15 @@ public class PoolMenu {
             }
             boolean isTracked = questData.isTracking(pool.getId(), quest.getId());
 
-            if (isTracked && trackingConfig.getTrackedLore() != null) {
-                extraLore.addAll(trackingConfig.getTrackedLore());
+            if (isTracked) {
+                if (trackingConfig.getTrackedLore() != null) {
+                    extraLore.addAll(trackingConfig.getTrackedLore());
+                }
+            } else if (quest.isUnlocked() && !quest.isCompleted()) {
+                // Counterpart of tracked-lore: shown on an active quest the player is not tracking.
+                if (trackingConfig.getUntrackedLore() != null) {
+                    extraLore.addAll(trackingConfig.getUntrackedLore());
+                }
             }
             var qPlaceholders = quest.getPlaceholders();
 

@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 8
+config-version: 9
 
 debug: false
 language: en
@@ -30,11 +30,14 @@ sort-order: [ "easy", "medium", "hard" ]
 # on-track: commands to execute when a player tracks a quest (supports {player}, {quest}, {quest_id}, {pool_id} placeholders)
 # on-untrack: commands to execute when a player untracks a quest
 # tracked-lore: extra lore lines appended to the quest menu item when it is being tracked
+# untracked-lore: extra lore lines appended to an active quest's menu item when it is NOT being tracked
 tracking:
   on-track: []
   on-untrack: []
   tracked-lore:
     - "&e&l► TRACKED"
+  # Counterpart of tracked-lore. Only shown on unlocked, non-completed, untracked quests.
+  untracked-lore: []
   # When true: /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
   # ONLY if the player has no other quest in progress.
   auto-track-on-unlock: false
