@@ -211,12 +211,20 @@ public class Quest extends EventBus {
         placeholders.add(Placeholder.of("{player}", data.profile().getPlayer().getName()));
         placeholders.add(Placeholder.of("{pool_level}", pool.getLevel()));
 
+        var commonMenu = AuroraQuests.getInstance().getConfigManager().getCommonMenuConfig();
+        var taskStatuses = commonMenu != null ? commonMenu.getTaskStatuses() : null;
+        boolean strikeCompleted = taskStatuses != null && taskStatuses.isCompletedStrikethrough();
+
         for (int i = 0; i < objectives.size(); i++) {
             var objective = objectives.get(i);
             if (isObjectiveLocked(i) && definition.getLockedObjectiveLore() != null) {
                 placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", definition.getLockedObjectiveLore()));
             } else {
-                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", objective.display()));
+                var line = objective.display();
+                if (strikeCompleted && objective.isCompleted()) {
+                    line = strikeThrough(line);
+                }
+                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", line));
             }
         }
 
@@ -225,6 +233,54 @@ public class Quest extends EventBus {
         }
 
         return placeholders;
+    }
+
+    /**
+     * Wraps a rendered task line so it renders struck-through in the quest menu.
+     * <p>
+     * Uses MiniMessage {@code <st>…</st>} (whose strikethrough is inherited by MiniMessage
+     * colour tags) AND re-injects the legacy {@code &m} code after every legacy colour / hex /
+     * reset code, because a legacy colour code resets formatting under vanilla rules and would
+     * otherwise cancel the strikethrough. This keeps whole lines struck across the mixed
+     * legacy + MiniMessage colours the configs allow.
+     */
+    private static String strikeThrough(String line) {
+        if (line == null || line.isEmpty()) return line;
+        StringBuilder sb = new StringBuilder(line.length() + 16).append("&m");
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if ((c == '&' || c == '§') && i + 1 < line.length()) {
+                char n = line.charAt(i + 1);
+                // legacy hex: &#RRGGBB
+                if (n == '#' && i + 7 < line.length() && isHex(line, i + 2, 6)) {
+                    sb.append(line, i, i + 8).append("&m");
+                    i += 7;
+                    continue;
+                }
+                // legacy colour (0-9, a-f) or reset (r) — both clear the strikethrough,
+                // so re-apply it. Format codes (k,l,m,n,o) do not clear it and are left alone.
+                if (isColourOrReset(n)) {
+                    sb.append(c).append(n).append("&m");
+                    i++;
+                    continue;
+                }
+            }
+            sb.append(c);
+        }
+        return "<st>" + sb + "</st>";
+    }
+
+    private static boolean isColourOrReset(char c) {
+        char l = Character.toLowerCase(c);
+        return (l >= '0' && l <= '9') || (l >= 'a' && l <= 'f') || l == 'r';
+    }
+
+    private static boolean isHex(String s, int start, int len) {
+        for (int i = start; i < start + len; i++) {
+            char c = Character.toLowerCase(s.charAt(i));
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return false;
+        }
+        return true;
     }
 
     private void startNextObjective() {
