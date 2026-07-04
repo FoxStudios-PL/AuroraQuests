@@ -116,3 +116,63 @@ Performance: only players with a tracked quest own a (per-player, Folia-safe) re
 | `/quests complete <player> <pool> <quest> <objective> true` | Completes the specified objective silently |
 
 Backwards compatible  passing `true`/`false` as the 4th argument still works as the old silent flag.
+
+---
+
+## New objective types
+
+Three plugin-integration objectives. Each is only active when the matching plugin is
+installed; the objective otherwise loads normally and simply never progresses.
+
+### `PLACE_FURNITURE`  Nexo furniture
+
+Progresses when the player places a **Nexo furniture**. Unlike `BLOCK_PLACE`, it does not
+require a backing block, so it also counts display-entity furniture that has no barrier
+hitbox. The `type` matched against `types` is the Nexo furniture id.
+
+```yaml
+place_furniture:
+  task: PLACE_FURNITURE
+  args:
+    amount: 3
+    types: [ "chair", "table" ]   # optional  omit / leave empty for any furniture
+    # mode: whitelist              # or blacklist
+    # multipliers: { chair: 2.0 }  # optional per-type multiplier
+```
+
+> **Plugin:** Nexo. The existing `BLOCK_PLACE` support for furniture (when it has a block)
+> is unchanged, so old configs keep working.
+
+### `CREATE_REALM`  LuxRealms
+
+Progresses when the player **creates a realm**. Simple counting objective (no `types`).
+
+```yaml
+create_realm:
+  task: CREATE_REALM
+  args:
+    amount: 1
+```
+
+> **Plugin:** LuxRealms (listens to `RealmCreationEvent`).
+
+### `OPEN_MENU`  DeluxeMenus
+
+Progresses when the player **opens a DeluxeMenus menu**. The `type` matched against `types`
+is the menu id.
+
+```yaml
+open_menu:
+  task: OPEN_MENU
+  args:
+    amount: 1
+    types: [ "shop_main" ]        # optional  omit / leave empty for any menu
+    # mode: whitelist             # or blacklist
+```
+
+> **Plugin:** DeluxeMenus. DeluxeMenus exposes no "menu opened" event, so opens are detected
+> through Bukkit's `InventoryOpenEvent` and the DeluxeMenus `MenuHolder`.
+
+`PLACE_FURNITURE` and `OPEN_MENU` are typed objectives, so they support `types`, `mode`
+(`whitelist`/`blacklist`) and `multipliers`. `CREATE_REALM` is a plain counting objective
+(no `types`). All three also honour the shared `filters` block (worlds, etc.).
