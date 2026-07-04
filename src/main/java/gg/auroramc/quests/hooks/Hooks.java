@@ -5,8 +5,10 @@ import gg.auroramc.quests.hooks.auraskills.AuraSkillsHook;
 import gg.auroramc.quests.hooks.auroralevels.AuroraLevelsHook;
 import gg.auroramc.quests.hooks.citizens.CitizensHook;
 import gg.auroramc.quests.hooks.customfishing.CustomFishingHook;
+import gg.auroramc.quests.hooks.deluxemenus.DeluxeMenusHook;
 import gg.auroramc.quests.hooks.economyshopgui.EconomyShopGuiHook;
 import gg.auroramc.quests.hooks.epiccraftingsplus.EpicCraftingsPlusHook;
+import gg.auroramc.quests.hooks.luxrealms.LuxRealmsHook;
 import gg.auroramc.quests.hooks.excellentshop.ExcellentShopHook;
 import gg.auroramc.quests.hooks.fancynpcs.FancyNPCsHook;
 import gg.auroramc.quests.hooks.luckperms.LuckPermsHook;
@@ -46,7 +48,9 @@ public enum Hooks {
     EXCELLENT_SHOP(ExcellentShopHook.class, "ExcellentShop"),
     NEXO(NexoHook.class, "Nexo"),
     ZNPCSPlus(ZnpcPlusHook.class, "ZNPCsPlus"),
-    EPIC_CRAFTINGS(EpicCraftingsPlusHook.class, "EpicCraftingsPlus");
+    EPIC_CRAFTINGS(EpicCraftingsPlusHook.class, "EpicCraftingsPlus"),
+    LUX_REALMS(LuxRealmsHook.class, "LuxRealms"),
+    DELUXE_MENUS(DeluxeMenusHook.class, "DeluxeMenus");
 
     private final Class<? extends Hook> clazz;
     private final Set<String> plugins;

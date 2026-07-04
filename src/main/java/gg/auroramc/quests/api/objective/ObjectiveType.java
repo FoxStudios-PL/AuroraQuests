@@ -49,4 +49,7 @@ public class ObjectiveType {
     public static final String TRAVEL = "TRAVEL";
     public static final String PLAY_TIME = "PLAY_TIME";
     public static final String EPICCRAFTINGS_CRAFT = "EPICCRAFTINGS_CRAFT";
+    public static final String PLACE_FURNITURE = "PLACE_FURNITURE";
+    public static final String CREATE_REALM = "CREATE_REALM";
+    public static final String OPEN_MENU = "OPEN_MENU";
 }

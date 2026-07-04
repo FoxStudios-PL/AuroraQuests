@@ -17,6 +17,7 @@ import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.event.objective.PlayerBreakCustomBlockEvent;
 import gg.auroramc.quests.api.event.objective.PlayerLootEvent;
 import gg.auroramc.quests.api.event.objective.PlayerPlaceCustomBlockEvent;
+import gg.auroramc.quests.api.event.objective.PlayerPlaceFurnitureEvent;
 import gg.auroramc.quests.hooks.Hook;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
@@ -108,6 +109,12 @@ public class NexoHook implements Hook, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onFurniturePlace(NexoFurniturePlaceEvent e) {
+        if (e.getPlayer() != null) {
+            // Dedicated PLACE_FURNITURE objective — works even for display-entity furniture
+            // that has no barrier block (which handlePlaceProgression would skip).
+            Bukkit.getPluginManager().callEvent(new PlayerPlaceFurnitureEvent(e.getPlayer(), e.getMechanic().getItemID()));
+        }
+        // Backwards-compatible BLOCK_PLACE support (only fires when the furniture has a block).
         handlePlaceProgression(e.getPlayer(), e.getMechanic().getItemID(), e.getBlock());
     }
 }
