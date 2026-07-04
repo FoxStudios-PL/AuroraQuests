@@ -121,6 +121,7 @@ public class Config extends AuroraConfig {
         private List<String> onTrack = List.of();
         private List<String> onUntrack = List.of();
         private List<String> trackedLore = List.of();
+        private List<String> untrackedLore = List.of();
         // When true, /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
         // only if the player has no other quest in progress.
         private boolean autoTrackOnUnlock = false;
@@ -271,6 +272,13 @@ public class Config extends AuroraConfig {
                             "Only the first tracked quest is shown (placeholders/scoreboard); when it is",
                             "completed, the next tracked quest takes its place. Use 0 or less for unlimited."));
                     yaml.set("config-version", 8);
+                },
+                (yaml) -> {
+                    yaml.set("tracking.untracked-lore", List.of());
+                    yaml.setComments("tracking.untracked-lore", List.of(
+                            "Extra lore lines appended to an active quest's menu item when it is NOT being tracked",
+                            "(counterpart of tracked-lore). Only shown on unlocked, non-completed, untracked quests."));
+                    yaml.set("config-version", 9);
                 }
         );
     }
