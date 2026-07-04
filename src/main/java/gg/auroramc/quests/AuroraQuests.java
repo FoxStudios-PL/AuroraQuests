@@ -265,6 +265,9 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         ObjectiveFactory.registerObjective(ObjectiveType.TRAVEL, TravelObjective.class);
         ObjectiveFactory.registerObjective(ObjectiveType.PLAY_TIME, PlayTimeObjective.class);
         ObjectiveFactory.registerObjective(ObjectiveType.EPICCRAFTINGS_CRAFT, EpicCraftObjective.class);
+        ObjectiveFactory.registerObjective(ObjectiveType.PLACE_FURNITURE, PlaceFurnitureObjective.class);
+        ObjectiveFactory.registerObjective(ObjectiveType.CREATE_REALM, CreateRealmObjective.class);
+        ObjectiveFactory.registerObjective(ObjectiveType.OPEN_MENU, OpenMenuObjective.class);
     }
 
     private void reloadUnlockTask() {

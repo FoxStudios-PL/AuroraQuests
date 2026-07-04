@@ -78,6 +78,7 @@ dependencies {
     compileOnly("de.oliver:FancyNpcs:2.6.0")
     compileOnly("ink.ptms.adyeshach:all:2.0.0-snapshot-1")
     compileOnly("com.nexomc:nexo:1.8.0")
+    compileOnly(name = "LuxRealms-1.2.4", group = "com.aselstudios", version = "1.2.4")
     compileOnly("su.nightexpress.excellentshop:api:5.1.2") {
         isTransitive = false
     }
