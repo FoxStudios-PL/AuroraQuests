@@ -80,7 +80,10 @@ public class QuestPool {
 
     public List<Quest> getActiveQuests() {
         if (isTimedRandom()) {
-            return profile.getData().getPoolRollData(getId()).quests()
+            // No roll data yet (pool never rolled for this player, e.g. still locked): no active quests.
+            var rollData = profile.getData().getPoolRollData(getId());
+            if (rollData == null) return List.of();
+            return rollData.quests()
                     .stream().map(quests::get).filter(Objects::nonNull)
                     .toList();
         }
@@ -88,7 +91,8 @@ public class QuestPool {
     }
 
     public boolean isRolledQuest(Quest quest) {
-        return profile.getData().getPoolRollData(getId()).quests().contains(quest.getId());
+        var rollData = profile.getData().getPoolRollData(getId());
+        return rollData != null && rollData.quests().contains(quest.getId());
     }
 
     public List<Quest> getNotCompletedQuests() {
@@ -107,6 +111,10 @@ public class QuestPool {
     }
 
     public void resetAllQuestProgress() {
+        // Drop every tracked quest of this pool in one pass (one head untrack + one promotion),
+        // exactly like a reroll. Leaving it to the per-quest untrack in Quest.reset() would churn
+        // on-track/on-untrack commands as queued quests of this pool get promoted and reset in turn.
+        clearTrackingIfNeeded(profile.getData());
         for (var quest : quests.values()) {
             quest.reset();
             if (isGlobal()) {

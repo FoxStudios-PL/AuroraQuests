@@ -154,6 +154,10 @@ public class Quest extends EventBus {
     }
 
     public void reset() {
+        // A reset wipes the quest, so it must leave the tracking queue too — otherwise the
+        // scoreboard sidebar and the tracked_* placeholders keep showing it, even once it is
+        // locked again. Runs before the wipe so on-untrack commands see the pre-reset state.
+        QuestTracker.untrack(data.profile(), pool, this, data.profile().getData());
         boolean wasStarted = started;
         for (var obj : objectives) {
             obj.dispose();
@@ -314,13 +318,8 @@ public class Quest extends EventBus {
         Player player = data.profile().getPlayer();
         QuestData questData = AuroraAPI.getUser(player.getUniqueId()).getData(QuestData.class);
 
-        if (!questData.isTracking(pool.getId(), definition.getId())) return;
-
         // Removing the completed quest from the queue lets the next tracked quest take its place as head.
-        boolean wasHead = questData.isHeadTrackedQuest(pool.getId(), definition.getId());
-        if (wasHead) executeUntrackCommands();
-        questData.removeTrackedQuest(pool.getId(), definition.getId());
-        if (wasHead) QuestTracker.runHeadTrackCommands(data.profile(), questData);
+        if (!QuestTracker.untrack(data.profile(), pool, this, questData)) return;
 
         var scoreboardManager = AuroraQuests.getInstance().getScoreboardManager();
         if (scoreboardManager != null) {
