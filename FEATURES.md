@@ -156,3 +156,33 @@ NODE_edynn_ore_harvest_success:
 
 Because the type defaults to the casting mob, the same line can be copy-pasted into every
 node's success skill (ores, crops, …) with no per-node configuration.
+
+## FoxSkills `UNLOCK_FOXSKILLS_SKILL` task type
+
+Progresses when a player unlocks a skill on a FoxSkills class weapon (FoxSkills ≥ 1.1.0,
+which fires `PlayerWeaponSkillUnlockEvent`). Requires the FoxSkills plugin — the hook
+registers itself automatically when FoxSkills is present.
+
+```yaml
+tasks:
+  unlock_skill:
+    task: UNLOCK_FOXSKILLS_SKILL
+    display: "{status} &fDébloque une compétence d'arme &b{current}&f/&b{required}"
+    args:
+      amount: 1
+```
+
+Without `types`, **any** skill on **any** weapon counts. To target specific skills, use
+`<weaponId>:<skillId>` entries (the ids from FoxSkills' `weapons` config section), with
+the usual `mode: whitelist` (default) or `blacklist`:
+
+```yaml
+    args:
+      amount: 1
+      types:
+        - "katana:dash"
+```
+
+Unlocks are only counted once per skill per weapon item: FoxSkills' unlock manager
+guards against re-unlocking an already-unlocked skill, so the event never fires twice
+for the same weapon + skill pair.

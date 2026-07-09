@@ -52,4 +52,5 @@ public class ObjectiveType {
     public static final String PLACE_FURNITURE = "PLACE_FURNITURE";
     public static final String CREATE_REALM = "CREATE_REALM";
     public static final String OPEN_MENU = "OPEN_MENU";
+    public static final String UNLOCK_FOXSKILLS_SKILL = "UNLOCK_FOXSKILLS_SKILL";
 }
