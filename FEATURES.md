@@ -116,3 +116,43 @@ Performance: only players with a tracked quest own a (per-player, Folia-safe) re
 | `/quests complete <player> <pool> <quest> <objective> true` | Completes the specified objective silently |
 
 Backwards compatible  passing `true`/`false` as the 4th argument still works as the old silent flag.
+
+---
+
+## MythicMobs `questkill` mechanic
+
+Harvest-node style mobs (custom ores, crops — e.g. LittleRoomDev packs) are never actually
+killed: every damage modifier is `0.0`, mining is simulated with skill variables, and on
+success the mob is **removed** and later respawned. `MythicMobDeathEvent` never fires for
+them, so `KILL_MOB` / `KILL_LEVELLED_MOB` objectives can't progress.
+
+AuroraQuests registers a custom MythicMobs mechanic that credits the kill from the skill
+itself, without the mob dying:
+
+```
+questkill{type=<internal_name>;amount=<n>} @trigger
+```
+
+| Option | Aliases | Default | Description |
+|---|---|---|---|
+| `type` | `t`, `mob`, `m` | the casting mob's own internal name | Mythic mob id credited to the player (`mythicmobs:<type>` in quest configs) |
+| `amount` | `a` | `1` | Number of kills to credit |
+
+It fires the exact same `PlayerKillMobEvent` as a real mythic mob death (including the mob
+level for `KILL_LEVELLED_MOB`), so objective `types`, `filters` and `multipliers` behave
+identically. If no player has a matching active objective the event is a silent no-op —
+no commands, no console spam.
+
+Typical usage, in the node's harvest-success metaskill (the one that gives the loot and
+removes the node), with the player available as `@trigger` from `~onDamaged`:
+
+```yaml
+NODE_edynn_ore_harvest_success:
+  Skills:
+  # ... existing loot / effects ...
+  - questkill @trigger        # credits mythicmobs:edynn_ore (caster's own type)
+  # ... existing spawn of the "broken" node + remove ...
+```
+
+Because the type defaults to the casting mob, the same line can be copy-pasted into every
+node's success skill (ores, crops, …) with no per-node configuration.
