@@ -156,3 +156,61 @@ NODE_edynn_ore_harvest_success:
 
 Because the type defaults to the casting mob, the same line can be copy-pasted into every
 node's success skill (ores, crops, …) with no per-node configuration.
+
+## FoxSkills `UNLOCK_FOXSKILLS_SKILL` task type
+
+Progresses when a player unlocks a skill on a FoxSkills class weapon (FoxSkills ≥ 1.1.0,
+which fires `PlayerWeaponSkillUnlockEvent`). Requires the FoxSkills plugin — the hook
+registers itself automatically when FoxSkills is present.
+
+```yaml
+tasks:
+  unlock_skill:
+    task: UNLOCK_FOXSKILLS_SKILL
+    display: "{status} &fDébloque une compétence d'arme &b{current}&f/&b{required}"
+    args:
+      amount: 1
+```
+
+Without `types`, **any** skill on **any** weapon counts. To target specific skills, use
+`<weaponId>:<skillId>` entries (the ids from FoxSkills' `weapons` config section), with
+the usual `mode: whitelist` (default) or `blacklist`:
+
+```yaml
+    args:
+      amount: 1
+      types:
+        - "katana:dash"
+```
+
+Unlocks are only counted once per skill per weapon item: FoxSkills' unlock manager
+guards against re-unlocking an already-unlocked skill, so the event never fires twice
+for the same weapon + skill pair.
+
+## FoxSkills `REACH_FOXSKILLS_WEAPON_LEVEL` task type
+
+Progresses when a FoxSkills class weapon levels up **through XP gain** (FoxSkills ≥ 1.2.0,
+which fires `PlayerWeaponLevelUpEvent` from its XP path only). `amount` is the level to
+reach; on every level-up the progress jumps to the weapon's new level and **never
+decreases** — another weapon leveling below the best one, or a prestige reset, can't
+lower it. Admin `/foxskills setlevel`/`addlevel` don't fire the event, so they neither
+credit nor reset the quest (admin `addxp` counts: it goes through the XP path).
+
+```yaml
+tasks:
+  weapon_level:
+    task: REACH_FOXSKILLS_WEAPON_LEVEL
+    display: "{status} &fMonte une arme de classe au niveau {required} &b{current}&f/&b{required}"
+    args:
+      amount: 10
+```
+
+Without `types`, any class weapon counts (the quest tracks the highest level reached
+across all weapons). To restrict it to specific weapons, use their FoxSkills ids:
+
+```yaml
+    args:
+      amount: 10
+      types:
+        - "katana"
+```
