@@ -11,6 +11,7 @@ import gg.auroramc.quests.hooks.epiccraftingsplus.EpicCraftingsPlusHook;
 import gg.auroramc.quests.hooks.luxrealms.LuxRealmsHook;
 import gg.auroramc.quests.hooks.excellentshop.ExcellentShopHook;
 import gg.auroramc.quests.hooks.fancynpcs.FancyNPCsHook;
+import gg.auroramc.quests.hooks.foxskills.FoxSkillsHook;
 import gg.auroramc.quests.hooks.luckperms.LuckPermsHook;
 import gg.auroramc.quests.hooks.mmolib.MMOLibHook;
 import gg.auroramc.quests.hooks.mythicdungeons.DungeonsHook;
@@ -50,6 +51,7 @@ public enum Hooks {
     ZNPCSPlus(ZnpcPlusHook.class, "ZNPCsPlus"),
     EPIC_CRAFTINGS(EpicCraftingsPlusHook.class, "EpicCraftingsPlus"),
     LUX_REALMS(LuxRealmsHook.class, "LuxRealms"),
+    FOX_SKILLS(FoxSkillsHook.class, "FoxSkills"),
     DELUXE_MENUS(DeluxeMenusHook.class, "DeluxeMenus");
 
     private final Class<? extends Hook> clazz;

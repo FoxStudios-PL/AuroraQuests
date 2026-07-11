@@ -176,3 +176,101 @@ open_menu:
 `PLACE_FURNITURE` and `OPEN_MENU` are typed objectives, so they support `types`, `mode`
 (`whitelist`/`blacklist`) and `multipliers`. `CREATE_REALM` is a plain counting objective
 (no `types`). All three also honour the shared `filters` block (worlds, etc.).
+
+---
+
+## MythicMobs `questkill` mechanic
+
+Harvest-node style mobs (custom ores, crops — e.g. LittleRoomDev packs) are never actually
+killed: every damage modifier is `0.0`, mining is simulated with skill variables, and on
+success the mob is **removed** and later respawned. `MythicMobDeathEvent` never fires for
+them, so `KILL_MOB` / `KILL_LEVELLED_MOB` objectives can't progress.
+
+AuroraQuests registers a custom MythicMobs mechanic that credits the kill from the skill
+itself, without the mob dying:
+
+```
+questkill{type=<internal_name>;amount=<n>} @trigger
+```
+
+| Option | Aliases | Default | Description |
+|---|---|---|---|
+| `type` | `t`, `mob`, `m` | the casting mob's own internal name | Mythic mob id credited to the player (`mythicmobs:<type>` in quest configs) |
+| `amount` | `a` | `1` | Number of kills to credit |
+
+It fires the exact same `PlayerKillMobEvent` as a real mythic mob death (including the mob
+level for `KILL_LEVELLED_MOB`), so objective `types`, `filters` and `multipliers` behave
+identically. If no player has a matching active objective the event is a silent no-op —
+no commands, no console spam.
+
+Typical usage, in the node's harvest-success metaskill (the one that gives the loot and
+removes the node), with the player available as `@trigger` from `~onDamaged`:
+
+```yaml
+NODE_edynn_ore_harvest_success:
+  Skills:
+  # ... existing loot / effects ...
+  - questkill @trigger        # credits mythicmobs:edynn_ore (caster's own type)
+  # ... existing spawn of the "broken" node + remove ...
+```
+
+Because the type defaults to the casting mob, the same line can be copy-pasted into every
+node's success skill (ores, crops, …) with no per-node configuration.
+
+## FoxSkills `UNLOCK_FOXSKILLS_SKILL` task type
+
+Progresses when a player unlocks a skill on a FoxSkills class weapon (FoxSkills ≥ 1.1.0,
+which fires `PlayerWeaponSkillUnlockEvent`). Requires the FoxSkills plugin — the hook
+registers itself automatically when FoxSkills is present.
+
+```yaml
+tasks:
+  unlock_skill:
+    task: UNLOCK_FOXSKILLS_SKILL
+    display: "{status} &fDébloque une compétence d'arme &b{current}&f/&b{required}"
+    args:
+      amount: 1
+```
+
+Without `types`, **any** skill on **any** weapon counts. To target specific skills, use
+`<weaponId>:<skillId>` entries (the ids from FoxSkills' `weapons` config section), with
+the usual `mode: whitelist` (default) or `blacklist`:
+
+```yaml
+    args:
+      amount: 1
+      types:
+        - "katana:dash"
+```
+
+Unlocks are only counted once per skill per weapon item: FoxSkills' unlock manager
+guards against re-unlocking an already-unlocked skill, so the event never fires twice
+for the same weapon + skill pair.
+
+## FoxSkills `REACH_FOXSKILLS_WEAPON_LEVEL` task type
+
+Progresses when a FoxSkills class weapon levels up **through XP gain** (FoxSkills ≥ 1.2.0,
+which fires `PlayerWeaponLevelUpEvent` from its XP path only). `amount` is the level to
+reach; on every level-up the progress jumps to the weapon's new level and **never
+decreases** — another weapon leveling below the best one, or a prestige reset, can't
+lower it. Admin `/foxskills setlevel`/`addlevel` don't fire the event, so they neither
+credit nor reset the quest (admin `addxp` counts: it goes through the XP path).
+
+```yaml
+tasks:
+  weapon_level:
+    task: REACH_FOXSKILLS_WEAPON_LEVEL
+    display: "{status} &fMonte une arme de classe au niveau {required} &b{current}&f/&b{required}"
+    args:
+      amount: 10
+```
+
+Without `types`, any class weapon counts (the quest tracks the highest level reached
+across all weapons). To restrict it to specific weapons, use their FoxSkills ids:
+
+```yaml
+    args:
+      amount: 10
+      types:
+        - "katana"
+```

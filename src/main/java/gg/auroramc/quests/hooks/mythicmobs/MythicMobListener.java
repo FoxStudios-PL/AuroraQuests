@@ -6,6 +6,7 @@ import gg.auroramc.quests.api.event.objective.PlayerDealDamageEvent;
 import gg.auroramc.quests.api.event.objective.PlayerKillMobEvent;
 import gg.auroramc.quests.api.event.objective.PlayerLootEvent;
 import io.lumine.mythic.bukkit.events.MythicDamageEvent;
+import io.lumine.mythic.bukkit.events.MythicMechanicLoadEvent;
 import io.lumine.mythic.bukkit.events.MythicMobDeathEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -31,6 +32,15 @@ public class MythicMobListener implements Listener {
         for (var drop : drops) {
             var dropId = AuroraAPI.getItemManager().resolveId(drop);
             Bukkit.getPluginManager().callEvent(new PlayerLootEvent(player, dropId, drop.getAmount(), PlayerLootEvent.Source.ENTITY));
+        }
+    }
+
+    // Registers the questkill{type=<mob>;amount=<n>} mechanic, used by harvest-node style
+    // mobs (removed/respawned by skills, never killed) to credit KILL_MOB progress.
+    @EventHandler
+    public void onMechanicLoad(MythicMechanicLoadEvent e) {
+        if (e.getMechanicName().equalsIgnoreCase("questkill")) {
+            e.register(new QuestKillMechanic(e.getConfig()));
         }
     }
 

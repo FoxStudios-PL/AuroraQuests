@@ -34,16 +34,12 @@ public final class QuestTracker {
      * @param max maximum number of tracked quests, or {@code <= 0} for unlimited
      */
     public static ToggleResult toggle(Profile profile, QuestPool pool, Quest quest, QuestData data, int max) {
-        String poolId = pool.getId();
-        String questId = quest.getId();
-
-        if (data.isTracking(poolId, questId)) {
-            boolean wasHead = data.isHeadTrackedQuest(poolId, questId);
-            if (wasHead) quest.executeUntrackCommands();
-            data.removeTrackedQuest(poolId, questId);
-            if (wasHead) runHeadTrackCommands(profile, data);
+        if (untrack(profile, pool, quest, data)) {
             return ToggleResult.UNTRACKED;
         }
+
+        String poolId = pool.getId();
+        String questId = quest.getId();
 
         if (max > 0 && data.getTrackedCount() >= max) {
             return ToggleResult.QUEUE_FULL;
@@ -56,6 +52,26 @@ public final class QuestTracker {
             return ToggleResult.TRACKED_HEAD;
         }
         return ToggleResult.TRACKED_QUEUED;
+    }
+
+    /**
+     * Removes a quest from the tracking queue with the same head-transition behaviour as a manual
+     * untrack: {@code on-untrack} commands run if it was the head, and the next queued quest (if any)
+     * takes over visibility. No-op when the quest is not tracked.
+     *
+     * @return true if the quest was tracked and got removed
+     */
+    public static boolean untrack(Profile profile, QuestPool pool, Quest quest, QuestData data) {
+        String poolId = pool.getId();
+        String questId = quest.getId();
+
+        if (!data.isTracking(poolId, questId)) return false;
+
+        boolean wasHead = data.isHeadTrackedQuest(poolId, questId);
+        if (wasHead) quest.executeUntrackCommands();
+        data.removeTrackedQuest(poolId, questId);
+        if (wasHead) runHeadTrackCommands(profile, data);
+        return true;
     }
 
     /**
