@@ -119,6 +119,73 @@ Backwards compatible  passing `true`/`false` as the 4th argument still works as 
 
 ---
 
+## Auto chat centering: the `<center>` marker
+
+Chat lines used to be "centered" with hardcoded leading spaces, which breaks as soon as a
+line contains a variable-width placeholder (`{quest}`, `{reward}`, `{level}`, …). Prefix a
+line with **`<center>`** instead: it is centered **at render time, after placeholders are
+resolved**, and the marker is removed from the output.
+
+```yaml
+quest-complete-message:
+  message:
+    - ' '
+    - '<center>&#FFAA00&lQUÊTE TERMINÉE'
+    - '<center>&fVous avez terminé'
+    - '<center>&#55FFFF&l{quest}'
+    - component:rewards
+    - ' '
+
+display-components:
+  rewards:
+    title: ' '
+    line: '<center>{reward}'
+```
+
+Supported everywhere the plugin sends chat: `quest-complete-message` (global and per-quest
+override), `level-up-message`, `display-components.*.title`/`.line`, and every
+`messages_xx.yml` entry. Non-chat renders are untouched: menu lore drops the marker
+without padding, and title/actionbar/scoreboard keep their own systems. Lines without the
+marker are never modified (you can mix centered and left-aligned lines in one block).
+
+### `config.yml` options
+
+```yaml
+# Half chat width in pixels the text is centered on.
+# 154 = vanilla default (320px wide chat).
+chat-center-px: 154
+# Width used for characters missing from the vanilla font table (glyphs, CJK, ...)
+unknown-char-width: 8
+# Optional per-glyph widths (resource pack glyphs)
+glyph-widths:
+  'ꕾ': 14      # raw glyph character
+  lys: 12      # width applied to <glyph:lys> tags
+```
+
+`chat-center-px` **must** be tuned per server: the effective chat width depends on the
+client chat settings / GUI scale / resource pack (e.g. ~107 instead of 154 on some setups).
+
+### How the width is measured
+
+Standard Bukkit "center message" algorithm: formatting codes take 0px — legacy (`&x`,
+`&#RRGGBB`, `§x§F§F…`) and MiniMessage tags (`<gold>`, `<#FFAA00>`, `<b>`, …) are skipped —
+while the **bold state** (`&l` / `<b>`, +1px per character; legacy colors reset it,
+MiniMessage colors don't) is tracked. Characters use the vanilla font advance (most letters
+6px, space 4px); accented Latin letters (`é`, `È`, `ç`, …) are measured from their base
+letter automatically. The padding is emitted as spaces (4px granularity, so ±2px).
+
+Characters outside the table (resource-pack glyphs like `ꕾ`, CJK, …) use `glyph-widths`
+when configured, otherwise `unknown-char-width`. A `glyph-widths` key longer than one
+character gives a width to the matching `<glyph:NAME>` tag (Nexo/Oraxen substitute those
+client-side, so the plugin can't measure them; unconfigured tags count 0px).
+
+Edge cases: a line wider than the whole chat (`>= 2 × chat-center-px`) is left unpadded so
+it doesn't wrap even further; blank/unmarked lines are untouched; ACF-forwarded command
+errors (`invalid-syntax`, `player-not-found`, …) can't be centered — the marker is simply
+stripped there.
+
+---
+
 ## Item turn-in: `DELIVER_ITEM` + `/quests deliver` + `has_items` placeholder
 
 A quest step where the player must **bring back items** and an NPC / script decides when

@@ -16,25 +16,38 @@ public class RewardUtil {
         var localization = AuroraQuests.getInstance().getLocalizationProvider();
         var text = Component.text();
 
-        for (var line : lines) {
+        for (int i = 0; i < lines.size(); i++) {
+            var line = lines.get(i);
             if (line.equals("component:rewards")) {
                 if (!rewards.isEmpty()) {
-                    text.append(Text.component(player, localization.fillVariables(player, config.getTitle(), placeholders)));
+                    text.append(render(player, localization.fillVariables(player, config.getTitle(), placeholders)));
                 }
                 for (var reward : rewards) {
                     var rewardText = reward.getDisplay(player, placeholders);
                     if (rewardText.isBlank()) continue;
                     text.append(Component.newline());
                     var display = config.getLine().replace("{reward}", rewardText);
-                    text.append(Text.component(player, localization.fillVariables(player, display, placeholders)));
+                    text.append(render(player, localization.fillVariables(player, display, placeholders)));
                 }
             } else {
-                text.append(Text.component(player, localization.fillVariables(player, line, placeholders)));
+                text.append(render(player, localization.fillVariables(player, line, placeholders)));
             }
 
-            if (!line.equals(lines.getLast())) text.append(Component.newline());
+            // Index-based on purpose: comparing by value (the old code) dropped the newline
+            // after any line that happened to equal the last one (e.g. two ' ' spacers),
+            // gluing it to the next line and shifting centered lines.
+            if (i < lines.size() - 1) text.append(Component.newline());
         }
 
         return text.build();
+    }
+
+    /**
+     * PlaceholderAPI is resolved before centering so <center> lines are measured on the
+     * final text; Text.component would otherwise resolve it after the padding was computed.
+     */
+    private static Component render(Player player, String line) {
+        var resolved = Text.fillPlaceholders(player, line);
+        return Text.component(ChatCenterer.center(resolved));
     }
 }

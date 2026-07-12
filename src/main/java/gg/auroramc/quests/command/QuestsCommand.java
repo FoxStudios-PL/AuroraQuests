@@ -3,7 +3,7 @@ package gg.auroramc.quests.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import gg.auroramc.aurora.api.AuroraAPI;
-import gg.auroramc.aurora.api.message.Chat;
+import gg.auroramc.quests.util.ChatUtil;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.data.QuestData;
@@ -34,7 +34,7 @@ public class QuestsCommand extends BaseCommand {
     public void onMenu(Player player) {
         var profile = plugin.getProfileManager().getProfile(player);
         if (profile == null) {
-            Chat.sendMessage(player, plugin.getConfigManager().getMessageConfig(player).getDataNotLoadedYetSelf());
+            ChatUtil.sendMessage(player, plugin.getConfigManager().getMessageConfig(player).getDataNotLoadedYetSelf());
             return;
         }
         new MainMenu(profile).open();
@@ -45,7 +45,7 @@ public class QuestsCommand extends BaseCommand {
     @CommandPermission("aurora.quests.admin.reload")
     public void onReload(CommandSender sender) {
         plugin.reload();
-        Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getReloaded());
+        ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getReloaded());
     }
 
     @Subcommand("open")
@@ -55,7 +55,7 @@ public class QuestsCommand extends BaseCommand {
     public void onOpenMenu(CommandSender sender, @Flags("other") Player target, @Default("none") String poolId, @Default("false") Boolean silent) {
         var profile = plugin.getProfileManager().getProfile(target);
         if (profile == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
 
@@ -64,13 +64,13 @@ public class QuestsCommand extends BaseCommand {
         } else {
             var pool = profile.getQuestPool(poolId);
             if (pool == null) {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
                 return;
             }
             if (pool.isUnlocked()) {
                 new PoolMenu(profile, pool).open();
                 if (!silent) {
-                    Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getMenuOpened(), Placeholder.of("{player}", target.getName()));
+                    ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getMenuOpened(), Placeholder.of("{player}", target.getName()));
                 }
             }
         }
@@ -83,7 +83,7 @@ public class QuestsCommand extends BaseCommand {
     public void onReroll(CommandSender sender, @Flags("other") Player target, @Default("all") String poolId, @Default("false") Boolean silent) {
         var profile = plugin.getProfileManager().getProfile(target);
         if (profile == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
 
@@ -95,10 +95,10 @@ public class QuestsCommand extends BaseCommand {
                 if (!pool.isUnlocked()) return;
                 pool.reRollQuests(!silent);
                 if (!silent) {
-                    Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getReRolledSource(), Placeholder.of("{player}", target.getName()), Placeholder.of("{pool}", pool.getDefinition().getName()));
+                    ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getReRolledSource(), Placeholder.of("{player}", target.getName()), Placeholder.of("{pool}", pool.getDefinition().getName()));
                 }
             } else {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
             }
         }
     }
@@ -110,19 +110,19 @@ public class QuestsCommand extends BaseCommand {
     public void onQuestUnlock(CommandSender sender, @Flags("other") Player target, String poolId, String questId, @Default("false") Boolean silent) {
         var profile = plugin.getProfileManager().getProfile(target);
         if (profile == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
 
         var pool = profile.getQuestPool(poolId);
         if (pool == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
             return;
         }
 
         var quest = pool.getQuest(questId);
         if (quest == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
             return;
         }
 
@@ -139,10 +139,10 @@ public class QuestsCommand extends BaseCommand {
             }
 
             if (!silent) {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
             }
         } else {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyUnlocked(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
         }
     }
 
@@ -164,19 +164,19 @@ public class QuestsCommand extends BaseCommand {
         Profile profile = plugin.getProfileManager().getProfile(target);
 
         if (profile == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
 
         var pool = profile.getQuestPool(poolId);
         if (pool == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
             return;
         }
 
         var quest = pool.getQuest(questId);
         if (quest == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
             return;
         }
 
@@ -184,10 +184,10 @@ public class QuestsCommand extends BaseCommand {
             if (!quest.isCompleted()) {
                 quest.complete();
                 if (!isSilent) {
-                    Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+                    ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
                 }
             } else {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestAlreadyCompleted(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
             }
         } else {
             Objective objective = quest.getObjectives().stream()
@@ -195,12 +195,12 @@ public class QuestsCommand extends BaseCommand {
                     .findFirst().orElse(null);
 
             if (objective == null) {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveNotFound(),
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveNotFound(),
                         Placeholder.of("{objective}", targetObjective), Placeholder.of("{quest}", questId));
                 return;
             }
             if (objective.isCompleted()) {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveAlreadyCompleted(),
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveAlreadyCompleted(),
                         Placeholder.of("{objective}", targetObjective), Placeholder.of("{player}", target.getName()));
                 return;
             }
@@ -210,7 +210,7 @@ public class QuestsCommand extends BaseCommand {
             objective.complete(false);
 
             if (!isSilent) {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(),
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestCompleted(),
                         Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId + "/" + targetObjective));
             }
         }
@@ -238,30 +238,30 @@ public class QuestsCommand extends BaseCommand {
 
         var profile = plugin.getProfileManager().getProfile(target);
         if (profile == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
 
         var pool = profile.getQuestPool(poolId);
         if (pool == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
             return;
         }
 
         var quest = pool.getQuest(questId);
         if (quest == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
             return;
         }
 
         if (!targetObjective.equals("all") && quest.getObjectives().stream().noneMatch(o -> o.getId().equals(targetObjective))) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveNotFound(),
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveNotFound(),
                     Placeholder.of("{objective}", targetObjective), Placeholder.of("{quest}", questId));
             return;
         }
 
         if (quest.isCompleted() || !quest.isStarted()) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotActive(),
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotActive(),
                     Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
             return;
         }
@@ -278,15 +278,15 @@ public class QuestsCommand extends BaseCommand {
 
             var msg = plugin.getConfigManager().getMessageConfig(sender);
             if (!event.getDelivered().isEmpty()) {
-                Chat.sendMessage(sender, msg.getItemsDelivered(),
+                ChatUtil.sendMessage(sender, msg.getItemsDelivered(),
                         Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId),
                         Placeholder.of("{objective}", String.join(", ", event.getDelivered())));
             } else if (!event.getMissing().isEmpty()) {
-                Chat.sendMessage(sender, msg.getItemsMissing(),
+                ChatUtil.sendMessage(sender, msg.getItemsMissing(),
                         Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId),
                         Placeholder.of("{objective}", String.join(", ", event.getMissing())));
             } else {
-                Chat.sendMessage(sender, msg.getDeliverNoObjectives(),
+                ChatUtil.sendMessage(sender, msg.getDeliverNoObjectives(),
                         Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId),
                         Placeholder.of("{objective}", targetObjective));
             }
@@ -310,7 +310,7 @@ public class QuestsCommand extends BaseCommand {
     public void onQuestBookNotify(CommandSender sender, @Flags("other") Player target, @Default("toggle") String value) {
         var manager = plugin.getQuestBookManager();
         if (manager == null || !manager.isActive()) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestBookDisabled());
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestBookDisabled());
             return;
         }
 
@@ -324,14 +324,14 @@ public class QuestsCommand extends BaseCommand {
         }
 
         if (newState == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
 
         var msg = newState == QuestBookState.NEW_QUEST
                 ? plugin.getConfigManager().getMessageConfig(sender).getQuestBookNotifyOn()
                 : plugin.getConfigManager().getMessageConfig(sender).getQuestBookNotifyOff();
-        Chat.sendMessage(sender, msg, Placeholder.of("{player}", target.getName()));
+        ChatUtil.sendMessage(sender, msg, Placeholder.of("{player}", target.getName()));
     }
 
     @Subcommand("reset")
@@ -341,13 +341,13 @@ public class QuestsCommand extends BaseCommand {
     public void onQuestReset(CommandSender sender, @Flags("other") Player target, String poolId, @Default("all") String questId, @Default("false") Boolean silent) {
         var profile = plugin.getProfileManager().getProfile(target);
         if (profile == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
 
         var pool = profile.getQuestPool(poolId);
         if (pool == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
             return;
         }
 
@@ -358,11 +358,11 @@ public class QuestsCommand extends BaseCommand {
                 plugin.getScoreboardManager().refresh(target);
             }
             if (!silent) {
-                Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestReset(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", "all"));
+                ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestReset(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", "all"));
             }
             return;
         } else if (quest == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
             return;
         }
 
@@ -378,7 +378,7 @@ public class QuestsCommand extends BaseCommand {
         }
 
         if (!silent) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestReset(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestReset(), Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId));
         }
     }
 
@@ -390,23 +390,23 @@ public class QuestsCommand extends BaseCommand {
         Profile profile = plugin.getProfileManager().getProfile(target);
 
         if (profile == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
             return;
         }
         QuestPool pool = profile.getQuestPool(poolId);
 
         if (pool == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
             return;
         }
         Quest quest = pool.getQuest(questId);
 
         if (quest == null) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
             return;
         }
         if (quest.isCompleted() || !quest.isStarted()) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotActive(),
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotActive(),
                     Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
             return;
         }
@@ -415,13 +415,13 @@ public class QuestsCommand extends BaseCommand {
         var result = QuestTracker.toggle(profile, pool, quest, questData, max);
 
         if (result == QuestTracker.ToggleResult.QUEUE_FULL) {
-            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackQueueFull(),
+            ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackQueueFull(),
                     Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()),
                     Placeholder.of("{max}", String.valueOf(max)));
             return;
         }
 
-        Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackToggled(),
+        ChatUtil.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestTrackToggled(),
                 Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
 
         if (plugin.getScoreboardManager() != null) {

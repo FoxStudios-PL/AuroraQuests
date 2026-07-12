@@ -3,7 +3,6 @@ package gg.auroramc.quests.menu;
 import gg.auroramc.aurora.api.AuroraAPI;
 import gg.auroramc.aurora.api.menu.AuroraMenu;
 import gg.auroramc.aurora.api.menu.ItemBuilder;
-import gg.auroramc.aurora.api.message.Chat;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.data.QuestData;
@@ -15,6 +14,7 @@ import gg.auroramc.quests.api.quest.QuestTracker;
 import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.config.Config;
 import gg.auroramc.quests.config.MessageConfig;
+import gg.auroramc.quests.util.ChatUtil;
 import gg.auroramc.quests.util.RomanNumber;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -276,12 +276,12 @@ public class PoolMenu {
         var result = QuestTracker.toggle(profile, pool, quest, questData, max);
 
         switch (result) {
-            case UNTRACKED -> Chat.sendMessage(player, msgConfig.getQuestUntracked(),
+            case UNTRACKED -> ChatUtil.sendMessage(player, msgConfig.getQuestUntracked(),
                     Placeholder.of("{quest}", quest.getDefinition().getName()));
-            case QUEUE_FULL -> Chat.sendMessage(player, msgConfig.getQuestTrackQueueFull(),
+            case QUEUE_FULL -> ChatUtil.sendMessage(player, msgConfig.getQuestTrackQueueFull(),
                     Placeholder.of("{quest}", quest.getDefinition().getName()),
                     Placeholder.of("{max}", String.valueOf(max)));
-            default -> Chat.sendMessage(player, msgConfig.getQuestTracked(),
+            default -> ChatUtil.sendMessage(player, msgConfig.getQuestTracked(),
                     Placeholder.of("{quest}", quest.getDefinition().getName()));
         }
 

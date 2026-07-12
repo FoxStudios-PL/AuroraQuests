@@ -1,6 +1,6 @@
 package gg.auroramc.quests.api.profile;
 
-import gg.auroramc.aurora.api.message.Chat;
+import gg.auroramc.quests.util.ChatUtil;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.aurora.api.user.AuroraUser;
 import gg.auroramc.quests.AuroraQuests;
@@ -55,7 +55,7 @@ public class Profile {
             var placeholder = Placeholder.of("{pool}", String.join(", ", rolledPools.stream().map(QuestPool::getName).toList()));
             var msg = AuroraQuests.getInstance().getConfigManager().getMessageConfig(player).getReRolledTarget();
             msg = Placeholder.execute(msg, placeholder);
-            Chat.sendMessage(player, AuroraQuests.getInstance().getLocalizationProvider().fillVariables(player, msg, placeholder));
+            ChatUtil.sendMessage(player, AuroraQuests.getInstance().getLocalizationProvider().fillVariables(player, msg, placeholder));
         }
 
         if (AuroraQuests.getInstance().getConfigManager().getConfig().getPurgeInvalidDataOnLogin()) {

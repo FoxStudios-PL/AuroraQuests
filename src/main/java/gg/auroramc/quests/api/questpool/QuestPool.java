@@ -1,7 +1,6 @@
 package gg.auroramc.quests.api.questpool;
 
 import gg.auroramc.aurora.api.AuroraAPI;
-import gg.auroramc.aurora.api.message.Chat;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.aurora.api.reward.RewardExecutor;
 import gg.auroramc.quests.AuroraQuests;
@@ -11,6 +10,7 @@ import gg.auroramc.quests.api.event.QuestPoolLevelUpEvent;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
 import gg.auroramc.quests.api.quest.QuestTracker;
+import gg.auroramc.quests.util.ChatUtil;
 import gg.auroramc.quests.util.RewardUtil;
 import gg.auroramc.quests.util.RomanNumber;
 import gg.auroramc.quests.util.SoundUtil;
@@ -144,7 +144,7 @@ public class QuestPool {
         profile.getData().unlockPool(getId());
 
         var msg = AuroraQuests.getInstance().getConfigManager().getMessageConfig(profile.getPlayer()).getPoolUnlocked();
-        Chat.sendMessage(profile.getPlayer(), msg, Placeholder.of("{pool}", pool.getDefinition().getName()));
+        ChatUtil.sendMessage(profile.getPlayer(), msg, Placeholder.of("{pool}", pool.getDefinition().getName()));
 
         return true;
     }
@@ -264,7 +264,7 @@ public class QuestPool {
             var msg = AuroraQuests.getInstance().getConfigManager().getMessageConfig(profile.getPlayer()).getReRolledTarget();
             var placeholder = Placeholder.of("{pool}", definition.getName());
             msg = Placeholder.execute(msg, placeholder);
-            Chat.sendMessage(profile.getPlayer(), AuroraQuests.getInstance().getLocalizationProvider().fillVariables(profile.getPlayer(), msg, placeholder));
+            ChatUtil.sendMessage(profile.getPlayer(), AuroraQuests.getInstance().getLocalizationProvider().fillVariables(profile.getPlayer(), msg, placeholder));
         }
     }
 
