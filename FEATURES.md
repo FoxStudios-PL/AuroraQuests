@@ -119,6 +119,80 @@ Backwards compatible  passing `true`/`false` as the 4th argument still works as 
 
 ---
 
+## Item turn-in: `DELIVER_ITEM` + `/quests deliver` + `has_items` placeholder
+
+A quest step where the player must **bring back items** and an NPC / script decides when
+to collect them. Unlike `TAKE_ITEM` (menu-click triggered, id-matched, takes partial
+amounts), `DELIVER_ITEM` is triggered **only by a command** (typically from the console),
+matches items on **material + name + lore + custom model data**, and is strictly
+**all-or-nothing**: either the player holds the whole required amount and it is removed
+from their inventory in one go (completing the objective), or **nothing happens at all**
+(no items taken, no progress, no message to the player).
+
+### Task definition
+
+```yaml
+tasks:
+  livrer_cristaux:
+    task: DELIVER_ITEM
+    display: "{status} &fRapporte {required} Cristaux d'Edynn &b{current}&f/&b{required}"
+    args:
+      amount: 5                        # required amount
+      item:
+        material: PAPER                # vanilla material or custom item id ("nexo:cristal_edynn")
+        name: "&bCristal d'Edynn"      # display name (legacy & codes and MiniMessage supported)
+        lore:                          # exact lore, line by line, in order
+          - "&7Un cristal rare."
+          - "&7Objet de quête."
+        custom-model-data: 1234
+```
+
+- **Every `item` criterion is optional** — only the configured ones are checked (but at
+  least one is required, otherwise the task logs a warning and never matches).
+- `material`: a vanilla id (`PAPER`, `minecraft:paper`) checks the Bukkit material; a
+  namespaced id from another plugin (`nexo:...`, `oraxen:...`, …) is resolved through
+  Aurora's item manager like `TAKE_ITEM` does.
+- `name` / `lore`: compared **exactly, colors included**, after normalizing both sides to
+  the same format — so `&b...`, hex and MiniMessage all work. Lore must have the same
+  lines in the same order.
+- The shared `filters` block (worlds, regions, …) applies at delivery time.
+
+### The command
+
+```
+/quests deliver <player> <pool_id> <quest_id> [objective_id|all] [silent]
+```
+
+| Usage | Effect |
+|---|---|
+| `/quests deliver Steve tutoriel recolte` | Tries every `DELIVER_ITEM` task of the quest, each all-or-nothing |
+| `/quests deliver Steve tutoriel recolte livrer_cristaux` | Tries only that task |
+| `/quests deliver Steve tutoriel recolte all true` | Silent: no feedback to the sender |
+
+- Permission `aurora.quests.admin.deliver` (default: op — the console always has it).
+- Only works while the quest is **active** (started, not completed); with
+  `linear-objectives`, a `DELIVER_ITEM` step responds only once it is the current step.
+- Feedback goes to the **sender only** (delivered / player doesn't have the items / no
+  active DELIVER_ITEM objective). The player sees nothing on failure — and on success only
+  the usual task-completion side effects (`on-complete`, rewards, next step…).
+- Typical NPC / script wiring: `quests deliver %player_name% tutoriel recolte all true`.
+- Folia-safe: the inventory check/removal runs on the player's region thread.
+
+### The placeholder
+
+| Placeholder | Returns |
+|---|---|
+| `%aurora_quests_has_items_<pool>_<quest>%` | `true` if the quest is active and the player's inventory satisfies **all** its not-yet-completed `DELIVER_ITEM` tasks (completed ones count as satisfied), otherwise `false` |
+| `%aurora_quests_has_items:<pool>:<quest>[:<objective>]%` | Explicit colon form; the optional third part targets a single task |
+
+- `false` for every other case: unknown pool/quest, quest locked or completed, quest
+  without `DELIVER_ITEM` tasks, missing items.
+- Ids may contain underscores (resolved against the real ids, like `is_at`).
+- Use it in DeluxeMenus/NPC conditions to only show a "turn in" button when it would
+  succeed, then run the `deliver` command from it.
+
+---
+
 ## New objective types
 
 Three plugin-integration objectives. Each is only active when the matching plugin is
