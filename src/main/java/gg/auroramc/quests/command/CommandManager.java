@@ -8,6 +8,7 @@ import gg.auroramc.aurora.api.message.Text;
 import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.questpool.PoolConfig;
 import gg.auroramc.quests.config.Config;
+import gg.auroramc.quests.util.ChatCenterer;
 import gg.auroramc.quests.config.MessageConfig;
 import gg.auroramc.quests.config.quest.QuestConfig;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -98,7 +99,8 @@ public class CommandManager {
     }
 
     private String m(String msg) {
-        return serializer.serialize(Text.component(Chat.translateToMM(msg)));
+        // ACF renders these itself, so <center> can't be honored here — just drop the marker.
+        return serializer.serialize(Text.component(Chat.translateToMM(ChatCenterer.strip(msg))));
     }
 
     public void unregisterCommands() {

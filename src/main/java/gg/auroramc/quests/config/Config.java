@@ -22,6 +22,13 @@ public class Config extends AuroraConfig {
     private Map<String, String> difficulties;
     private Boolean preventCreativeMode = false;
     private LeaderboardConfig leaderboards;
+    // Auto chat centering (<center> marker): half chat width in px the text is centered on.
+    // 154 = vanilla default (320px wide chat); effective width can differ per server/pack.
+    private Integer chatCenterPx = 154;
+    // Pixel width assumed for characters missing from the vanilla font table.
+    private Integer unknownCharWidth = 8;
+    // Per-character (or per-<glyph:NAME> tag) pixel widths for resource-pack glyphs.
+    private Map<String, Integer> glyphWidths = Map.of();
     private Map<String, DisplayComponent> displayComponents;
     private LevelUpSound levelUpSound;
     private LevelUpMessage levelUpMessage;
@@ -279,6 +286,31 @@ public class Config extends AuroraConfig {
                             "Extra lore lines appended to an active quest's menu item when it is NOT being tracked",
                             "(counterpart of tracked-lore). Only shown on unlocked, non-completed, untracked quests."));
                     yaml.set("config-version", 9);
+                },
+                (yaml) -> {
+                    yaml.set("chat-center-px", 154);
+                    yaml.setComments("chat-center-px", List.of(
+                            "Auto chat centering: prefix a chat line with <center> to center it at render time,",
+                            "after placeholders are resolved (so variable-width values stay centered). Works in",
+                            "quest-complete-message, level-up-message, display-components titles/lines and",
+                            "messages_xx.yml entries. The marker is removed from the rendered text.",
+                            "Half chat width in pixels the text is centered on. 154 = vanilla default (320px chat).",
+                            "Tune it if your effective chat width differs (client chat settings / resource pack)."));
+                    yaml.set("unknown-char-width", 8);
+                    yaml.setComments("unknown-char-width", List.of(
+                            "Pixel width assumed for characters outside Minecraft's default font table",
+                            "(resource-pack glyphs, CJK, ...). Accented Latin letters are measured from",
+                            "their base letter automatically."));
+                    if (!yaml.isConfigurationSection("glyph-widths")) {
+                        yaml.createSection("glyph-widths");
+                    }
+                    yaml.setComments("glyph-widths", List.of(
+                            "Optional pixel widths for custom glyphs, e.g.:",
+                            "glyph-widths:",
+                            "  'ꕾ': 14   # raw resource-pack glyph character",
+                            "  lys: 12   # width applied to <glyph:lys> tags",
+                            "Single-character keys override any character; longer keys match <glyph:NAME> tags."));
+                    yaml.set("config-version", 10);
                 }
         );
     }

@@ -8,6 +8,7 @@ import gg.auroramc.aurora.api.message.Text;
 import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.questpool.QuestPool;
+import gg.auroramc.quests.util.ChatCenterer;
 import gg.auroramc.quests.util.RomanNumber;
 import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
@@ -117,11 +118,12 @@ public class LevelMenu {
                 if (line.equals("component:rewards")) {
                     var display = cmf.getDisplayComponents().get("rewards");
 
+                    // Menu lore is not chat: drop a <center> marker instead of centering.
                     if (!rewards.isEmpty()) {
-                        lore.add(display.getTitle());
+                        lore.add(ChatCenterer.strip(display.getTitle()));
                     }
                     for (var reward : rewards) {
-                        lore.add(display.getLine().replace("{reward}", reward.getDisplay(player, rPlaceholders)));
+                        lore.add(ChatCenterer.strip(display.getLine()).replace("{reward}", reward.getDisplay(player, rPlaceholders)));
                     }
                 } else {
                     lore.add(line);

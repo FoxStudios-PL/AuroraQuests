@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 9
+config-version: 10
 
 debug: false
 language: en
@@ -55,6 +55,24 @@ leaderboards:
   # Should we create leaderboards for global (not infinite) quest pools as well?
   # Only makes sense to enable this if you have a lot of quests, and they are not easy to complete fast
   include-global: false
+
+# Auto chat centering: prefix a chat line with <center> to center it at render time,
+# after placeholders are resolved (so variable-width values like {quest} stay centered).
+# Works in quest-complete-message, level-up-message, display-components titles/lines
+# and messages_xx.yml entries. The marker is removed from the rendered text.
+# Half chat width in pixels the text is centered on. 154 = vanilla default (320px chat).
+# Tune it if your effective chat width differs (client chat settings / resource pack).
+chat-center-px: 154
+# Pixel width assumed for characters outside Minecraft's default font table
+# (resource-pack glyphs, CJK, ...). Accented Latin letters are measured from
+# their base letter automatically.
+unknown-char-width: 8
+# Optional pixel widths for custom glyphs, e.g.:
+# glyph-widths:
+#   'ꕾ': 14   # raw resource-pack glyph character
+#   lys: 12   # width applied to <glyph:lys> tags
+# Single-character keys override any character; longer keys match <glyph:NAME> tags.
+glyph-widths: { }
 
 display-components:
   rewards:
