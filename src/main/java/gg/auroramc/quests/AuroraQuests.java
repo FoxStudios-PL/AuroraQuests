@@ -258,6 +258,7 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         ObjectiveFactory.registerObjective(ObjectiveType.REACH_ISLAND_LEVEL, IslandLevelObjective.class);
         ObjectiveFactory.registerObjective(ObjectiveType.UPGRADE_ISLAND, IslandUpgradeObjective.class);
         ObjectiveFactory.registerObjective(ObjectiveType.TAKE_ITEM, TakeItemObjective.class);
+        ObjectiveFactory.registerObjective(ObjectiveType.DELIVER_ITEM, DeliverItemObjective.class);
         ObjectiveFactory.registerObjective(ObjectiveType.PLACEHOLDER, PlaceholderObjective.class);
         ObjectiveFactory.registerObjective(ObjectiveType.ENTER_WORLD, EnterWorldObjective.class);
         ObjectiveFactory.registerObjective(ObjectiveType.DEAL_DAMAGE, DealDamageObjective.class);

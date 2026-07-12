@@ -52,6 +52,9 @@ public class MessageConfig extends AuroraConfig {
     private String questNotActive = "&cQuest {quest} is not active for player {player}.";
     private String objectiveNotFound = "&cObjective {objective} not found in quest {quest}.";
     private String objectiveAlreadyCompleted = "&cObjective {objective} is already completed for player {player}.";
+    private String itemsDelivered = "&aTook the required items from {player} for {quest}/{objective}.";
+    private String itemsMissing = "&cPlayer {player} doesn't have the required items for {quest}/{objective}.";
+    private String deliverNoObjectives = "&cNo active DELIVER_ITEM objective matching {objective} in quest {quest} for {player}.";
     private TimerFormatConfig timerFormat = new TimerFormatConfig();
     private ConfigurationSection custom;
 
@@ -199,6 +202,12 @@ public class MessageConfig extends AuroraConfig {
                 (yaml) -> {
                     yaml.set("quest-track-queue-full", "&cYou are already tracking the maximum number of quests ({max}).");
                     yaml.set("config-version", 6);
+                },
+                (yaml) -> {
+                    yaml.set("items-delivered", "&aTook the required items from {player} for {quest}/{objective}.");
+                    yaml.set("items-missing", "&cPlayer {player} doesn't have the required items for {quest}/{objective}.");
+                    yaml.set("deliver-no-objectives", "&cNo active DELIVER_ITEM objective matching {objective} in quest {quest} for {player}.");
+                    yaml.set("config-version", 7);
                 }
         );
     }

@@ -7,6 +7,7 @@ import gg.auroramc.aurora.api.message.Chat;
 import gg.auroramc.aurora.api.message.Placeholder;
 import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.data.QuestData;
+import gg.auroramc.quests.api.event.objective.PlayerDeliverItemEvent;
 import gg.auroramc.quests.api.objective.Objective;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
@@ -15,6 +16,7 @@ import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.menu.MainMenu;
 import gg.auroramc.quests.menu.PoolMenu;
 import gg.auroramc.quests.questbook.QuestBookState;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -215,6 +217,89 @@ public class QuestsCommand extends BaseCommand {
 
         if (plugin.getScoreboardManager() != null) {
             plugin.getScoreboardManager().refresh(target);
+        }
+    }
+
+    @Subcommand("deliver")
+    @Description("Takes the items required by a quest's DELIVER_ITEM objectives from a player's inventory, all-or-nothing")
+    @CommandCompletion("@players @pools @quests @objectives true|false")
+    @CommandPermission("aurora.quests.admin.deliver")
+    public void onQuestDeliver(CommandSender sender, @Flags("other") Player target, String poolId, String questId, @Default("all") String objectiveId, @Default("false") Boolean silent) {
+        String targetObjective;
+        boolean isSilent;
+
+        if (objectiveId.equalsIgnoreCase("true") || objectiveId.equalsIgnoreCase("false")) {
+            isSilent = Boolean.parseBoolean(objectiveId);
+            targetObjective = "all";
+        } else {
+            targetObjective = objectiveId;
+            isSilent = silent;
+        }
+
+        var profile = plugin.getProfileManager().getProfile(target);
+        if (profile == null) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            return;
+        }
+
+        var pool = profile.getQuestPool(poolId);
+        if (pool == null) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            return;
+        }
+
+        var quest = pool.getQuest(questId);
+        if (quest == null) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            return;
+        }
+
+        if (!targetObjective.equals("all") && quest.getObjectives().stream().noneMatch(o -> o.getId().equals(targetObjective))) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getObjectiveNotFound(),
+                    Placeholder.of("{objective}", targetObjective), Placeholder.of("{quest}", questId));
+            return;
+        }
+
+        if (quest.isCompleted() || !quest.isStarted()) {
+            Chat.sendMessage(sender, plugin.getConfigManager().getMessageConfig(sender).getQuestNotActive(),
+                    Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
+            return;
+        }
+
+        Runnable delivery = () -> {
+            var event = new PlayerDeliverItemEvent(target, quest, targetObjective.equals("all") ? null : targetObjective);
+            Bukkit.getPluginManager().callEvent(event);
+
+            if (!event.getDelivered().isEmpty() && plugin.getScoreboardManager() != null) {
+                plugin.getScoreboardManager().refresh(target);
+            }
+
+            if (isSilent) return;
+
+            var msg = plugin.getConfigManager().getMessageConfig(sender);
+            if (!event.getDelivered().isEmpty()) {
+                Chat.sendMessage(sender, msg.getItemsDelivered(),
+                        Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId),
+                        Placeholder.of("{objective}", String.join(", ", event.getDelivered())));
+            } else if (!event.getMissing().isEmpty()) {
+                Chat.sendMessage(sender, msg.getItemsMissing(),
+                        Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId),
+                        Placeholder.of("{objective}", String.join(", ", event.getMissing())));
+            } else {
+                Chat.sendMessage(sender, msg.getDeliverNoObjectives(),
+                        Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId),
+                        Placeholder.of("{objective}", targetObjective));
+            }
+        };
+
+        // Inventory is read and mutated, so it must happen on the player's region thread.
+        // On Paper that's the main thread the command already runs on (keeps the sender
+        // feedback synchronous, e.g. for RCON); on Folia the command runs on the global
+        // region thread, so hop onto the player's scheduler.
+        if (Bukkit.isOwnedByCurrentRegion(target)) {
+            delivery.run();
+        } else {
+            target.getScheduler().run(plugin, (task) -> delivery.run(), null);
         }
     }
 

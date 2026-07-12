@@ -8,11 +8,13 @@ import gg.auroramc.quests.api.objective.Objective;
 import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
 import gg.auroramc.quests.api.questpool.QuestPool;
+import gg.auroramc.quests.objective.DeliverItemObjective;
 import gg.auroramc.quests.util.DurationFormatter;
 import gg.auroramc.quests.util.RomanNumber;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 public class QuestPlaceholderHandler implements PlaceholderHandler {
     @Override
@@ -33,6 +35,10 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
 
         if (full.startsWith("is_at_") || full.startsWith("is_at:")) {
             return handleIsAtPlaceholder(profile, full.substring(6));
+        }
+
+        if (full.startsWith("has_items_") || full.startsWith("has_items:")) {
+            return handleHasItemsPlaceholder(profile, full.substring(10));
         }
 
         if (full.endsWith("total_completed_raw")) {
@@ -201,6 +207,55 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
     }
 
     /**
+     * Tells whether the player's inventory holds everything needed to validate the
+     * DELIVER_ITEM objectives of a quest (see {@code /quests deliver}).
+     * <pre>
+     *   %aurora_quests_has_items_&lt;pool&gt;_&lt;quest&gt;%              (natural form)
+     *   %aurora_quests_has_items:&lt;pool&gt;:&lt;quest&gt;[:&lt;objective&gt;]% (explicit form)
+     * </pre>
+     * Returns "true" only when the quest is active (started, not completed) and every
+     * targeted, not-yet-completed DELIVER_ITEM objective has its remaining amount in the
+     * inventory (already completed ones count as satisfied). "false" for any other case:
+     * unknown ids, quest locked or completed, no DELIVER_ITEM objective, missing items.
+     * <p>
+     * Like {@code is_at}, the underscore form is resolved against the player's real
+     * pool/quest ids, so ids may freely contain underscores.
+     */
+    private String handleHasItemsPlaceholder(Profile profile, String params) {
+        // Explicit colon form — unambiguous, optionally targets a single objective.
+        if (params.indexOf(':') >= 0) {
+            String[] parts = params.split(":", 3);
+            if (parts.length < 2) return null;
+            var pool = profile.getQuestPool(parts[0]);
+            if (pool == null) return "false";
+            return hasItemsResult(pool.getQuest(parts[1]), parts.length == 3 ? parts[2] : null);
+        }
+
+        // Natural underscore form — quest level only, resolved against known ids.
+        for (var pool : profile.getQuestPools()) {
+            var poolPrefix = pool.getId() + "_";
+            if (!params.startsWith(poolPrefix)) continue;
+            var quest = pool.getQuest(params.substring(poolPrefix.length()));
+            if (quest != null) return hasItemsResult(quest, null);
+        }
+        return "false";
+    }
+
+    private String hasItemsResult(@Nullable Quest quest, @Nullable String objectiveId) {
+        if (quest == null) return "false";
+        if (quest.isCompleted() || !quest.isStarted()) return "false";
+
+        var found = false;
+        for (var objective : quest.getObjectives()) {
+            if (!(objective instanceof DeliverItemObjective deliver)) continue;
+            if (objectiveId != null && !deliver.getId().equals(objectiveId)) continue;
+            found = true;
+            if (!deliver.hasRequiredItems()) return "false";
+        }
+        return String.valueOf(found);
+    }
+
+    /**
      * "true"/"false" if {@code objectiveId} belongs to the quest, otherwise null so the
      * underscore resolver can keep trying other pool/quest splits.
      */
@@ -242,6 +297,7 @@ public class QuestPlaceholderHandler implements PlaceholderHandler {
         list.add("tracked_current_amount_raw");
         list.add("tracked_required_amount_raw");
         list.add("is_at_<pool>_<quest>_<objective>");
+        list.add("has_items_<pool>_<quest>");
 
         for (var pool : manager.getPoolIds()) {
             list.add(pool + "_level");

@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 6
+config-version: 7
 
 reloaded: "&aReloaded configuration!"
 data-not-loaded-yet: "&cData for this player hasn't loaded yet, try again later!"
@@ -34,6 +34,9 @@ quest-track-queue-full: "&cYou are already tracking the maximum number of quests
 quest-not-active: "&cQuest {quest} is not active for player {player}."
 objective-not-found: "&cObjective {objective} not found in quest {quest}."
 objective-already-completed: "&cObjective {objective} is already completed for player {player}."
+items-delivered: "&aTook the required items from {player} for {quest}/{objective}."
+items-missing: "&cPlayer {player} doesn't have the required items for {quest}/{objective}."
+deliver-no-objectives: "&cNo active DELIVER_ITEM objective matching {objective} in quest {quest} for {player}."
 
 timer-format:
   short-format:
