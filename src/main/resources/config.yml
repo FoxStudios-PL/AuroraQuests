@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 10
+config-version: 11
 
 debug: false
 language: en
@@ -176,6 +176,16 @@ quest-book:
 scoreboard:
   enabled: false
   refresh-interval: 20
+  # Hide the sidebar while a watched BetterHud popup is showing, then restore it
+  # automatically when the popup ends (fixes the popup being drawn under the sidebar).
+  # Requires BetterHud; if it is not installed the sidebar behaves exactly as before.
+  # Set to false to keep the old behaviour (sidebar stays visible during popups).
+  hide-during-popups: true
+  # BetterHud popup groups (the popup file's `group:` value) that hide the sidebar
+  # while active. Add more group names to watch additional popups; leave empty to
+  # disable hiding even when hide-during-popups is true.
+  hide-during-popup-groups:
+    - "challenge"
   title: "&6&lQUEST"
   lines:
     - ""
