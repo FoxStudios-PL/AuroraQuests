@@ -87,6 +87,15 @@ dependencies {
         isTransitive = false
     }
 
+    // BetterHud (optional, softdepend): used only to hide the quest sidebar while a
+    // popup is showing. Pinned to the server version (1.14.1). The public API types
+    // (BetterHudAPI, PlayerManager, HudPlayer, popup classes) live in the
+    // standard-api module; HudPlayer extends BetterCommandSource, so BetterCommand
+    // must be on the compile classpath too. Compile-only: never shaded, provided by
+    // BetterHud at runtime and absent otherwise.
+    compileOnly("io.github.toxicity188:BetterHud-standard-api:1.14.1")
+    compileOnly("io.github.toxicity188:BetterCommand:1.4.3")
+
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
     implementation("org.bstats:bstats-bukkit:3.0.2")
 

@@ -147,6 +147,13 @@ public class Config extends AuroraConfig {
         private Integer refreshInterval = 20;
         private String title = "";
         private List<String> lines = List.of();
+        // While a watched BetterHud popup is active for the player, hide the sidebar so
+        // the popup (drawn under it) becomes visible, then restore it when the popup ends.
+        // Requires BetterHud; silently ignored (sidebar behaves as before) if it is absent.
+        private Boolean hideDuringPopups = true;
+        // BetterHud popup groups (the popup file's `group:` value) that hide the sidebar
+        // while active. Empty disables the feature even when hide-during-popups is true.
+        private List<String> hideDuringPopupGroups = List.of("challenge");
     }
 
     public static File getFile(AuroraQuests plugin) {
@@ -311,6 +318,20 @@ public class Config extends AuroraConfig {
                             "  lys: 12   # width applied to <glyph:lys> tags",
                             "Single-character keys override any character; longer keys match <glyph:NAME> tags."));
                     yaml.set("config-version", 10);
+                },
+                (yaml) -> {
+                    yaml.set("scoreboard.hide-during-popups", true);
+                    yaml.setComments("scoreboard.hide-during-popups", List.of(
+                            "Hide the quest sidebar while a watched BetterHud popup is showing, then",
+                            "restore it automatically when the popup ends. Fixes the popup being drawn",
+                            "underneath the sidebar (z-order). Requires BetterHud: if it is not installed",
+                            "the sidebar behaves exactly as before. Set to false to keep the old behaviour."));
+                    yaml.set("scoreboard.hide-during-popup-groups", List.of("challenge"));
+                    yaml.setComments("scoreboard.hide-during-popup-groups", List.of(
+                            "BetterHud popup groups (the popup file's `group:` value) that hide the",
+                            "sidebar while active. Add more group names to watch additional popups;",
+                            "leave empty to disable hiding even when hide-during-popups is true."));
+                    yaml.set("config-version", 11);
                 }
         );
     }
