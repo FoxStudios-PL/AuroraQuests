@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - v2
+      - '26.2'
+      - claude/auroraquest-26-2-assessment-7s67r5
 
 jobs:
   build:
@@ -16,16 +18,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: 8.14
+          gradle-version: '9.6.0'
 
       - name: Build with Gradle
         run: gradle clean build
@@ -45,7 +47,11 @@ jobs:
           commits_base64=$(echo "[$commits_json]" | base64 -w 0)
           echo "commits=$commits_base64" >> $GITHUB_OUTPUT
 
+      # Only the release branches publish to the dev-build distribution server; the 26.2
+      # branch builds and keeps its jar as a GitHub artifact. Drop this guard once 26.2
+      # becomes the mainline.
       - name: Upload to server
+        if: github.ref_name == 'main' || github.ref_name == 'v2'
         run: |
           commits_json=$(echo "${{ steps.commits.outputs.commits }}" | base64 --decode)
           artifact_url="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ steps.upload-jar.outputs.artifact-id }}/zip"
