@@ -5,8 +5,7 @@ on:
     branches:
       - main
       - v2
-      - '26.2'
-      - claude/auroraquest-26-2-assessment-7s67r5
+      - AuroraQuest-26.2
 
 jobs:
   build:
