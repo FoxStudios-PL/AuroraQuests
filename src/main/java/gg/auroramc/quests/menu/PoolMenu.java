@@ -60,7 +60,7 @@ public class PoolMenu {
         var menu = new AuroraMenu(player, Placeholder.execute(mc.getTitle(), Placeholder.of("{name}", config.getName())), mc.getRows() * 9, false, localization, Placeholder.of("{name}", config.getName()));
 
         if (config.getMenu().getFiller().getEnabled()) {
-            menu.addFiller(ItemBuilder.of(mc.getFiller().getItem()).localization(localization).toItemStack(player));
+            menu.addFiller(MenuItems.of(mc.getFiller().getItem()).localization(localization).toItemStack(player));
         } else {
             menu.addFiller(ItemBuilder.filler(Material.AIR));
         }
@@ -94,7 +94,7 @@ public class PoolMenu {
         }
 
         for (var customItem : config.getMenu().getCustomItems().values()) {
-            menu.addItem(ItemBuilder.of(customItem)
+            menu.addItem(MenuItems.of(customItem)
                     .localization(localization)
                     .placeholder(totalCompletedPlaceholder)
                     .placeholder(Placeholder.of("{name}", config.getName()))
@@ -109,7 +109,7 @@ public class PoolMenu {
         if (mc.getHasCloseButton()) {
             var closeConfig = cmf.getItems().get("close").merge(mc.getItems().get("close"));
 
-            menu.addItem(ItemBuilder.close(closeConfig).localization(localization).build(player), (e) -> {
+            menu.addItem(MenuItems.close(closeConfig).localization(localization).build(player), (e) -> {
                 player.closeInventory();
             });
         }
@@ -117,7 +117,7 @@ public class PoolMenu {
         if (mc.getHasBackButton()) {
             var backConfig = cmf.getItems().get("back").merge(mc.getItems().get("back"));
 
-            menu.addItem(ItemBuilder.back(backConfig).localization(localization).build(player), (e) -> {
+            menu.addItem(MenuItems.back(backConfig).localization(localization).build(player), (e) -> {
                 if (backAction != null) {
                     backAction.run();
                 } else {
@@ -134,7 +134,7 @@ public class PoolMenu {
         for (int i = 0; i < mc.getDisplayArea().size(); i++) {
             var slot = mc.getDisplayArea().get(i);
             if (quests.size() <= i) {
-                menu.addItem(ItemBuilder.item(new ItemStack(Material.AIR)).slot(slot).build(player));
+                menu.addItem(MenuItems.item(new ItemStack(Material.AIR)).slot(slot).build(player));
                 continue;
             }
 
@@ -168,7 +168,7 @@ public class PoolMenu {
             }
             var qPlaceholders = quest.getPlaceholders();
 
-            var builder = ItemBuilder.of(quest.getDefinition().getMenuItem()).slot(slot)
+            var builder = MenuItems.of(quest.getDefinition().getMenuItem()).slot(slot)
                     .setName(Placeholder.execute(quest.getDefinition().getMenuItem().getName(), Placeholder.of("{name}", quest.getDefinition().getName())))
                     .setLore(quest.getDefinition().getMenuItem().getLore().stream().map(l -> Placeholder.execute(l, qPlaceholders)).toList())
                     .localization(localization)
@@ -194,7 +194,7 @@ public class PoolMenu {
             var pageCount = getTotalPageCount(mc.getDisplayArea().size());
             List<Placeholder<?>> placeholders = List.of(Placeholder.of("{current}", page + 1), Placeholder.of("{max}", pageCount + 1));
 
-            menu.addItem(ItemBuilder.of(cmf.getItems().get("previous-page").merge(mc.getItems().get("previous-page")))
+            menu.addItem(MenuItems.of(cmf.getItems().get("previous-page").merge(mc.getItems().get("previous-page")))
                     .localization(localization)
                     .placeholder(placeholders).build(player), (e) -> {
                 if (page > 0) {
@@ -203,11 +203,11 @@ public class PoolMenu {
                 }
             });
 
-            menu.addItem(ItemBuilder.of(cmf.getItems().get("current-page").merge(mc.getItems().get("current-page")))
+            menu.addItem(MenuItems.of(cmf.getItems().get("current-page").merge(mc.getItems().get("current-page")))
                     .localization(localization)
                     .placeholder(placeholders).build(player));
 
-            menu.addItem(ItemBuilder.of(cmf.getItems().get("next-page").merge(mc.getItems().get("next-page")))
+            menu.addItem(MenuItems.of(cmf.getItems().get("next-page").merge(mc.getItems().get("next-page")))
                     .localization(localization)
                     .placeholder(placeholders).build(player), (e) -> {
                 if (page < pageCount) {
@@ -220,7 +220,7 @@ public class PoolMenu {
         // Switch between completed/locked quests
         if (pool.isGlobal()) {
             if (isCompletedQuests) {
-                var item = ItemBuilder.of(cmf.getItems().get("switch-to-active").merge(mc.getItems().get("switch-to-active")))
+                var item = MenuItems.of(cmf.getItems().get("switch-to-active").merge(mc.getItems().get("switch-to-active")))
                         .localization(localization)
                         .placeholder(Placeholder.of("{name}", config.getName())).build(player);
 
@@ -230,7 +230,7 @@ public class PoolMenu {
                     createMenu().open();
                 });
             } else {
-                var item = ItemBuilder.of(cmf.getItems().get("switch-to-completed").merge(mc.getItems().get("switch-to-completed")))
+                var item = MenuItems.of(cmf.getItems().get("switch-to-completed").merge(mc.getItems().get("switch-to-completed")))
                         .localization(localization)
                         .placeholder(Placeholder.of("{name}", config.getName()))
                         .placeholder(totalCompletedPlaceholder)
@@ -247,7 +247,7 @@ public class PoolMenu {
 
         // Leveling button
         if (pool.hasLeveling()) {
-            var item = ItemBuilder.of(cmf.getItems().get("switch-to-levels").merge(mc.getItems().get("switch-to-levels")))
+            var item = MenuItems.of(cmf.getItems().get("switch-to-levels").merge(mc.getItems().get("switch-to-levels")))
                     .localization(localization)
                     .placeholder(Placeholder.of("{name}", config.getName()))
                     .placeholder(totalCompletedPlaceholder)

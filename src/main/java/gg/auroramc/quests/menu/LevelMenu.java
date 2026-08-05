@@ -44,19 +44,19 @@ public class LevelMenu {
         var menu = new AuroraMenu(player, cm.getTitle(), cm.getRows() * 9, false, localization, Placeholder.of("{name}", pool.getName()));
 
         if (cm.getFiller().getEnabled()) {
-            menu.addFiller(ItemBuilder.of(cm.getFiller().getItem()).localization(localization).toItemStack(player));
+            menu.addFiller(MenuItems.of(cm.getFiller().getItem()).localization(localization).toItemStack(player));
         } else {
             menu.addFiller(ItemBuilder.filler(Material.AIR));
         }
 
         if (cm.getHasBackButton()) {
-            menu.addItem(ItemBuilder.back(cmf.getItems().get("back").merge(cm.getItems().get("back"))).localization(localization).build(player), (e) -> {
+            menu.addItem(MenuItems.back(cmf.getItems().get("back").merge(cm.getItems().get("back"))).localization(localization).build(player), (e) -> {
                 backAction.run();
             });
         }
 
         if (cm.getHasCloseButton()) {
-            menu.addItem(ItemBuilder.close(cmf.getItems().get("close").merge(cm.getItems().get("close"))).localization(localization).build(player), (e) -> {
+            menu.addItem(MenuItems.close(cmf.getItems().get("close").merge(cm.getItems().get("close"))).localization(localization).build(player), (e) -> {
                 player.closeInventory();
             });
         }
@@ -71,7 +71,7 @@ public class LevelMenu {
         );
 
         for (var customItem : cm.getCustomItems().values()) {
-            menu.addItem(ItemBuilder.of(customItem).localization(localization).placeholder(placeholders).build(player));
+            menu.addItem(MenuItems.of(customItem).localization(localization).placeholder(placeholders).build(player));
         }
 
         var requirements = getPage(page, cm.getDisplayArea().size());
@@ -130,7 +130,7 @@ public class LevelMenu {
                 }
             }
 
-            var builder = ItemBuilder.of(itemConfig).slot(slot)
+            var builder = MenuItems.of(itemConfig).slot(slot)
                     .localization(localization)
                     .loreCompute(() -> lore.stream().map(l -> Text.component(player, localization.fillVariables(player, l, rPlaceholders))).toList())
                     .placeholder(rPlaceholders);
@@ -149,7 +149,7 @@ public class LevelMenu {
 
             List<Placeholder<?>> pl = List.of(Placeholder.of("{current}", page + 1), Placeholder.of("{max}", pageCount + 1));
 
-            menu.addItem(ItemBuilder.of(cmf.getItems().get("previous-page").merge(cm.getItems().get("previous-page")))
+            menu.addItem(MenuItems.of(cmf.getItems().get("previous-page").merge(cm.getItems().get("previous-page")))
                     .localization(localization)
                     .placeholder(pl).build(player), (e) -> {
                 if (page > 0) {
@@ -158,11 +158,11 @@ public class LevelMenu {
                 }
             });
 
-            menu.addItem(ItemBuilder.of(cmf.getItems().get("current-page").merge(cm.getItems().get("current-page")))
+            menu.addItem(MenuItems.of(cmf.getItems().get("current-page").merge(cm.getItems().get("current-page")))
                     .localization(localization)
                     .placeholder(pl).build(player));
 
-            menu.addItem(ItemBuilder.of(cmf.getItems().get("next-page").merge(cm.getItems().get("next-page")))
+            menu.addItem(MenuItems.of(cmf.getItems().get("next-page").merge(cm.getItems().get("next-page")))
                     .localization(localization)
                     .placeholder(pl).build(player), (e) -> {
                 if (page < pageCount) {

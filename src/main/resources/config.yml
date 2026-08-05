@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 11
+config-version: 12
 
 debug: false
 language: en
@@ -73,6 +73,27 @@ unknown-char-width: 8
 #   lys: 12   # width applied to <glyph:lys> tags
 # Single-character keys override any character; longer keys match <glyph:NAME> tags.
 glyph-widths: { }
+
+# Shared appearance options for every quest menu.
+menus:
+  # Hide the tooltip sections Minecraft appends on its own to menu items
+  # ("6 Attack Damage", "1.6 Attack Speed", potion effects, enchantments, ...)
+  # so only the name and lore you configured are shown. Set to false to keep
+  # the vanilla description. Items keep their glint: only the text is hidden.
+  hide-vanilla-tooltips: true
+  # Which sections are hidden when hide-vanilla-tooltips is on. Remove an entry
+  # to let that section show again (e.g. drop HIDE_ENCHANTS to keep enchantment
+  # lines). Any Bukkit ItemFlag name is accepted.
+  hidden-tooltip-flags:
+    - HIDE_ATTRIBUTES
+    - HIDE_ADDITIONAL_TOOLTIP
+    - HIDE_ENCHANTS
+    - HIDE_STORED_ENCHANTS
+    - HIDE_UNBREAKABLE
+    - HIDE_DESTROYS
+    - HIDE_PLACED_ON
+    - HIDE_DYE
+    - HIDE_ARMOR_TRIM
 
 display-components:
   rewards:

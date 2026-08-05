@@ -43,13 +43,13 @@ public class MainMenu {
         var menu = new AuroraMenu(player, config.getTitle(), config.getMenuRows() * 9, false, localization);
 
         if (config.getFiller().getEnabled()) {
-            menu.addFiller(ItemBuilder.of(config.getFiller().getItem()).localization(localization).toItemStack(player));
+            menu.addFiller(MenuItems.of(config.getFiller().getItem()).localization(localization).toItemStack(player));
         } else {
             menu.addFiller(ItemBuilder.filler(Material.AIR));
         }
 
         if (config.getHasCloseButton()) {
-            menu.addItem(ItemBuilder.close(merge(cmf, config, "close")).localization(localization).build(player), (e) -> {
+            menu.addItem(MenuItems.close(merge(cmf, config, "close")).localization(localization).build(player), (e) -> {
                 player.closeInventory();
             });
         }
@@ -100,7 +100,7 @@ public class MainMenu {
                 lore.addAll(mi.getLockedLore());
             }
 
-            menu.addItem(ItemBuilder.of(mi.getItem())
+            menu.addItem(MenuItems.of(mi.getItem())
                     .setName(Placeholder.execute(mi.getItem().getName(), Placeholder.of("{name}", pool.getDefinition().getName())))
                     .localization(localization)
                     .extraLore(lore)
@@ -115,7 +115,7 @@ public class MainMenu {
         }
 
         for (var customItem : config.getCustomItems().values()) {
-            menu.addItem(ItemBuilder.of(customItem).localization(localization).build(player));
+            menu.addItem(MenuItems.of(customItem).localization(localization).build(player));
         }
 
         if (maxPage > 1) {
@@ -125,16 +125,16 @@ public class MainMenu {
                     Placeholder.of("{total}", maxPage)
             );
 
-            menu.addItem(ItemBuilder.of(merge(cmf, config, "previous-page")).localization(localization).placeholder(placeholders).build(player), (e) -> {
+            menu.addItem(MenuItems.of(merge(cmf, config, "previous-page")).localization(localization).placeholder(placeholders).build(player), (e) -> {
                 if (page > 1) {
                     page--;
                     createMenu().open();
                 }
             });
 
-            menu.addItem(ItemBuilder.of(merge(cmf, config, "current-page")).localization(localization).placeholder(placeholders).build(player));
+            menu.addItem(MenuItems.of(merge(cmf, config, "current-page")).localization(localization).placeholder(placeholders).build(player));
 
-            menu.addItem(ItemBuilder.of(merge(cmf, config, "next-page")).localization(localization).placeholder(placeholders).build(player), (e) -> {
+            menu.addItem(MenuItems.of(merge(cmf, config, "next-page")).localization(localization).placeholder(placeholders).build(player), (e) -> {
                 if (page < maxPage) {
                     page++;
                     createMenu().open();
