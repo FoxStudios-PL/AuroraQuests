@@ -23,7 +23,7 @@ plugins {
 
 group = "gg.auroramc"
 // Suffixed so the 26.2 artifact is never mistaken for the 1.21.11 one built from main.
-version = "2.2.0-26.2"
+version = "2.2.1-26.2"
 
 java {
     toolchain {
@@ -71,7 +71,7 @@ dependencies {
     }
     compileOnly("com.github.Xiao-MoMi:Custom-Fishing:2.3.3")
     //compileOnly("com.nisovin.shopkeepers:ShopkeepersAPI:2.23.3")
-    compileOnly("com.github.Gypopo:EconomyShopGUI-API:1.7.2")
+    compileOnly("com.github.Gypopo:EconomyShopGUI-API:1.10.1")
     compileOnly("io.th0rgal:oraxen:1.179.0")
     compileOnly("com.github.brcdev-minecraft:shopgui-api:3.0.0") {
         exclude(group = "org.spigotmc", module = "spigot-api")

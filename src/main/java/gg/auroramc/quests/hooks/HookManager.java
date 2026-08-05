@@ -17,8 +17,10 @@ public class HookManager {
                 if (hook instanceof Listener) {
                     Bukkit.getPluginManager().registerEvents((Listener) hook, plugin);
                 }
-            } catch (Exception e) {
-                AuroraQuests.logger().warning("Failed to enable hook " + hook.getClass().getSimpleName() + ": " + e.getMessage());
+            } catch (Throwable e) {
+                // Throwable, not Exception: a hook compiled against an outdated API of the plugin
+                // it hooks into fails with a LinkageError, which must not take AuroraQuests down.
+                AuroraQuests.logger().warning("Failed to enable hook " + hook.getClass().getSimpleName() + ": " + e);
             }
         }
     }
@@ -31,8 +33,8 @@ public class HookManager {
                     instance.hookAtStartUp(plugin);
                     hooks.put(hook.getClazz(), instance);
                 }
-            } catch (Exception e) {
-                AuroraQuests.logger().warning("Failed to hook " + String.join(", ", hook.getPlugins()) + ": " + e.getMessage());
+            } catch (Throwable e) {
+                AuroraQuests.logger().warning("Failed to hook " + String.join(", ", hook.getPlugins()) + ": " + e);
             }
         }
     }

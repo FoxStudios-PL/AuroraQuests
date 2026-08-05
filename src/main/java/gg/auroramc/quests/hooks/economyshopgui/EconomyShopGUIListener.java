@@ -5,6 +5,7 @@ import gg.auroramc.quests.api.event.objective.PlayerEarnFromSellEvent;
 import gg.auroramc.quests.api.event.objective.PlayerPurchaseItemEvent;
 import gg.auroramc.quests.api.event.objective.PlayerSellItemEvent;
 import gg.auroramc.quests.api.event.objective.PlayerSpendOnPurchaseEvent;
+import gg.auroramc.quests.util.EnumCompat;
 import me.gypopo.economyshopgui.api.events.PostTransactionEvent;
 import me.gypopo.economyshopgui.util.Transaction;
 import org.bukkit.Bukkit;
@@ -15,18 +16,19 @@ import org.bukkit.event.Listener;
 import java.util.Set;
 
 public class EconomyShopGUIListener implements Listener {
-    private final Set<Transaction.Result> successResults = Set.of(
-            Transaction.Result.SUCCESS, Transaction.Result.SUCCESS_COMMANDS_EXECUTED,
-            Transaction.Result.NOT_ALL_ITEMS_ADDED
+    // Constants are resolved by name: EconomyShopGUI keeps reshuffling these enums between
+    // versions, and a direct reference to one that no longer exists kills the whole plugin
+    // with a NoSuchFieldError while this class is being initialized. NOT_ALL_ITEMS_ADDED was
+    // dropped in EconomyShopGUI-API 1.8, it is kept here for older installations.
+    private final Set<Transaction.Result> successResults = EnumCompat.setOf(Transaction.Result.class,
+            "SUCCESS", "SUCCESS_COMMANDS_EXECUTED", "NOT_ALL_ITEMS_ADDED"
     );
-    private final Set<Transaction.Type> buyTypes = Set.of(
-            Transaction.Type.BUY_SCREEN, Transaction.Type.BUY_STACKS_SCREEN, Transaction.Type.QUICK_BUY,
-            Transaction.Type.SHOPSTAND_BUY_SCREEN
+    private final Set<Transaction.Type> buyTypes = EnumCompat.setOf(Transaction.Type.class,
+            "BUY_SCREEN", "BUY_STACKS_SCREEN", "QUICK_BUY", "SHOPSTAND_BUY_SCREEN"
     );
-    private final Set<Transaction.Type> sellTypes = Set.of(
-            Transaction.Type.SELL_GUI_SCREEN, Transaction.Type.SELL_SCREEN, Transaction.Type.SELL_ALL_SCREEN,
-            Transaction.Type.SELL_ALL_COMMAND, Transaction.Type.QUICK_SELL, Transaction.Type.AUTO_SELL_CHEST,
-            Transaction.Type.SHOPSTAND_SELL_SCREEN
+    private final Set<Transaction.Type> sellTypes = EnumCompat.setOf(Transaction.Type.class,
+            "SELL_GUI_SCREEN", "SELL_SCREEN", "SELL_ALL_SCREEN", "SELL_ALL_COMMAND", "QUICK_SELL",
+            "AUTO_SELL_CHEST", "SHOPSTAND_SELL_SCREEN"
     );
 
 
