@@ -6,11 +6,15 @@ import gg.auroramc.aurora.api.config.premade.ItemConfig;
 import gg.auroramc.quests.AuroraQuests;
 import lombok.Getter;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemFlag;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @Getter
@@ -40,9 +44,14 @@ public class Config extends AuroraConfig {
     private TrackingConfig tracking = new TrackingConfig();
     private QuestBookConfig questBook = new QuestBookConfig();
     private ScoreboardConfig scoreboard = new ScoreboardConfig();
+    private MenuConfig menus = new MenuConfig();
 
     @IgnoreField
     private Map<String, Integer> sortOderMap;
+
+    // Resolved once on load so menus don't re-validate flag names on every item.
+    @IgnoreField
+    private Set<ItemFlag> menuItemFlags = Set.of();
 
     @Override
     public void load() {
@@ -52,6 +61,30 @@ public class Config extends AuroraConfig {
             difficultyOrder.put(sortOrder.get(i), i);
         }
         sortOderMap = difficultyOrder;
+        menuItemFlags = resolveMenuItemFlags();
+    }
+
+    private Set<ItemFlag> resolveMenuItemFlags() {
+        if (menus == null || !Boolean.TRUE.equals(menus.getHideVanillaTooltips())) {
+            return Set.of();
+        }
+
+        var names = menus.getHiddenTooltipFlags();
+        if (names == null || names.isEmpty()) {
+            return Set.of();
+        }
+
+        var flags = EnumSet.noneOf(ItemFlag.class);
+        for (var name : names) {
+            if (name == null || name.isBlank()) continue;
+            try {
+                flags.add(ItemFlag.valueOf(name.trim().toUpperCase(Locale.ROOT)));
+            } catch (IllegalArgumentException e) {
+                AuroraQuests.logger().warning("Unknown item flag in menus.hidden-tooltip-flags: " + name + " (ignored)");
+            }
+        }
+
+        return Set.copyOf(flags);
     }
 
     public Config(AuroraQuests plugin) {
@@ -154,6 +187,27 @@ public class Config extends AuroraConfig {
         // BetterHud popup groups (the popup file's `group:` value) that hide the sidebar
         // while active. Empty disables the feature even when hide-during-popups is true.
         private List<String> hideDuringPopupGroups = List.of("challenge");
+    }
+
+    @Getter
+    public static final class MenuConfig {
+        // Strip the tooltip sections Minecraft appends on its own (attack damage,
+        // attack speed, potion effects, enchantments, ...) from every item shown in
+        // the quest menus, so only the configured name/lore is left.
+        private Boolean hideVanillaTooltips = true;
+        // Which vanilla tooltip sections are hidden. Any org.bukkit.inventory.ItemFlag
+        // name; unknown names are logged and skipped.
+        private List<String> hiddenTooltipFlags = List.of(
+                "HIDE_ATTRIBUTES",
+                "HIDE_ADDITIONAL_TOOLTIP",
+                "HIDE_ENCHANTS",
+                "HIDE_STORED_ENCHANTS",
+                "HIDE_UNBREAKABLE",
+                "HIDE_DESTROYS",
+                "HIDE_PLACED_ON",
+                "HIDE_DYE",
+                "HIDE_ARMOR_TRIM"
+        );
     }
 
     public static File getFile(AuroraQuests plugin) {
@@ -332,6 +386,32 @@ public class Config extends AuroraConfig {
                             "sidebar while active. Add more group names to watch additional popups;",
                             "leave empty to disable hiding even when hide-during-popups is true."));
                     yaml.set("config-version", 11);
+                },
+                (yaml) -> {
+                    yaml.set("menus.hide-vanilla-tooltips", true);
+                    yaml.setComments("menus", List.of(
+                            "Shared appearance options for every quest menu."));
+                    yaml.setComments("menus.hide-vanilla-tooltips", List.of(
+                            "Hide the tooltip sections Minecraft appends on its own to menu items",
+                            "(\"6 Attack Damage\", \"1.6 Attack Speed\", potion effects, enchantments, ...)",
+                            "so only the name and lore you configured are shown. Set to false to keep",
+                            "the vanilla description. Items keep their glint: only the text is hidden."));
+                    yaml.set("menus.hidden-tooltip-flags", List.of(
+                            "HIDE_ATTRIBUTES",
+                            "HIDE_ADDITIONAL_TOOLTIP",
+                            "HIDE_ENCHANTS",
+                            "HIDE_STORED_ENCHANTS",
+                            "HIDE_UNBREAKABLE",
+                            "HIDE_DESTROYS",
+                            "HIDE_PLACED_ON",
+                            "HIDE_DYE",
+                            "HIDE_ARMOR_TRIM"
+                    ));
+                    yaml.setComments("menus.hidden-tooltip-flags", List.of(
+                            "Which sections are hidden when hide-vanilla-tooltips is on. Remove an",
+                            "entry to let that section show again (e.g. drop HIDE_ENCHANTS to keep",
+                            "enchantment lines). Any Bukkit ItemFlag name is accepted."));
+                    yaml.set("config-version", 12);
                 }
         );
     }

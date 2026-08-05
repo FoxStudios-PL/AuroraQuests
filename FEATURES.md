@@ -186,6 +186,48 @@ stripped there.
 
 ---
 
+## Hidden vanilla tooltips in the quest menus
+
+Minecraft appends its own description to an item tooltip: `6 Attack Damage`, `1.6 Attack
+Speed`, potion effects, enchantment lines, armor trims… On a quest menu that text is pure
+noise — the item is a button, not gear — and it pushes the configured lore around.
+
+Every item shown by the main menu, a pool menu and a level menu is now built with those
+vanilla sections hidden, so only the `name` and `lore` you wrote are displayed. The item's
+enchantment **glint is kept** — only the text is hidden.
+
+### `config.yml`
+
+```yaml
+menus:
+  # Set to false to get the vanilla description back
+  hide-vanilla-tooltips: true
+  hidden-tooltip-flags:
+    - HIDE_ATTRIBUTES
+    - HIDE_ADDITIONAL_TOOLTIP
+    - HIDE_ENCHANTS
+    - HIDE_STORED_ENCHANTS
+    - HIDE_UNBREAKABLE
+    - HIDE_DESTROYS
+    - HIDE_PLACED_ON
+    - HIDE_DYE
+    - HIDE_ARMOR_TRIM
+```
+
+`hidden-tooltip-flags` accepts any [`ItemFlag`](https://jd.papermc.io/paper/1.21/org/bukkit/inventory/ItemFlag.html)
+name; remove an entry to let that section show again (drop `HIDE_ENCHANTS` to keep
+enchantment lines, for instance). Unknown names are logged once on load and skipped.
+
+Notes:
+
+- Flags are added on top of the ones an item defines through its own `flags:` option, so
+  existing per-item configuration keeps working.
+- The setting applies to the quest menus only. The quest book item (`quest-book` section)
+  is a real inventory item and is left untouched.
+- `/quests reload` applies the change live.
+
+---
+
 ## Item turn-in: `DELIVER_ITEM` + `/quests deliver` + `has_items` placeholder
 
 A quest step where the player must **bring back items** and an NPC / script decides when
