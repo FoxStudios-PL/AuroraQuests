@@ -31,6 +31,16 @@ menu-item:
     - ""
     - "&7Difficulty: &f{difficulty}"
 
+# Optional: swap the icon depending on the quest status. Only the keys you write here are
+# replaced, everything else (name, lore, flags, ...) is inherited from "menu-item" above.
+# A locked quest always keeps the "menu-item" icon.
+#in-progress-item:      # unlocked, not completed yet
+#  material: PAPER
+#  custom-model-data: 880063
+#completed-item:        # completed
+#  material: PAPER
+#  custom-model-data: 880064
+
 locked-lore:
   - ""
   - "&cYou can't start this quest yet."

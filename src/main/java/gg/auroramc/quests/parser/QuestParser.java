@@ -7,6 +7,7 @@ import gg.auroramc.quests.api.quest.QuestRequirement;
 import gg.auroramc.quests.api.objective.ObjectiveDefinition;
 import gg.auroramc.quests.config.quest.QuestConfig;
 import gg.auroramc.quests.config.quest.StartRequirementConfig;
+import gg.auroramc.quests.util.MenuItemOverride;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.LinkedHashMap;
@@ -22,6 +23,10 @@ public class QuestParser {
                 .rewards(parseRewards(config.getRewards(), rewardFactory))
                 .tasks(parseTasks(config, rewardFactory))
                 .menuItem(config.getMenuItem())
+                .inProgressMenuItem(MenuItemOverride.apply(config.getMenuItem(), config.getInProgressItem(),
+                        rawSection(config, "in-progress-item")))
+                .completedMenuItem(MenuItemOverride.apply(config.getMenuItem(), config.getCompletedItem(),
+                        rawSection(config, "completed-item")))
                 .completedLore(config.getCompletedLore())
                 .lockedLore(config.getLockedLore())
                 .uncompletedLore(config.getUncompletedLore())
@@ -32,6 +37,11 @@ public class QuestParser {
                 .onTrack(config.getOnTrack())
                 .onUntrack(config.getOnUntrack())
                 .build();
+    }
+
+    private static ConfigurationSection rawSection(QuestConfig config, String key) {
+        var raw = config.getRawConfig();
+        return raw != null ? raw.getConfigurationSection(key) : null;
     }
 
     public static QuestRequirement parseRequirement(StartRequirementConfig config) {

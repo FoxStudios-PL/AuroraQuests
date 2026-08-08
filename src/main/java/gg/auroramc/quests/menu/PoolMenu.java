@@ -1,6 +1,7 @@
 package gg.auroramc.quests.menu;
 
 import gg.auroramc.aurora.api.AuroraAPI;
+import gg.auroramc.aurora.api.config.premade.ItemConfig;
 import gg.auroramc.aurora.api.menu.AuroraMenu;
 import gg.auroramc.aurora.api.menu.ItemBuilder;
 import gg.auroramc.aurora.api.message.Placeholder;
@@ -167,10 +168,11 @@ public class PoolMenu {
                 }
             }
             var qPlaceholders = quest.getPlaceholders();
+            var menuItem = iconOf(quest);
 
-            var builder = MenuItems.of(quest.getDefinition().getMenuItem()).slot(slot)
-                    .setName(Placeholder.execute(quest.getDefinition().getMenuItem().getName(), Placeholder.of("{name}", quest.getDefinition().getName())))
-                    .setLore(quest.getDefinition().getMenuItem().getLore().stream().map(l -> Placeholder.execute(l, qPlaceholders)).toList())
+            var builder = MenuItems.of(menuItem).slot(slot)
+                    .setName(Placeholder.execute(menuItem.getName(), Placeholder.of("{name}", quest.getDefinition().getName())))
+                    .setLore(menuItem.getLore().stream().map(l -> Placeholder.execute(l, qPlaceholders)).toList())
                     .localization(localization)
                     .placeholder(qPlaceholders).extraLore(extraLore);
 
@@ -268,6 +270,26 @@ public class PoolMenu {
 
 
         return menu;
+    }
+
+    /**
+     * Icon to display for a quest: the {@code completed-item} / {@code in-progress-item}
+     * override when the quest defines one for its current status, the base {@code menu-item}
+     * otherwise. A locked quest always keeps the base icon.
+     * <p>
+     * Both pool kinds render their quests through this method, so global and timed-random
+     * pools behave identically.
+     */
+    private static ItemConfig iconOf(Quest quest) {
+        var definition = quest.getDefinition();
+
+        if (quest.isCompleted()) {
+            if (definition.getCompletedMenuItem() != null) return definition.getCompletedMenuItem();
+        } else if (quest.isUnlocked()) {
+            if (definition.getInProgressMenuItem() != null) return definition.getInProgressMenuItem();
+        }
+
+        return definition.getMenuItem();
     }
 
     private void toggleTracking(Player player, Quest quest, QuestData questData) {

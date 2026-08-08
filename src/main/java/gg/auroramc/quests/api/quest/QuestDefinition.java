@@ -18,6 +18,16 @@ public class QuestDefinition {
     private final String chapter;
     private final String difficulty;
     private final ItemConfig menuItem;
+    /**
+     * Icon shown while the quest is unlocked and not completed yet, {@code null} when the
+     * quest doesn't override it. Already merged over {@link #menuItem}.
+     */
+    private final ItemConfig inProgressMenuItem;
+    /**
+     * Icon shown once the quest is completed, {@code null} when the quest doesn't override
+     * it. Already merged over {@link #menuItem}.
+     */
+    private final ItemConfig completedMenuItem;
     private final List<String> lockedLore;
     private final List<String> completedLore;
     private final List<String> uncompletedLore;

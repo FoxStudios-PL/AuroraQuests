@@ -114,6 +114,10 @@ dependencies {
     compileOnly("com.cronutils:cron-utils:9.2.0")
 
     testImplementation("io.papermc.paper:paper-api:26.2.build.31-alpha")
+    // Only for the config-merge tests: ItemConfig is a plain POJO, no server needed.
+    testImplementation("gg.auroramc:Aurora:2.6.0-SNAPSHOT") {
+        isTransitive = false
+    }
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.0")
 
