@@ -18,6 +18,8 @@ public class QuestConfig extends AuroraConfig {
     private String chapter;
     private String difficulty;
     private ItemConfig menuItem;
+    private ItemConfig inProgressItem;
+    private ItemConfig completedItem;
     private List<String> lockedLore;
     private List<String> completedLore;
     private List<String> uncompletedLore;

@@ -186,6 +186,66 @@ stripped there.
 
 ---
 
+## Per-status quest icons: `in-progress-item` / `completed-item`
+
+Upstream, a quest has a single `menu-item` and only its **lore** can vary with the quest
+status (`locked-lore`, `uncompleted-lore`, `completed-lore`). Two new optional sections,
+written next to those, let the **icon itself** change too — so a player can tell at a
+glance which quests are started and which are done.
+
+```yaml
+menu-item:
+  material: oak_log
+  custom-model-data: 0        # icon of a locked / not-yet-started quest
+  name: "&6{name}"
+  lore:
+    - "&7Coupe du bois"
+
+in-progress-item:             # unlocked, not completed yet
+  material: PAPER
+  custom-model-data: 880063
+
+completed-item:               # completed
+  material: PAPER
+  custom-model-data: 880064
+```
+
+### Which icon is used
+
+| Quest status | Icon |
+|---|---|
+| Locked (not unlocked yet, incl. `always-show-in-menu`) | `menu-item` — unchanged |
+| Unlocked, not completed | `in-progress-item` if defined, otherwise `menu-item` |
+| Completed | `completed-item` if defined, otherwise `menu-item` |
+
+### Merge rules
+
+An override is merged **over** `menu-item`, exactly like the pool menu's `items:` overrides
+of `menu_common.yml`: a key you write wins, a key you leave out is inherited. So the
+example above swaps the material and the custom model data and keeps the quest's `name`,
+`lore`, `flags`, `hide-tooltip`, … Any `ItemConfig` key is accepted, not only
+`material` / `custom-model-data` (`item-model`, `texture`, `skull`, `enchantments`, …).
+
+Two consequences worth knowing:
+
+- Because keys are inherited, a `menu-item` that sets `item-model` keeps it in the
+  override unless the override sets its own — and Minecraft's `item_model` component wins
+  over `custom-model-data`. Set `item-model` in the override too when the base item uses
+  one.
+- `locked-lore` / `uncompleted-lore` / `completed-lore` still apply on top, whichever icon
+  is used. The two features are independent.
+
+### Notes
+
+- **Strictly backwards compatible**: a quest that defines neither key renders exactly as
+  before — the code path is identical, `menu-item` is used for every status.
+- Both keys are optional and independent; a quest can define only one of them.
+- The icon is resolved in the shared quest-item builder of the pool menu, so `global`
+  pools and `timed-random` pools (daily / weekly) behave identically.
+- `/quests reload` applies changes live.
+
+---
+
 ## Hidden vanilla tooltips in the quest menus
 
 Minecraft appends its own description to an item tooltip: `6 Attack Damage`, `1.6 Attack
