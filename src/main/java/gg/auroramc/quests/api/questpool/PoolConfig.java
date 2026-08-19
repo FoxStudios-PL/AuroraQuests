@@ -6,6 +6,7 @@ import gg.auroramc.aurora.api.config.premade.ConcreteMatcherConfig;
 import gg.auroramc.aurora.api.config.premade.IntervalMatcherConfig;
 import gg.auroramc.aurora.api.config.premade.ItemConfig;
 import gg.auroramc.quests.config.MainMenuConfig;
+import gg.auroramc.quests.config.advancement.PoolAdvancementConfig;
 import gg.auroramc.quests.config.quest.QuestConfig;
 import gg.auroramc.quests.config.quest.StartRequirementConfig;
 import lombok.Getter;
@@ -27,6 +28,7 @@ public class PoolConfig extends AuroraConfig {
     private PoolMenu menu;
     private Leveling leveling;
     private StartRequirementConfig unlockRequirements;
+    private PoolAdvancementConfig advancement;
 
     @Setter
     @IgnoreField

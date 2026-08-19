@@ -19,7 +19,15 @@ plugins {
     id("com.gradleup.shadow") version "9.4.2"
     id("maven-publish")
     id("xyz.jpenilla.run-paper") version "3.0.2"
+    // Compiles the advancement-GUI module directly against the Mojang-mapped Paper server
+    // (net.minecraft.advancements + ClientboundUpdateAdvancementsPacket). No reobf step:
+    // the artifact stays Mojang-mapped, matching the manifest attribute below.
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.22"
 }
+
+// The shaded jar already declares paperweight-mappings-namespace=mojang, so ship the
+// Mojang-mapped classes as the production artifact instead of reobfuscating to spigot names.
+paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
 
 group = "gg.auroramc"
 // Suffixed so the 26.2 artifact is never mistaken for the 1.21.11 one built from main.
@@ -58,7 +66,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.31-alpha")
+    // Replaces the plain paper-api compileOnly dependency: the dev bundle provides
+    // paper-api AND the Mojang-mapped paper-server on the compile classpath.
+    paperweight.paperDevBundle("26.2.build.31-alpha")
     compileOnly("gg.auroramc:Aurora:2.6.0-SNAPSHOT")
     compileOnly("gg.auroramc:AuroraLevels:1.6.2")
     compileOnly("net.luckperms:api:5.4")

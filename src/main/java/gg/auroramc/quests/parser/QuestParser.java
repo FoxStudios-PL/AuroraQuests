@@ -36,6 +36,7 @@ public class QuestParser {
                 .lockedObjectiveLore(config.getLockedObjectiveLore())
                 .onTrack(config.getOnTrack())
                 .onUntrack(config.getOnUntrack())
+                .advancement(config.getAdvancement())
                 .build();
     }
 

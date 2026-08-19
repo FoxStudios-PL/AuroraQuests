@@ -55,6 +55,8 @@ public class MessageConfig extends AuroraConfig {
     private String itemsDelivered = "&aTook the required items from {player} for {quest}/{objective}.";
     private String itemsMissing = "&cPlayer {player} doesn't have the required items for {quest}/{objective}.";
     private String deliverNoObjectives = "&cNo active DELIVER_ITEM objective matching {objective} in quest {quest} for {player}.";
+    private String advancementGuiHint = "&aYour quests are in the &fprogress screen&a! Press &f&lL&r&a (or Esc → Advancements) to browse them.";
+    private String advancementLockedDescription = "&cLocked. Keep playing to unlock this quest.";
     private TimerFormatConfig timerFormat = new TimerFormatConfig();
     private ConfigurationSection custom;
 
@@ -208,6 +210,11 @@ public class MessageConfig extends AuroraConfig {
                     yaml.set("items-missing", "&cPlayer {player} doesn't have the required items for {quest}/{objective}.");
                     yaml.set("deliver-no-objectives", "&cNo active DELIVER_ITEM objective matching {objective} in quest {quest} for {player}.");
                     yaml.set("config-version", 7);
+                },
+                (yaml) -> {
+                    yaml.set("advancement-gui-hint", "&aYour quests are in the &fprogress screen&a! Press &f&lL&r&a (or Esc → Advancements) to browse them.");
+                    yaml.set("advancement-locked-description", "&cLocked. Keep playing to unlock this quest.");
+                    yaml.set("config-version", 8);
                 }
         );
     }

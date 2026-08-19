@@ -109,3 +109,14 @@ rewards:
 #  # Required permissions to start the quest
 #  permissions:
 #    - "example.permission"
+
+# Optional: display in the VANILLA advancement screen (see config.yml,
+# "advancement-gui"). Combine "parent" with "start-requirements.quests" to
+# build progression trees exactly like vanilla progress: the line shows the
+# path, the requirement gates it.
+#advancement:
+#  tab: global               # category; defaults to this pool's tab
+#  parent: another_quest     # draws the connection line; omit = attached to the tab root
+#  frame: goal               # task (default) | goal | challenge
+#  hidden: false             # true = invisible until it can be started
+#  progress-steps: 10

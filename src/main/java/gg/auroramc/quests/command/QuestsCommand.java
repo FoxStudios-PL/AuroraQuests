@@ -37,6 +37,16 @@ public class QuestsCommand extends BaseCommand {
             ChatUtil.sendMessage(player, plugin.getConfigManager().getMessageConfig(player).getDataNotLoadedYetSelf());
             return;
         }
+
+        // With the advancement GUI active and command-behavior "message", the quests
+        // live in the vanilla progress screen (client-side, the server cannot open
+        // it): point the player at the L key instead of opening the chest menu.
+        var advancementGui = plugin.getAdvancementGuiManager();
+        if (advancementGui != null && advancementGui.isCommandHint()) {
+            ChatUtil.sendMessage(player, plugin.getConfigManager().getMessageConfig(player).getAdvancementGuiHint());
+            return;
+        }
+
         new MainMenu(profile).open();
     }
 

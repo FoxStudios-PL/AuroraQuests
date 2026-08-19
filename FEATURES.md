@@ -1,5 +1,67 @@
 # AuroraQuests  New Features
 
+## Advancement GUI: quests in the vanilla progress screen
+
+An optional module that mirrors quests into the **vanilla advancement screen** (the one
+players open with the **L** key), instead of — or alongside — the classic chest menu:
+
+- **Categories**: every quest belongs to a *tab* of the progress screen. Tabs are
+  declared once in `config.yml` (`advancement-gui.tabs`) and each quest picks one with
+  a single key (`advancement.tab`). Pools without any mapping automatically get their
+  own tab (pool name + pool menu icon), so the module works with **zero extra config**.
+- **Trees**: `advancement.parent: <questId>` (or `<poolId>/<questId>`) connects a quest
+  to another one with the native line, exactly like vanilla progress trees. Quests
+  without a parent are independent entries attached to the tab root. Layout is
+  automatic (tidy tree, stable positions); `advancement.position: {x, y}` overrides it.
+- **Live progress**: tooltips show the same task/reward lines as the chest menu with
+  live counters, plus the native `x/y` fraction (`progress-steps`). Completing a quest
+  pops the vanilla toast and turns the frame gold; `frame: challenge` gives the purple
+  challenge styling.
+- **Per player**: everything is sent through per-player packets — timed-random pools
+  (dailies/weeklies) only show the player's **own roll**, and reroll at midnight without
+  a reconnect. Locked quests show a locked description (or are invisible with
+  `advancement.hidden: true` until they can be started).
+- **`hide-vanilla-tabs`**: optionally strips the vanilla tabs so the screen only
+  contains quest categories.
+
+```yaml
+# config.yml
+advancement-gui:
+  enabled: true
+  command-behavior: menu     # or "message": /quests sends the "press L" hint
+  progress-steps: 10
+  tabs:
+    exploration:
+      name: "&aExploration"
+      icon: { material: compass }
+      background: "minecraft:gui/advancements/backgrounds/adventure"
+
+# in a quest file
+advancement:
+  tab: exploration
+  parent: first_steps
+  frame: goal
+```
+
+**Performance.** Built for large servers (250+ online): all structure (trees, layout,
+requirement objects, description templates) is computed once per `/quests reload` and
+shared by every player; progress updates only mark the quest dirty (O(1)) and a single
+async flusher batches everything into at most **one small packet per player per
+`flush-interval-ticks`** (a pure progress update is a few dozen bytes). Idle players
+cost nothing — there is no polling task per player. Packet assembly runs on the
+player's region thread, so the module is Folia-safe, and the whole feature is compiled
+directly against the Mojang-mapped server (no reflection in hot paths).
+
+**Notes.** The progress screen is 100% client-side and **no clientbound packet exists
+to open it** (verified against the full 26.2 packet set — this also rules out
+PacketEvents or any other packet library), so `/quests` cannot open it: it keeps
+opening the chest menu (default) or sends a configurable "press L" hint. To compensate,
+`select-quest-tab` (default on) pre-selects the first quest tab once per session, so
+the screen **opens directly on the quests** when the player presses L; their own tab
+navigation is respected afterwards. The client always draws a line from a quest to its
+parent (the tab root at minimum), and one root exists per tab. Enabling, disabling and
+every option reload live with `/quests reload`.
+
 ## Quest Placeholders
 
 > **PlaceholderAPI prefix.** AuroraQuests exposes its placeholders through Aurora's

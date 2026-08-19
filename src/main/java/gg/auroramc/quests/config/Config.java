@@ -45,6 +45,7 @@ public class Config extends AuroraConfig {
     private QuestBookConfig questBook = new QuestBookConfig();
     private ScoreboardConfig scoreboard = new ScoreboardConfig();
     private MenuConfig menus = new MenuConfig();
+    private AdvancementGuiConfig advancementGui = new AdvancementGuiConfig();
 
     @IgnoreField
     private Map<String, Integer> sortOderMap;
@@ -187,6 +188,48 @@ public class Config extends AuroraConfig {
         // BetterHud popup groups (the popup file's `group:` value) that hide the sidebar
         // while active. Empty disables the feature even when hide-during-popups is true.
         private List<String> hideDuringPopupGroups = List.of("challenge");
+    }
+
+    @Getter
+    public static final class AdvancementGuiConfig {
+        // Whether quests are mirrored into the vanilla advancement screen (L key).
+        // Can be toggled live with /quests reload.
+        private Boolean enabled = false;
+        // What /quests does while the module is active:
+        //   menu    -> keeps opening the classic chest menu (default)
+        //   message -> sends the advancement-gui-hint message instead
+        private String commandBehavior = "menu";
+        // Remove the vanilla tabs (Minecraft, Nether, End, ...) from the screen so only
+        // quest tabs remain. Best effort: the screen is resynced whenever the vanilla
+        // system re-sends something.
+        private Boolean hideVanillaTabs = false;
+        // How often (ticks) queued quest updates are flushed to clients. All changes of
+        // a window collapse into at most one packet per player.
+        private Integer flushIntervalTicks = 10;
+        // Default number of steps of the native "x/y" counter on quest tooltips.
+        // Clamped to the quest's total objective amount; 1 disables the fraction.
+        private Integer progressSteps = 10;
+        // Show the vanilla toast (top-right popup) when a quest is completed.
+        private Boolean completionToast = true;
+        // Pre-select the first quest tab once per session, so the progress screen opens
+        // directly on the quests when the player presses L. The screen itself cannot be
+        // opened by the server (no such packet exists in the protocol); afterwards the
+        // player's own tab navigation is respected.
+        private Boolean selectQuestTab = true;
+        // Background used by tabs that don't declare one.
+        private String defaultBackground = "minecraft:gui/advancements/backgrounds/stone";
+        // Declared tabs (categories). Pools without a mapping get an auto tab.
+        private Map<String, TabConfig> tabs = Map.of();
+    }
+
+    @Getter
+    public static final class TabConfig {
+        private String name;
+        private String description;
+        private ItemConfig icon;
+        private String background;
+        // Tabs are ordered by index (then by id) in the advancement screen.
+        private Integer index = 0;
     }
 
     @Getter
@@ -412,6 +455,65 @@ public class Config extends AuroraConfig {
                             "entry to let that section show again (e.g. drop HIDE_ENCHANTS to keep",
                             "enchantment lines). Any Bukkit ItemFlag name is accepted."));
                     yaml.set("config-version", 12);
+                },
+                (yaml) -> {
+                    yaml.set("advancement-gui.enabled", false);
+                    yaml.setComments("advancement-gui", List.of(
+                            "===========================================================================",
+                            "Advancement GUI",
+                            "---------------------------------------------------------------------------",
+                            "Mirrors quests into the VANILLA advancement screen (L key): every quest",
+                            "joins a configurable tab (category), can be connected to other quests with",
+                            "\"advancement.parent\" (trees) and shows live progress in its tooltip.",
+                            "Per-player: rolled daily/weekly quests only show the player's own roll.",
+                            "Everything below can be changed live with /quests reload.",
+                            "==========================================================================="));
+                    yaml.set("advancement-gui.command-behavior", "menu");
+                    yaml.setComments("advancement-gui.command-behavior", List.of(
+                            "What /quests does while the module is active:",
+                            "  menu    -> keeps opening the classic chest menu",
+                            "  message -> sends the advancement-gui-hint message (\"press L\") instead"));
+                    yaml.set("advancement-gui.hide-vanilla-tabs", false);
+                    yaml.setComments("advancement-gui.hide-vanilla-tabs", List.of(
+                            "Remove the vanilla tabs (Minecraft, Nether, ...) from the screen so only",
+                            "quest tabs remain. Best effort: the screen is resynced whenever the",
+                            "vanilla system re-sends something."));
+                    yaml.set("advancement-gui.flush-interval-ticks", 10);
+                    yaml.setComments("advancement-gui.flush-interval-ticks", List.of(
+                            "How often (ticks) queued quest updates are flushed to clients. All the",
+                            "changes of a window collapse into at most one packet per player."));
+                    yaml.set("advancement-gui.progress-steps", 10);
+                    yaml.setComments("advancement-gui.progress-steps", List.of(
+                            "Default number of steps of the native \"x/y\" counter shown on quest",
+                            "tooltips. Clamped to the quest's total objective amount; 1 disables it.",
+                            "Can be overridden per quest with advancement.progress-steps."));
+                    yaml.set("advancement-gui.completion-toast", true);
+                    yaml.setComments("advancement-gui.completion-toast", List.of(
+                            "Show the vanilla toast (top-right popup) when a quest is completed."));
+                    yaml.set("advancement-gui.select-quest-tab", true);
+                    yaml.setComments("advancement-gui.select-quest-tab", List.of(
+                            "Pre-select the first quest tab once per session, so the progress screen",
+                            "opens directly on the quests when the player presses L. (The screen itself",
+                            "cannot be opened by the server: no such packet exists in the protocol.)",
+                            "The player's own tab navigation is respected afterwards."));
+                    yaml.set("advancement-gui.default-background", "minecraft:gui/advancements/backgrounds/stone");
+                    yaml.setComments("advancement-gui.default-background", List.of(
+                            "Background texture for tabs that don't declare one. Any texture id works,",
+                            "e.g. minecraft:block/deepslate_bricks or minecraft:gui/advancements/backgrounds/end."));
+                    if (!yaml.isConfigurationSection("advancement-gui.tabs")) {
+                        yaml.createSection("advancement-gui.tabs");
+                    }
+                    yaml.setComments("advancement-gui.tabs", List.of(
+                            "Declared tabs (categories). Assign a quest to one with \"advancement.tab\".",
+                            "Pools without any mapping automatically get their own tab. Example:",
+                            "tabs:",
+                            "  exploration:",
+                            "    name: \"&aExploration\"",
+                            "    description: \"&7Roam the world\"",
+                            "    icon: { material: compass }",
+                            "    background: \"minecraft:gui/advancements/backgrounds/adventure\"",
+                            "    index: 1"));
+                    yaml.set("config-version", 13);
                 }
         );
     }

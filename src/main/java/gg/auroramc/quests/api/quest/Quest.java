@@ -45,6 +45,7 @@ public class Quest extends EventBus {
         for (var obj : objectives) {
             obj.subscribe(EventType.TASK_PROGRESS, objective -> {
                 this.publish(EventType.TASK_PROGRESS, objective);
+                notifyAdvancementGui();
                 if (!objective.getDefinition().getOnProgress().isEmpty()) {
                     List<Placeholder<?>> pl = List.of(
                             Placeholder.of("{player}", data.profile().getPlayer().getName()),
@@ -63,6 +64,7 @@ public class Quest extends EventBus {
 
             obj.subscribe(EventType.TASK_COMPLETED, objective -> {
                 this.publish(EventType.TASK_COMPLETED, objective);
+                notifyAdvancementGui();
 
                 if (!objective.getDefinition().getOnComplete().isEmpty()) {
                     var pl = Placeholder.of("{player}", data.profile().getPlayer().getName());
@@ -293,6 +295,17 @@ public class Quest extends EventBus {
                 obj.start();
                 return;
             }
+        }
+    }
+
+    /**
+     * O(1) dirty-mark for the advancement GUI (batched, flushed asynchronously). No-op
+     * when the module is disabled or this quest isn't mirrored into the screen.
+     */
+    private void notifyAdvancementGui() {
+        var manager = AuroraQuests.getInstance().getAdvancementGuiManager();
+        if (manager != null) {
+            manager.markProgressDirty(data.profile().getPlayer(), pool.getId(), definition.getId());
         }
     }
 

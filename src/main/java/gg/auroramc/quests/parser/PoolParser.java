@@ -24,6 +24,7 @@ public class PoolParser {
                 .requirement(QuestParser.parseRequirement(config.getUnlockRequirements()))
                 .leveling(config.getLeveling())
                 .type(PoolType.fromString(config.getType()))
+                .advancement(config.getAdvancement())
                 .quests(parseQuests(config.getQuests(), rewardFactory))
                 .build();
 
