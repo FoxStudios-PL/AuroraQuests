@@ -240,6 +240,11 @@ advancement-gui:
   progress-steps: 10
   # Show the vanilla toast (top-right popup) when a quest is completed.
   completion-toast: true
+  # Pre-select the first quest tab once per session, so the progress screen
+  # opens directly on the quests when the player presses L. (The screen itself
+  # cannot be opened by the server: no such packet exists in the protocol.)
+  # The player's own tab navigation is respected afterwards.
+  select-quest-tab: true
   # Background texture for tabs that don't declare one. Any texture id works,
   # e.g. minecraft:block/deepslate_bricks or minecraft:gui/advancements/backgrounds/end.
   default-background: "minecraft:gui/advancements/backgrounds/stone"

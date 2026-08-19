@@ -211,6 +211,11 @@ public class Config extends AuroraConfig {
         private Integer progressSteps = 10;
         // Show the vanilla toast (top-right popup) when a quest is completed.
         private Boolean completionToast = true;
+        // Pre-select the first quest tab once per session, so the progress screen opens
+        // directly on the quests when the player presses L. The screen itself cannot be
+        // opened by the server (no such packet exists in the protocol); afterwards the
+        // player's own tab navigation is respected.
+        private Boolean selectQuestTab = true;
         // Background used by tabs that don't declare one.
         private String defaultBackground = "minecraft:gui/advancements/backgrounds/stone";
         // Declared tabs (categories). Pools without a mapping get an auto tab.
@@ -485,6 +490,12 @@ public class Config extends AuroraConfig {
                     yaml.set("advancement-gui.completion-toast", true);
                     yaml.setComments("advancement-gui.completion-toast", List.of(
                             "Show the vanilla toast (top-right popup) when a quest is completed."));
+                    yaml.set("advancement-gui.select-quest-tab", true);
+                    yaml.setComments("advancement-gui.select-quest-tab", List.of(
+                            "Pre-select the first quest tab once per session, so the progress screen",
+                            "opens directly on the quests when the player presses L. (The screen itself",
+                            "cannot be opened by the server: no such packet exists in the protocol.)",
+                            "The player's own tab navigation is respected afterwards."));
                     yaml.set("advancement-gui.default-background", "minecraft:gui/advancements/backgrounds/stone");
                     yaml.setComments("advancement-gui.default-background", List.of(
                             "Background texture for tabs that don't declare one. Any texture id works,",

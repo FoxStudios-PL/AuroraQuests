@@ -52,11 +52,15 @@ cost nothing — there is no polling task per player. Packet assembly runs on th
 player's region thread, so the module is Folia-safe, and the whole feature is compiled
 directly against the Mojang-mapped server (no reflection in hot paths).
 
-**Notes.** The progress screen is 100% client-side, so `/quests` cannot open it — it
-keeps opening the chest menu (default) or sends a configurable "press L" hint. The
-client always draws a line from a quest to its parent (the tab root at minimum), and
-one root exists per tab. Enabling, disabling and every option reload live with
-`/quests reload`.
+**Notes.** The progress screen is 100% client-side and **no clientbound packet exists
+to open it** (verified against the full 26.2 packet set — this also rules out
+PacketEvents or any other packet library), so `/quests` cannot open it: it keeps
+opening the chest menu (default) or sends a configurable "press L" hint. To compensate,
+`select-quest-tab` (default on) pre-selects the first quest tab once per session, so
+the screen **opens directly on the quests** when the player presses L; their own tab
+navigation is respected afterwards. The client always draws a line from a quest to its
+parent (the tab root at minimum), and one root exists per tab. Enabling, disabling and
+every option reload live with `/quests reload`.
 
 ## Quest Placeholders
 

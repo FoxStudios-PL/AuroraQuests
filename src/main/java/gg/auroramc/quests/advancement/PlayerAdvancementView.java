@@ -36,6 +36,12 @@ final class PlayerAdvancementView {
     final Map<String, SentState> sent = new HashMap<>();
     /** Tab roots the client currently knows, by tab id (region thread only). */
     final Map<String, Identifier> sentRoots = new HashMap<>();
+    /**
+     * Whether the quest tab was already pre-selected this session (region thread only).
+     * Done once so the progress screen opens on the quests, then the player's own tab
+     * navigation is respected. Reset when the client forgets our advancements.
+     */
+    boolean tabPreselected = false;
 
     PlayerAdvancementView(UUID playerId) {
         this.playerId = playerId;

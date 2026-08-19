@@ -111,6 +111,18 @@ final class AdvancementPacketFactory {
     }
 
     /**
+     * Pre-selects an advancement tab on the client. The client remembers the selection,
+     * so the next time the player opens the progress screen (L key) it lands directly
+     * on that tab; if the screen is already open, it switches immediately. This is the
+     * closest the protocol gets to "opening" the screen — no clientbound packet exists
+     * to actually open it (it is pure client-side input handling).
+     */
+    static void selectTab(Player player, Identifier rootId) {
+        ((CraftPlayer) player).getHandle().connection.send(
+                new net.minecraft.network.protocol.game.ClientboundSelectAdvancementsTabPacket(rootId));
+    }
+
+    /**
      * Re-runs the vanilla advancement sync for the player, restoring the vanilla tabs
      * after the module (or its hide-vanilla-tabs option) is turned off at runtime.
      */

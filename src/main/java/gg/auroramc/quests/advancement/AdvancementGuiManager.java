@@ -70,6 +70,7 @@ public class AdvancementGuiManager implements Listener {
     private volatile boolean hideVanillaTabs = false;
     private volatile boolean completionToast = true;
     private volatile boolean commandHint = false;
+    private volatile boolean selectQuestTab = true;
     private ScheduledTask flushTask;
 
     public AdvancementGuiManager(AuroraQuests plugin) {
@@ -97,6 +98,7 @@ public class AdvancementGuiManager implements Listener {
         hideVanillaTabs = active && Boolean.TRUE.equals(cfg.getHideVanillaTabs());
         completionToast = cfg == null || !Boolean.FALSE.equals(cfg.getCompletionToast());
         commandHint = cfg != null && "message".equalsIgnoreCase(cfg.getCommandBehavior());
+        selectQuestTab = cfg == null || !Boolean.FALSE.equals(cfg.getSelectQuestTab());
 
         if (active) {
             model = AdvancementModelBuilder.build(plugin.getPoolManager().getPools(), cfg);
@@ -253,6 +255,7 @@ public class AdvancementGuiManager implements Listener {
         if (view.forgetClient) {
             view.sent.clear();
             view.sentRoots.clear();
+            view.tabPreselected = false;
             view.forgetClient = false;
             view.fullResync = true;
         }
@@ -356,6 +359,19 @@ public class AdvancementGuiManager implements Listener {
         view.sent.putAll(newSent);
         view.sentRoots.clear();
         view.sentRoots.putAll(newRoots);
+
+        // Once per session: pre-select the first quest tab so the progress screen opens
+        // straight on the quests when the player presses L (no packet can OPEN the
+        // client-side screen, but the client remembers the selected tab). Sent after the
+        // sync packet, so the client already knows the root id. The player's own tab
+        // clicks are respected afterwards.
+        if (selectQuestTab && !view.tabPreselected) {
+            var firstTab = m.getTabs().values().stream().findFirst();
+            if (firstTab.isPresent()) {
+                AdvancementPacketFactory.selectTab(player, firstTab.get().getRootId());
+                view.tabPreselected = true;
+            }
+        }
     }
 
     /** Sends only what changed for the given quest keys (usually a single quest). */
