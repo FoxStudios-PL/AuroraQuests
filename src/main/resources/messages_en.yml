@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 7
+config-version: 8
 
 reloaded: "&aReloaded configuration!"
 data-not-loaded-yet: "&cData for this player hasn't loaded yet, try again later!"
@@ -37,6 +37,8 @@ objective-already-completed: "&cObjective {objective} is already completed for p
 items-delivered: "&aTook the required items from {player} for {quest}/{objective}."
 items-missing: "&cPlayer {player} doesn't have the required items for {quest}/{objective}."
 deliver-no-objectives: "&cNo active DELIVER_ITEM objective matching {objective} in quest {quest} for {player}."
+advancement-gui-hint: "&aYour quests are in the &fprogress screen&a! Press &f&lL&r&a (or Esc → Advancements) to browse them."
+advancement-locked-description: "&cLocked. Keep playing to unlock this quest."
 
 timer-format:
   short-format:

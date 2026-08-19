@@ -13,6 +13,18 @@ reset-frequency: 0 0 0 * * ?
 # Should quests be rolled again when all of them are completed?
 reroll-on-completion: false
 
+# Optional: how this pool appears in the VANILLA advancement screen when
+# "advancement-gui.enabled" is on in config.yml. Without this section the pool
+# still gets its own tab automatically (name + menu icon below).
+#advancement:
+#  enabled: true                 # false keeps this pool out of the screen
+#  tab: daily                    # default tab of this pool's quests (default: pool id)
+#  root:                         # appearance of the auto tab
+#    title: "{name}"
+#    description: "&7New quests every day at midnight"
+#    icon: { material: CRYING_OBSIDIAN }
+#    background: "minecraft:gui/advancements/backgrounds/end"
+
 # How should this pool be displayed in the main menu and where?
 menu-item:
   show-in-main-menu: true

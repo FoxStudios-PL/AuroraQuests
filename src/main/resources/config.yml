@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 12
+config-version: 13
 
 debug: false
 language: en
@@ -186,6 +186,73 @@ quest-book:
       sound: "item.book.page_turn"
       volume: 1.0
       pitch: 1.2
+
+# ===========================================================================
+# Advancement GUI
+# ---------------------------------------------------------------------------
+# Mirrors quests into the VANILLA advancement screen (the one players open
+# with the L key): every quest joins a configurable tab (category), can be
+# connected to other quests with "advancement.parent" (forming trees, like
+# vanilla progress) and shows its live progress in the tooltip + the native
+# x/y counter. Fully per-player: rolled daily/weekly pools only show the
+# player's own roll.
+#
+# The whole section can be changed live with /quests reload (including
+# enabling/disabling the module).
+#
+# Per-quest options (in the quest file):
+#   advancement:
+#     tab: exploration        # category; defaults to the pool's tab
+#     parent: other_quest     # connect to a quest ("id" or "pool/id"); omit = tab root
+#     frame: task             # task (default) | goal | challenge
+#     hidden: true            # invisible until the quest can be started
+#     progress-steps: 8       # native x/y counter steps for this quest
+#     icon: { material: ... } # icon override (defaults to the menu item)
+#     description: [ ... ]    # tooltip lines; defaults to task + reward displays
+#     position: { x: 2, y: 0} # manual grid position; omit for auto layout
+#
+# Per-pool options (in the pool's config.yml):
+#   advancement:
+#     enabled: true           # false keeps the whole pool out of the screen
+#     tab: exploration        # default tab of the pool's quests (default: pool id)
+#     root:                   # appearance of the pool's auto tab
+#       title: "{name}"
+#       description: "&7..."
+#       icon: { material: ... }
+#       background: "minecraft:gui/advancements/backgrounds/stone"
+# ===========================================================================
+advancement-gui:
+  enabled: false
+  # What /quests does while the module is active:
+  #   menu    -> keeps opening the classic chest menu
+  #   message -> sends the advancement-gui-hint message ("press L") instead
+  command-behavior: menu
+  # Remove the vanilla tabs (Minecraft, Nether, ...) from the screen so only
+  # quest tabs remain. Best effort: the screen is resynced whenever the
+  # vanilla system re-sends something.
+  hide-vanilla-tabs: false
+  # How often (ticks) queued quest updates are flushed to clients. All the
+  # changes of a window collapse into at most one packet per player.
+  flush-interval-ticks: 10
+  # Default number of steps of the native "x/y" counter shown on quest
+  # tooltips. Clamped to the quest's total objective amount; 1 disables it.
+  # Can be overridden per quest with advancement.progress-steps.
+  progress-steps: 10
+  # Show the vanilla toast (top-right popup) when a quest is completed.
+  completion-toast: true
+  # Background texture for tabs that don't declare one. Any texture id works,
+  # e.g. minecraft:block/deepslate_bricks or minecraft:gui/advancements/backgrounds/end.
+  default-background: "minecraft:gui/advancements/backgrounds/stone"
+  # Declared tabs (categories). Assign a quest to one with "advancement.tab".
+  # Pools without any mapping automatically get their own tab. Example:
+  # tabs:
+  #   exploration:
+  #     name: "&aExploration"
+  #     description: "&7Roam the world"
+  #     icon: { material: compass }
+  #     background: "minecraft:gui/advancements/backgrounds/adventure"
+  #     index: 1
+  tabs: { }
 
 # Quest sidebar shown ONLY while a player is tracking a quest (/quests track).
 # Supports legacy (&), MiniMessage (<#hex>, <yellow>) and PlaceholderAPI.

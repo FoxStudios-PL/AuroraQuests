@@ -260,6 +260,8 @@ public class QuestPool {
 
         AuroraQuests.logger().debug("Rolled quests for player " + profile.getPlayer().getName() + " in pool " + definition.getId() + ": " + String.join(", ", questIds));
 
+        Bukkit.getPluginManager().callEvent(new gg.auroramc.quests.api.event.QuestPoolReRolledEvent(profile.getPlayer(), this));
+
         if (sendNotification) {
             var msg = AuroraQuests.getInstance().getConfigManager().getMessageConfig(profile.getPlayer()).getReRolledTarget();
             var placeholder = Placeholder.of("{pool}", definition.getName());

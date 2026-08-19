@@ -2,6 +2,7 @@ package gg.auroramc.quests.api.questpool;
 
 import gg.auroramc.quests.api.quest.QuestDefinition;
 import gg.auroramc.quests.api.quest.QuestRequirement;
+import gg.auroramc.quests.config.advancement.PoolAdvancementConfig;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,6 +22,8 @@ public class PoolDefinition {
     private final PoolConfig.PoolMenu menu;
     private final PoolConfig.Leveling leveling;
     private final QuestRequirement requirement;
+    /** Raw {@code advancement:} section of the pool config, {@code null} when absent. */
+    private final PoolAdvancementConfig advancement;
 
     private final LinkedHashMap<String, QuestDefinition> quests;
 

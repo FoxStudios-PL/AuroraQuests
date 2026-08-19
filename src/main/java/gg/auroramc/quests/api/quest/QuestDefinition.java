@@ -3,6 +3,7 @@ package gg.auroramc.quests.api.quest;
 import gg.auroramc.aurora.api.config.premade.ItemConfig;
 import gg.auroramc.aurora.api.reward.Reward;
 import gg.auroramc.quests.api.objective.ObjectiveDefinition;
+import gg.auroramc.quests.config.advancement.QuestAdvancementConfig;
 import gg.auroramc.quests.config.quest.QuestConfig;
 import lombok.Builder;
 import lombok.Getter;
@@ -40,4 +41,6 @@ public class QuestDefinition {
     private final String lockedObjectiveLore;
     private final List<String> onTrack;
     private final List<String> onUntrack;
+    /** Raw {@code advancement:} section of the quest file, {@code null} when absent. */
+    private final QuestAdvancementConfig advancement;
 }

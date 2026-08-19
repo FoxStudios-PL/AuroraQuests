@@ -41,6 +41,22 @@ completed-lore:
 # it unlocks the next). Omit it to keep the default where all tasks run at once.
 #linear-objectives: true
 
+# Optional: how this quest appears in the VANILLA advancement screen when
+# "advancement-gui.enabled" is on in config.yml. Everything has sensible
+# defaults (pool tab, attached to the tab root, icon from menu-item).
+#advancement:
+#  tab: exploration          # category (a tab of the progress screen)
+#  parent: other_quest       # connect to a quest ("id" or "pool/id"); omit = tab root
+#  frame: task               # task (default) | goal | challenge
+#  hidden: true              # invisible until the quest can be started
+#  progress-steps: 8         # native x/y counter steps for this quest
+#  icon: { material: GOLDEN_PICKAXE }
+#  description:              # tooltip lines; same placeholders as the menu lore
+#    - "&7A daily mining trip."
+#    - ""
+#    - "{task_mine_block}"
+#  position: { x: 2, y: 0 }  # manual grid position; omit for auto layout
+
 tasks:
   # Task 1
   # Optional: a "rewards:" block can be added to ANY task (same format as the

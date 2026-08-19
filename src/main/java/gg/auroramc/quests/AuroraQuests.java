@@ -13,6 +13,7 @@ import gg.auroramc.quests.api.event.BukkitEventBus;
 import gg.auroramc.quests.api.event.QuestCompletedEvent;
 import gg.auroramc.quests.api.factory.ObjectiveFactory;
 import gg.auroramc.quests.api.objective.ObjectiveType;
+import gg.auroramc.quests.advancement.AdvancementGuiManager;
 import gg.auroramc.quests.api.profile.ProfileManager;
 import gg.auroramc.quests.api.questpool.Pool;
 import gg.auroramc.quests.api.questpool.PoolManager;
@@ -65,6 +66,7 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
     private ScheduledTask unlockTask;
     private QuestBookManager questBookManager;
     private QuestScoreboardManager scoreboardManager;
+    private AdvancementGuiManager advancementGuiManager;
 
     private BukkitEventBus bukkitEventBus;
 
@@ -115,6 +117,12 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
 
         scoreboardManager = new QuestScoreboardManager(this);
 
+        // Advancement GUI: always constructed and registered so the module can be
+        // toggled live with /quests reload; costs nothing while disabled (guarded
+        // no-op handlers, no scheduled task, no NMS class touched).
+        advancementGuiManager = new AdvancementGuiManager(this);
+        Bukkit.getPluginManager().registerEvents(advancementGuiManager, this);
+
         commandManager = new CommandManager(this);
         commandManager.reload();
 
@@ -131,6 +139,7 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         loadPlayers();
 
         scoreboardManager.reload();
+        advancementGuiManager.reload();
 
 
         Bukkit.getGlobalRegionScheduler().run(this, (task) -> {
@@ -195,10 +204,18 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         if (scoreboardManager != null) {
             scoreboardManager.reload();
         }
+
+        if (advancementGuiManager != null) {
+            advancementGuiManager.reload();
+        }
     }
 
     @Override
     public void onDisable() {
+        if (advancementGuiManager != null) {
+            advancementGuiManager.shutdown();
+        }
+
         if (scoreboardManager != null) {
             scoreboardManager.shutdown();
         }
@@ -303,6 +320,9 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
                 if (scoreboardManager != null) {
                     scoreboardManager.onJoin(event.getUser().getPlayer());
                 }
+                if (advancementGuiManager != null) {
+                    advancementGuiManager.onJoin(event.getUser().getPlayer());
+                }
             } else {
                 toLoad.add(event.getUser().getPlayer());
             }
@@ -315,6 +335,9 @@ public class AuroraQuests extends AuroraQuestsPlugin implements Listener {
         toLoad.remove(event.getPlayer());
         if (scoreboardManager != null) {
             scoreboardManager.onQuit(event.getPlayer());
+        }
+        if (advancementGuiManager != null) {
+            advancementGuiManager.onQuit(event.getPlayer());
         }
     }
 
