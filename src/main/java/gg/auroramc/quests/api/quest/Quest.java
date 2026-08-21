@@ -205,7 +205,7 @@ public class Quest extends EventBus {
 
     public List<Placeholder<?>> getPlaceholders() {
         var gc = AuroraQuests.getInstance().getConfigManager().getConfig();
-        List<Placeholder<?>> placeholders = new ArrayList<>(9 + objectives.size() + definition.getRewards().size());
+        List<Placeholder<?>> placeholders = new ArrayList<>(11 + objectives.size() + definition.getRewards().size());
 
         placeholders.add(Placeholder.of("{name}", definition.getName()));
         placeholders.add(Placeholder.of("{difficulty}", gc.getDifficulties().get(definition.getDifficulty())));
@@ -216,6 +216,12 @@ public class Quest extends EventBus {
         placeholders.add(Placeholder.of("{pool}", pool.getName()));
         placeholders.add(Placeholder.of("{player}", data.profile().getPlayer().getName()));
         placeholders.add(Placeholder.of("{pool_level}", pool.getLevel()));
+        // The single step the player is on (first non-completed task), so long quests can
+        // show one line instead of listing every {task_<id>}. Empty once completed.
+        placeholders.add(Placeholder.of("{current_task}", currentTaskDisplay()));
+        // Names of the not-yet-completed prerequisite quests (start-requirements.quests),
+        // so locked-lore can say who blocks without hardcoding names. Empty when none.
+        placeholders.add(Placeholder.of("{unlock_requirement}", unlockRequirementDisplay()));
 
         var commonMenu = AuroraQuests.getInstance().getConfigManager().getCommonMenuConfig();
         var taskStatuses = commonMenu != null ? commonMenu.getTaskStatuses() : null;
@@ -296,6 +302,45 @@ public class Quest extends EventBus {
                 return;
             }
         }
+    }
+
+    /** Display line of the first non-completed objective; empty when all are done. */
+    private String currentTaskDisplay() {
+        for (Objective obj : objectives) {
+            if (!obj.isCompleted()) {
+                return obj.display();
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Names of the prerequisite quests ({@code start-requirements.quests}) the player has
+     * not completed yet, comma-separated. Falls back to the raw id when a reference
+     * cannot be resolved; empty when the quest has no quest prerequisites left.
+     */
+    private String unlockRequirementDisplay() {
+        var required = definition.getRequirements().getQuests();
+        if (required == null || required.isEmpty()) return "";
+
+        var profile = data.profile();
+        var questData = profile.getData();
+        List<String> missing = new ArrayList<>(required.size());
+
+        for (var entry : required) {
+            var typeId = gg.auroramc.aurora.api.item.TypeId.fromString(entry);
+            // Same convention as QuestRequirement: no namespace means "this pool".
+            var poolId = typeId.namespace().equals("minecraft") ? pool.getId() : typeId.namespace();
+            if (questData.hasCompletedQuest(poolId, typeId.id())) continue;
+
+            var requiredPool = profile.getQuestPool(poolId);
+            var requiredQuest = requiredPool != null ? requiredPool.getQuest(typeId.id()) : null;
+            missing.add(requiredQuest != null && requiredQuest.getDefinition().getName() != null
+                    ? requiredQuest.getDefinition().getName()
+                    : typeId.id());
+        }
+
+        return String.join(", ", missing);
     }
 
     /**

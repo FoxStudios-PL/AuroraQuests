@@ -29,6 +29,11 @@ public class QuestDefinition {
      * it. Already merged over {@link #menuItem}.
      */
     private final ItemConfig completedMenuItem;
+    /**
+     * Icon shown while the quest is locked, {@code null} when the quest doesn't override
+     * it. Already merged over {@link #menuItem}.
+     */
+    private final ItemConfig lockedMenuItem;
     private final List<String> lockedLore;
     private final List<String> completedLore;
     private final List<String> uncompletedLore;

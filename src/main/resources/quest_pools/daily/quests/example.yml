@@ -20,13 +20,16 @@ menu-item:
 
 # Optional: swap the icon depending on the quest status. Only the keys you write here are
 # replaced, everything else (name, lore, flags, ...) is inherited from "menu-item" above.
-# A locked quest always keeps the "menu-item" icon.
+# Without "locked-item", a locked quest keeps the "menu-item" icon.
 #in-progress-item:      # unlocked, not completed yet
 #  material: PAPER
 #  custom-model-data: 880063
 #completed-item:        # completed
 #  material: PAPER
 #  custom-model-data: 880064
+#locked-item:           # locked (requirements not met / manual unlock pending)
+#  material: PAPER
+#  custom-model-data: 880062
 
 locked-lore:
   - ""
@@ -35,6 +38,18 @@ locked-lore:
 completed-lore:
   - ""
   - "&aYou have completed this quest."
+
+# Optional: shown while the quest is unlocked and not completed yet. In the chest menu
+# these three lores are APPENDED to the item lore; in the advancement screen tooltip
+# they REPLACE the description for their state.
+#uncompleted-lore:
+#  - ""
+#  - "&7Current step: {current_task}"
+
+# Handy placeholders (menu lore, advancement descriptions, these three lores):
+#   {current_task}        -> display line of the first non-completed task
+#   {unlock_requirement}  -> names of the not-yet-completed quests from
+#                            start-requirements.quests (empty when none)
 
 # Optional: set "linear-objectives: true" to make the tasks below behave as
 # ordered steps (only the first unfinished task is tracked at a time, finishing
