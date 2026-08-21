@@ -21,6 +21,7 @@ public class QuestConfig extends AuroraConfig {
     private ItemConfig menuItem;
     private ItemConfig inProgressItem;
     private ItemConfig completedItem;
+    private ItemConfig lockedItem;
     private List<String> lockedLore;
     private List<String> completedLore;
     private List<String> uncompletedLore;

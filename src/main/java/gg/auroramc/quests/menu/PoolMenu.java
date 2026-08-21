@@ -287,6 +287,8 @@ public class PoolMenu {
             if (definition.getCompletedMenuItem() != null) return definition.getCompletedMenuItem();
         } else if (quest.isUnlocked()) {
             if (definition.getInProgressMenuItem() != null) return definition.getInProgressMenuItem();
+        } else if (definition.getLockedMenuItem() != null) {
+            return definition.getLockedMenuItem();
         }
 
         return definition.getMenuItem();

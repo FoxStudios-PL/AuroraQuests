@@ -171,6 +171,17 @@ public class AdvancementGuiManager implements Listener {
     // ------------------------------------------------------------------ dirt marking
 
     /**
+     * Requests a full resync of one player's quest screen on the next flush window.
+     * Used by admin actions whose effect is structural but fires no quest event
+     * (e.g. {@code /quests unlock}), so state flips show without a reconnect.
+     */
+    public void refresh(Player player) {
+        if (!active || player == null) return;
+        var view = views.get(player.getUniqueId());
+        if (view != null) view.fullResync = true;
+    }
+
+    /**
      * O(1) hot-path hook called from quest task progress/completion. Safe from any
      * thread; a no-op while the module is off or the quest isn't displayed.
      */
@@ -482,15 +493,26 @@ public class AdvancementGuiManager implements Listener {
         var def = quest.getDefinition();
         var titleRaw = def.getName() != null ? def.getName() : node.getQuestId();
 
+        // Three-state tooltip text, mirroring PoolMenu's completed/locked/uncompleted
+        // branching — but here the state lore REPLACES the description (an advancement
+        // tooltip has no item lore to append to). Empty lists count as absent.
         List<String> template;
         if (locked) {
-            template = def.getLockedLore() != null && !def.getLockedLore().isEmpty()
-                    ? def.getLockedLore()
-                    : List.of(plugin.getConfigManager().getMessageConfig(player).getAdvancementLockedDescription());
+            if (hasLines(def.getLockedLore())) {
+                template = def.getLockedLore();
+            } else {
+                var fallback = plugin.getConfigManager().getMessageConfig(player).getAdvancementLockedDescription();
+                template = fallback == null || fallback.isBlank() ? List.of() : List.of(fallback);
+            }
         } else {
-            template = node.getDescriptionTemplate() != null && !node.getDescriptionTemplate().isEmpty()
-                    ? node.getDescriptionTemplate()
-                    : node.getGeneratedDescription();
+            var stateLore = done ? def.getCompletedLore() : def.getUncompletedLore();
+            if (hasLines(stateLore)) {
+                template = stateLore;
+            } else if (hasLines(node.getDescriptionTemplate())) {
+                template = node.getDescriptionTemplate();
+            } else {
+                template = node.getGeneratedDescription();
+            }
         }
 
         var lines = new ArrayList<String>(template.size());
@@ -528,10 +550,15 @@ public class AdvancementGuiManager implements Listener {
         return total <= 0 ? 0 : current / total;
     }
 
+    private static boolean hasLines(List<String> lines) {
+        return lines != null && !lines.isEmpty();
+    }
+
     private gg.auroramc.aurora.api.config.premade.ItemConfig iconConfig(
             QuestNode node, gg.auroramc.quests.api.quest.QuestDefinition def, boolean done, boolean locked) {
         if (node.getIconOverride() != null) return node.getIconOverride();
         if (done && def.getCompletedMenuItem() != null) return def.getCompletedMenuItem();
+        if (locked && def.getLockedMenuItem() != null) return def.getLockedMenuItem();
         if (!done && !locked && def.getInProgressMenuItem() != null) return def.getInProgressMenuItem();
         return def.getMenuItem();
     }
