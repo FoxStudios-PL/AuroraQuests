@@ -515,9 +515,15 @@ public class AdvancementGuiManager implements Listener {
             }
         }
 
+        // Fill then split: multi-line tokens ({tasks}) join their lines with \n. The
+        // displayHash below is computed from the SPLIT lines, so any change in the
+        // windowed list re-sends the tooltip.
+        var menus = plugin.getConfigManager().getConfig().getMenus();
+        boolean dropEmpty = menus != null && Boolean.TRUE.equals(menus.getDropEmptyLoreLines());
         var lines = new ArrayList<String>(template.size());
         for (var line : template) {
-            lines.add(Text.fillPlaceholders(player, line, placeholders));
+            lines.addAll(gg.auroramc.quests.util.LoreLines.expand(
+                    line, Text.fillPlaceholders(player, line, placeholders), dropEmpty));
         }
 
         int granted;

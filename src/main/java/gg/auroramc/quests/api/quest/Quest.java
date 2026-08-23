@@ -227,18 +227,17 @@ public class Quest extends EventBus {
         var taskStatuses = commonMenu != null ? commonMenu.getTaskStatuses() : null;
         boolean strikeCompleted = taskStatuses != null && taskStatuses.isCompletedStrikethrough();
 
+        var taskLines = new ArrayList<String>(objectives.size());
         for (int i = 0; i < objectives.size(); i++) {
-            var objective = objectives.get(i);
-            if (isObjectiveLocked(i) && definition.getLockedObjectiveLore() != null) {
-                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", definition.getLockedObjectiveLore()));
-            } else {
-                var line = objective.display();
-                if (strikeCompleted && objective.isCompleted()) {
-                    line = strikeThrough(line);
-                }
-                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", line));
-            }
+            var line = taskLine(i, strikeCompleted);
+            taskLines.add(line);
+            placeholders.add(Placeholder.of("{task_" + objectives.get(i).getId() + "}", line));
         }
+
+        // Multi-line token: the objective list, optionally windowed around the current
+        // step (menus.objective-list / per-quest objective-list). Lines are joined with
+        // \n; the render sites (PoolMenu, AdvancementGuiManager) split them back.
+        placeholders.add(Placeholder.of("{tasks}", objectiveListDisplay(taskLines)));
 
         for (var reward : definition.getRewards().entrySet()) {
             placeholders.add(Placeholder.of("{reward_" + reward.getKey() + "}", reward.getValue().getDisplay(data.profile().getPlayer(), placeholders)));
@@ -302,6 +301,48 @@ public class Quest extends EventBus {
                 return;
             }
         }
+    }
+
+    /**
+     * Rendered display of one objective, as shown in lore lines: the locked-objective
+     * lore when the step is not reached yet (linear quests), the struck-through display
+     * when completed (if menu_common's task-statuses asks for it), the live display
+     * otherwise.
+     */
+    private String taskLine(int index, boolean strikeCompleted) {
+        var objective = objectives.get(index);
+        if (isObjectiveLocked(index) && definition.getLockedObjectiveLore() != null) {
+            return definition.getLockedObjectiveLore();
+        }
+        var line = objective.display();
+        if (strikeCompleted && objective.isCompleted()) {
+            line = strikeThrough(line);
+        }
+        return line;
+    }
+
+    /**
+     * Value of the {@code {tasks}} token: the objective list rendered according to the
+     * effective {@code objective-list} settings, lines joined with {@code \n}. Empty for
+     * a locked quest (a player who hasn't unlocked a quest has no business reading its
+     * script — consistent with locked-lore replacing the whole description).
+     */
+    private String objectiveListDisplay(List<String> taskLines) {
+        if (!isCompleted() && !isUnlocked()) return "";
+
+        var menus = AuroraQuests.getInstance().getConfigManager().getConfig().getMenus();
+        var settings = gg.auroramc.quests.util.ObjectiveListRenderer.resolve(
+                menus != null ? menus.getObjectiveList() : null, definition.getObjectiveList());
+
+        var completed = new ArrayList<Boolean>(objectives.size());
+        for (var objective : objectives) {
+            completed.add(objective.isCompleted());
+        }
+
+        var lines = gg.auroramc.quests.util.ObjectiveListRenderer.render(
+                taskLines, completed, getCurrentObjectiveIndex(),
+                definition.isLinearObjectives(), isCompleted(), settings);
+        return String.join("\n", lines);
     }
 
     /** Display line of the first non-completed objective; empty when all are done. */

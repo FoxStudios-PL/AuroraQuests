@@ -4,6 +4,7 @@ import gg.auroramc.aurora.api.config.AuroraConfig;
 import gg.auroramc.aurora.api.config.decorators.IgnoreField;
 import gg.auroramc.aurora.api.config.premade.ItemConfig;
 import gg.auroramc.quests.api.questpool.PoolConfig;
+import gg.auroramc.quests.config.Config;
 import gg.auroramc.quests.config.advancement.QuestAdvancementConfig;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,6 +36,8 @@ public class QuestConfig extends AuroraConfig {
     private List<String> onTrack;
     private List<String> onUntrack;
     private QuestAdvancementConfig advancement;
+    /** Per-quest override of {@code menus.objective-list}; absent keys fall back to it. */
+    private Config.ObjectiveListConfig objectiveList;
 
     @Setter
     @IgnoreField

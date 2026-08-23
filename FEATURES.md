@@ -321,6 +321,55 @@ Two consequences worth knowing:
 
 ---
 
+## Windowed objective list: the `{tasks}` token
+
+A long quest used to need one `{task_<id>}` lore line per step, so a 15-step quest
+tooltip listed 15 lines — most of them identical "upcoming step" fillers. The `{tasks}`
+token renders the whole objective list in one line of template, and the
+`menus.objective-list` settings decide how much of it shows:
+
+```yaml
+# config.yml
+menus:
+  objective-list:
+    mode: window          # all (default) | window | current
+    before: 1             # completed steps kept above the current one
+    after: 2              # upcoming steps kept below
+    line-format: " &8• &f{task}"
+    collapsed-before: " &8• &7… {count} steps completed"
+    collapsed-after: " &8• &7… {count} steps to come"
+
+# in a quest lore / advancement description
+lore:
+  - "&7Objectives:"
+  - "{tasks}"
+```
+
+With `mode: window`, a 15-step quest on step 6 renders 6 lines (fold above, previous
+step, current step, two upcoming, fold below) — and the tooltip stops growing with the
+step count. Rules:
+
+- Steps only fold when it saves **at least 2 lines**; a 3-step quest renders exactly
+  like `mode: all`, whatever the current step.
+- `{count}` in the summary lines is the number of folded steps; an **empty string**
+  template suppresses the summary line.
+- Completed quest → a single `collapsed-before` line with the total (except `mode: all`).
+- Locked quest → `{tasks}` renders nothing (consistent with `locked-lore` replacing the
+  description) and its line leaves no hole.
+- Non-linear quests (`linear-objectives: false`): every playable step stays visible,
+  only completed steps fold (honouring `before`); `after` is ignored.
+- Per-quest override: the same `objective-list:` block at the root of a quest file;
+  absent keys fall back to the global section.
+- `{task_<id>}` keeps working exactly as before, and both tokens can share a template.
+  The default `mode: all` + `line-format: "{task}"` render byte-identical to previous
+  builds (the generated advancement description now uses `{tasks}` internally).
+
+Also new, independent: `menus.drop-empty-lore-lines` (default `false`) drops a lore or
+description line that had content in the template but rendered empty once tokens were
+replaced and colour codes stripped (e.g. `" &8• &f{current_task}"` on a completed quest
+leaving a lone bullet). Deliberately blank lines and code-only separators are never
+touched.
+
 ## Hidden vanilla tooltips in the quest menus
 
 Minecraft appends its own description to an item tooltip: `6 Attack Damage`, `1.6 Attack

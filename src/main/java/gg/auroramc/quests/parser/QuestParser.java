@@ -39,6 +39,7 @@ public class QuestParser {
                 .onTrack(config.getOnTrack())
                 .onUntrack(config.getOnUntrack())
                 .advancement(config.getAdvancement())
+                .objectiveList(config.getObjectiveList())
                 .build();
     }
 

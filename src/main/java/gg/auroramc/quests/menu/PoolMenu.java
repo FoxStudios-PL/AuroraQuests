@@ -16,6 +16,7 @@ import gg.auroramc.quests.api.questpool.QuestPool;
 import gg.auroramc.quests.config.Config;
 import gg.auroramc.quests.config.MessageConfig;
 import gg.auroramc.quests.util.ChatUtil;
+import gg.auroramc.quests.util.LoreLines;
 import gg.auroramc.quests.util.RomanNumber;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -170,11 +171,22 @@ public class PoolMenu {
             var qPlaceholders = quest.getPlaceholders();
             var menuItem = iconOf(quest);
 
+            // Multi-line tokens ({tasks}) come back joined with \n and are split into
+            // real lore lines here; LoreLines also drops lines that rendered empty when
+            // menus.drop-empty-lore-lines asks for it.
+            boolean dropEmpty = Boolean.TRUE.equals(
+                    AuroraQuests.getInstance().getConfigManager().getConfig().getMenus().getDropEmptyLoreLines());
+
             var builder = MenuItems.of(menuItem).slot(slot)
                     .setName(Placeholder.execute(menuItem.getName(), Placeholder.of("{name}", quest.getDefinition().getName())))
-                    .setLore(menuItem.getLore().stream().map(l -> Placeholder.execute(l, qPlaceholders)).toList())
+                    .setLore(menuItem.getLore().stream()
+                            .flatMap(l -> LoreLines.expand(l, Placeholder.execute(l, qPlaceholders), dropEmpty).stream())
+                            .toList())
                     .localization(localization)
-                    .placeholder(qPlaceholders).extraLore(extraLore);
+                    .placeholder(qPlaceholders)
+                    .extraLore(extraLore.stream()
+                            .flatMap(l -> LoreLines.expand(l, Placeholder.execute(l, qPlaceholders), dropEmpty).stream())
+                            .toList());
 
             if (quest.isUnlocked() && !quest.isCompleted()) {
                 menu.addItem(builder.build(player), (e) -> {
