@@ -140,6 +140,12 @@ public class QuestsCommand extends BaseCommand {
             // Will unlock any locked quest, not just the ones that have manual-unlock requirement
             quest.start(true);
 
+            // Manual unlocks fire no quest event: refresh the advancement screen so the
+            // quest flips from locked to in-progress without a reconnect.
+            if (plugin.getAdvancementGuiManager() != null) {
+                plugin.getAdvancementGuiManager().refresh(target);
+            }
+
             // Auto-track the freshly unlocked quest, but only if the player has no quest tracked yet
             // (one quest tracked at a time). Other unlock paths and the GUI/track command are untouched.
             var trackingConfig = plugin.getConfigManager().getConfig().getTracking();

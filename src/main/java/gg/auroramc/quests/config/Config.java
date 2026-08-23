@@ -251,6 +251,36 @@ public class Config extends AuroraConfig {
                 "HIDE_DYE",
                 "HIDE_ARMOR_TRIM"
         );
+        // How the {tasks} token renders the objective list (all | window | current).
+        // Overridable per quest with an "objective-list" section in the quest file.
+        private ObjectiveListConfig objectiveList = new ObjectiveListConfig();
+        // Drop a lore/description line that had content in the template but rendered
+        // empty once tokens were replaced (e.g. " &8• &f{current_task}" on a completed
+        // quest leaving a lone bullet). Deliberate blank/separator lines are untouched.
+        private Boolean dropEmptyLoreLines = false;
+    }
+
+    /**
+     * {@code objective-list} settings for the {@code {tasks}} token. Every field is
+     * nullable on purpose: a per-quest override only carries the keys it writes, the
+     * rest falls back to the global section, then to the built-in defaults (see
+     * {@code ObjectiveListRenderer.resolve}).
+     */
+    @Getter
+    public static final class ObjectiveListConfig {
+        // all -> current behaviour (every step) | window -> steps around the current
+        // one, rest folded | current -> the current step alone.
+        private String mode;
+        // Completed steps kept visible above the current one (window mode).
+        private Integer before;
+        // Upcoming steps kept visible below the current one (window mode).
+        private Integer after;
+        // Template of one objective line; {task} is the step's rendered display.
+        private String lineFormat;
+        // Summary lines; {count} is the number of folded steps. An explicit empty
+        // string suppresses the summary line entirely.
+        private String collapsedBefore;
+        private String collapsedAfter;
     }
 
     public static File getFile(AuroraQuests plugin) {
@@ -514,6 +544,44 @@ public class Config extends AuroraConfig {
                             "    background: \"minecraft:gui/advancements/backgrounds/adventure\"",
                             "    index: 1"));
                     yaml.set("config-version", 13);
+                },
+                (yaml) -> {
+                    yaml.set("menus.objective-list.mode", "all");
+                    yaml.setComments("menus.objective-list", List.of(
+                            "How the {tasks} token renders a quest's objective list (menu lore and",
+                            "advancement descriptions). {tasks} produces one line per visible step;",
+                            "with mode \"window\" only the steps around the current one are shown and",
+                            "the rest folds into one summary line per side, so long quests stop",
+                            "overflowing the tooltip. Overridable per quest with an \"objective-list\"",
+                            "section at the root of the quest file (absent keys fall back to these)."));
+                    yaml.setComments("menus.objective-list.mode", List.of(
+                            "all     -> current behaviour, every step on its own line",
+                            "window  -> the steps around the current one, the rest folded",
+                            "current -> the current step alone"));
+                    yaml.set("menus.objective-list.before", 1);
+                    yaml.setComments("menus.objective-list.before", List.of(
+                            "Completed steps kept visible above the current one (window mode)."));
+                    yaml.set("menus.objective-list.after", 2);
+                    yaml.setComments("menus.objective-list.after", List.of(
+                            "Upcoming steps kept visible below the current one (window mode).",
+                            "Ignored for non-linear quests: their non-completed steps always show."));
+                    yaml.set("menus.objective-list.line-format", "{task}");
+                    yaml.setComments("menus.objective-list.line-format", List.of(
+                            "Template of one objective line; {task} is the step's display, already",
+                            "struck through / replaced by locked-objective-lore depending on state.",
+                            "e.g. \" &8• &f{task}\" to add a bullet."));
+                    yaml.set("menus.objective-list.collapsed-before", " &8• &7… {count} steps completed");
+                    yaml.set("menus.objective-list.collapsed-after", " &8• &7… {count} steps to come");
+                    yaml.setComments("menus.objective-list.collapsed-before", List.of(
+                            "Summary lines; {count} is the number of folded steps. An empty string",
+                            "suppresses the summary line. Steps only fold when it saves >= 2 lines."));
+                    yaml.set("menus.drop-empty-lore-lines", false);
+                    yaml.setComments("menus.drop-empty-lore-lines", List.of(
+                            "Drop a lore/description line that had content in the template but rendered",
+                            "empty once tokens were replaced and colour codes stripped (e.g.",
+                            "\" &8• &f{current_task}\" on a completed quest leaving a lone bullet).",
+                            "Deliberately blank lines and code-only separators are never touched."));
+                    yaml.set("config-version", 14);
                 }
         );
     }

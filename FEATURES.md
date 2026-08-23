@@ -17,6 +17,14 @@ players open with the **L** key), instead of — or alongside — the classic ch
   live counters, plus the native `x/y` fraction (`progress-steps`). Completing a quest
   pops the vanilla toast and turns the frame gold; `frame: challenge` gives the purple
   challenge styling.
+- **Three states, three texts, three icons**: the tooltip text follows the quest state —
+  `locked-lore` (locked), `uncompleted-lore` (in progress) and `completed-lore`
+  (completed), each **replacing** the description when set (empty = fall back to
+  `advancement.description`, then to the generated task/reward lines). The icon follows
+  `locked-item` / `in-progress-item` / `completed-item` (fallback `menu-item`). Two
+  placeholders help long quests: `{current_task}` renders only the step the player is on,
+  and `{unlock_requirement}` renders the names of the not-yet-completed prerequisite
+  quests from `start-requirements.quests`.
 - **Per player**: everything is sent through per-player packets — timed-random pools
   (dailies/weeklies) only show the player's **own roll**, and reroll at midnight without
   a reconnect. Locked quests show a locked description (or are invisible with
@@ -248,17 +256,18 @@ stripped there.
 
 ---
 
-## Per-status quest icons: `in-progress-item` / `completed-item`
+## Per-status quest icons: `in-progress-item` / `completed-item` / `locked-item`
 
 Upstream, a quest has a single `menu-item` and only its **lore** can vary with the quest
-status (`locked-lore`, `uncompleted-lore`, `completed-lore`). Two new optional sections,
+status (`locked-lore`, `uncompleted-lore`, `completed-lore`). Three optional sections,
 written next to those, let the **icon itself** change too — so a player can tell at a
-glance which quests are started and which are done.
+glance which quests are locked, started and done. They apply to the chest menu **and**
+to the advancement screen (Mode Progrès).
 
 ```yaml
 menu-item:
   material: oak_log
-  custom-model-data: 0        # icon of a locked / not-yet-started quest
+  custom-model-data: 0        # default icon (used when no override matches)
   name: "&6{name}"
   lore:
     - "&7Coupe du bois"
@@ -270,13 +279,17 @@ in-progress-item:             # unlocked, not completed yet
 completed-item:               # completed
   material: PAPER
   custom-model-data: 880064
+
+locked-item:                  # locked (requirements not met / manual unlock pending)
+  material: PAPER
+  custom-model-data: 880062
 ```
 
 ### Which icon is used
 
 | Quest status | Icon |
 |---|---|
-| Locked (not unlocked yet, incl. `always-show-in-menu`) | `menu-item` — unchanged |
+| Locked (not unlocked yet, incl. `always-show-in-menu`) | `locked-item` if defined, otherwise `menu-item` |
 | Unlocked, not completed | `in-progress-item` if defined, otherwise `menu-item` |
 | Completed | `completed-item` if defined, otherwise `menu-item` |
 
@@ -307,6 +320,55 @@ Two consequences worth knowing:
 - `/quests reload` applies changes live.
 
 ---
+
+## Windowed objective list: the `{tasks}` token
+
+A long quest used to need one `{task_<id>}` lore line per step, so a 15-step quest
+tooltip listed 15 lines — most of them identical "upcoming step" fillers. The `{tasks}`
+token renders the whole objective list in one line of template, and the
+`menus.objective-list` settings decide how much of it shows:
+
+```yaml
+# config.yml
+menus:
+  objective-list:
+    mode: window          # all (default) | window | current
+    before: 1             # completed steps kept above the current one
+    after: 2              # upcoming steps kept below
+    line-format: " &8• &f{task}"
+    collapsed-before: " &8• &7… {count} steps completed"
+    collapsed-after: " &8• &7… {count} steps to come"
+
+# in a quest lore / advancement description
+lore:
+  - "&7Objectives:"
+  - "{tasks}"
+```
+
+With `mode: window`, a 15-step quest on step 6 renders 6 lines (fold above, previous
+step, current step, two upcoming, fold below) — and the tooltip stops growing with the
+step count. Rules:
+
+- Steps only fold when it saves **at least 2 lines**; a 3-step quest renders exactly
+  like `mode: all`, whatever the current step.
+- `{count}` in the summary lines is the number of folded steps; an **empty string**
+  template suppresses the summary line.
+- Completed quest → a single `collapsed-before` line with the total (except `mode: all`).
+- Locked quest → `{tasks}` renders nothing (consistent with `locked-lore` replacing the
+  description) and its line leaves no hole.
+- Non-linear quests (`linear-objectives: false`): every playable step stays visible,
+  only completed steps fold (honouring `before`); `after` is ignored.
+- Per-quest override: the same `objective-list:` block at the root of a quest file;
+  absent keys fall back to the global section.
+- `{task_<id>}` keeps working exactly as before, and both tokens can share a template.
+  The default `mode: all` + `line-format: "{task}"` render byte-identical to previous
+  builds (the generated advancement description now uses `{tasks}` internally).
+
+Also new, independent: `menus.drop-empty-lore-lines` (default `false`) drops a lore or
+description line that had content in the template but rendered empty once tokens were
+replaced and colour codes stripped (e.g. `" &8• &f{current_task}"` on a completed quest
+leaving a lone bullet). Deliberately blank lines and code-only separators are never
+touched.
 
 ## Hidden vanilla tooltips in the quest menus
 

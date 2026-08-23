@@ -269,14 +269,16 @@ final class AdvancementModelBuilder {
     }
 
     /**
-     * Default tooltip description: one line per task (same {@code display} strings as
-     * the chest menu) followed by the reward displays. Filled with the quest's
-     * placeholders at render time, so counters stay live.
+     * Default tooltip description: the objective list followed by the reward displays.
+     * Uses the multi-line {@code {tasks}} token (instead of one {@code {task_<id>}} per
+     * step) so quests without an explicit template honour the {@code objective-list}
+     * window settings too. With the default {@code mode: all} and {@code line-format:
+     * "{task}"} this expands to exactly the per-step lines it used to emit.
      */
     private static List<String> generatedDescription(QuestDefinition quest) {
         var lines = new ArrayList<String>();
-        for (var taskId : quest.getTasks().keySet()) {
-            lines.add("{task_" + taskId + "}");
+        if (!quest.getTasks().isEmpty()) {
+            lines.add("{tasks}");
         }
         if (!quest.getRewards().isEmpty()) {
             if (!lines.isEmpty()) lines.add("");

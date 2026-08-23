@@ -205,7 +205,7 @@ public class Quest extends EventBus {
 
     public List<Placeholder<?>> getPlaceholders() {
         var gc = AuroraQuests.getInstance().getConfigManager().getConfig();
-        List<Placeholder<?>> placeholders = new ArrayList<>(9 + objectives.size() + definition.getRewards().size());
+        List<Placeholder<?>> placeholders = new ArrayList<>(11 + objectives.size() + definition.getRewards().size());
 
         placeholders.add(Placeholder.of("{name}", definition.getName()));
         placeholders.add(Placeholder.of("{difficulty}", gc.getDifficulties().get(definition.getDifficulty())));
@@ -216,23 +216,28 @@ public class Quest extends EventBus {
         placeholders.add(Placeholder.of("{pool}", pool.getName()));
         placeholders.add(Placeholder.of("{player}", data.profile().getPlayer().getName()));
         placeholders.add(Placeholder.of("{pool_level}", pool.getLevel()));
+        // The single step the player is on (first non-completed task), so long quests can
+        // show one line instead of listing every {task_<id>}. Empty once completed.
+        placeholders.add(Placeholder.of("{current_task}", currentTaskDisplay()));
+        // Names of the not-yet-completed prerequisite quests (start-requirements.quests),
+        // so locked-lore can say who blocks without hardcoding names. Empty when none.
+        placeholders.add(Placeholder.of("{unlock_requirement}", unlockRequirementDisplay()));
 
         var commonMenu = AuroraQuests.getInstance().getConfigManager().getCommonMenuConfig();
         var taskStatuses = commonMenu != null ? commonMenu.getTaskStatuses() : null;
         boolean strikeCompleted = taskStatuses != null && taskStatuses.isCompletedStrikethrough();
 
+        var taskLines = new ArrayList<String>(objectives.size());
         for (int i = 0; i < objectives.size(); i++) {
-            var objective = objectives.get(i);
-            if (isObjectiveLocked(i) && definition.getLockedObjectiveLore() != null) {
-                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", definition.getLockedObjectiveLore()));
-            } else {
-                var line = objective.display();
-                if (strikeCompleted && objective.isCompleted()) {
-                    line = strikeThrough(line);
-                }
-                placeholders.add(Placeholder.of("{task_" + objective.getId() + "}", line));
-            }
+            var line = taskLine(i, strikeCompleted);
+            taskLines.add(line);
+            placeholders.add(Placeholder.of("{task_" + objectives.get(i).getId() + "}", line));
         }
+
+        // Multi-line token: the objective list, optionally windowed around the current
+        // step (menus.objective-list / per-quest objective-list). Lines are joined with
+        // \n; the render sites (PoolMenu, AdvancementGuiManager) split them back.
+        placeholders.add(Placeholder.of("{tasks}", objectiveListDisplay(taskLines)));
 
         for (var reward : definition.getRewards().entrySet()) {
             placeholders.add(Placeholder.of("{reward_" + reward.getKey() + "}", reward.getValue().getDisplay(data.profile().getPlayer(), placeholders)));
@@ -296,6 +301,87 @@ public class Quest extends EventBus {
                 return;
             }
         }
+    }
+
+    /**
+     * Rendered display of one objective, as shown in lore lines: the locked-objective
+     * lore when the step is not reached yet (linear quests), the struck-through display
+     * when completed (if menu_common's task-statuses asks for it), the live display
+     * otherwise.
+     */
+    private String taskLine(int index, boolean strikeCompleted) {
+        var objective = objectives.get(index);
+        if (isObjectiveLocked(index) && definition.getLockedObjectiveLore() != null) {
+            return definition.getLockedObjectiveLore();
+        }
+        var line = objective.display();
+        if (strikeCompleted && objective.isCompleted()) {
+            line = strikeThrough(line);
+        }
+        return line;
+    }
+
+    /**
+     * Value of the {@code {tasks}} token: the objective list rendered according to the
+     * effective {@code objective-list} settings, lines joined with {@code \n}. Empty for
+     * a locked quest (a player who hasn't unlocked a quest has no business reading its
+     * script — consistent with locked-lore replacing the whole description).
+     */
+    private String objectiveListDisplay(List<String> taskLines) {
+        if (!isCompleted() && !isUnlocked()) return "";
+
+        var menus = AuroraQuests.getInstance().getConfigManager().getConfig().getMenus();
+        var settings = gg.auroramc.quests.util.ObjectiveListRenderer.resolve(
+                menus != null ? menus.getObjectiveList() : null, definition.getObjectiveList());
+
+        var completed = new ArrayList<Boolean>(objectives.size());
+        for (var objective : objectives) {
+            completed.add(objective.isCompleted());
+        }
+
+        var lines = gg.auroramc.quests.util.ObjectiveListRenderer.render(
+                taskLines, completed, getCurrentObjectiveIndex(),
+                definition.isLinearObjectives(), isCompleted(), settings);
+        return String.join("\n", lines);
+    }
+
+    /** Display line of the first non-completed objective; empty when all are done. */
+    private String currentTaskDisplay() {
+        for (Objective obj : objectives) {
+            if (!obj.isCompleted()) {
+                return obj.display();
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Names of the prerequisite quests ({@code start-requirements.quests}) the player has
+     * not completed yet, comma-separated. Falls back to the raw id when a reference
+     * cannot be resolved; empty when the quest has no quest prerequisites left.
+     */
+    private String unlockRequirementDisplay() {
+        var required = definition.getRequirements().getQuests();
+        if (required == null || required.isEmpty()) return "";
+
+        var profile = data.profile();
+        var questData = profile.getData();
+        List<String> missing = new ArrayList<>(required.size());
+
+        for (var entry : required) {
+            var typeId = gg.auroramc.aurora.api.item.TypeId.fromString(entry);
+            // Same convention as QuestRequirement: no namespace means "this pool".
+            var poolId = typeId.namespace().equals("minecraft") ? pool.getId() : typeId.namespace();
+            if (questData.hasCompletedQuest(poolId, typeId.id())) continue;
+
+            var requiredPool = profile.getQuestPool(poolId);
+            var requiredQuest = requiredPool != null ? requiredPool.getQuest(typeId.id()) : null;
+            missing.add(requiredQuest != null && requiredQuest.getDefinition().getName() != null
+                    ? requiredQuest.getDefinition().getName()
+                    : typeId.id());
+        }
+
+        return String.join(", ", missing);
     }
 
     /**

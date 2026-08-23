@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 13
+config-version: 14
 
 debug: false
 language: en
@@ -94,6 +94,35 @@ menus:
     - HIDE_PLACED_ON
     - HIDE_DYE
     - HIDE_ARMOR_TRIM
+  # How the {tasks} token renders a quest's objective list (menu lore and
+  # advancement descriptions). {tasks} produces one line per visible step; with
+  # mode "window" only the steps around the current one are shown and the rest
+  # folds into one summary line per side, so long quests stop overflowing the
+  # tooltip. Overridable per quest with an "objective-list" section at the root
+  # of the quest file (absent keys fall back to these values).
+  objective-list:
+    # all     -> current behaviour, every step on its own line
+    # window  -> the steps around the current one, the rest folded
+    # current -> the current step alone
+    mode: all
+    # Completed steps kept visible above the current one (window mode).
+    before: 1
+    # Upcoming steps kept visible below the current one (window mode).
+    # Ignored for non-linear quests: their non-completed steps always show.
+    after: 2
+    # Template of one objective line; {task} is the step's display, already
+    # struck through / replaced by locked-objective-lore depending on state.
+    # e.g. " &8• &f{task}" to add a bullet.
+    line-format: "{task}"
+    # Summary lines; {count} is the number of folded steps. An empty string
+    # suppresses the summary line. Steps only fold when it saves >= 2 lines.
+    collapsed-before: " &8• &7… {count} steps completed"
+    collapsed-after: " &8• &7… {count} steps to come"
+  # Drop a lore/description line that had content in the template but rendered
+  # empty once tokens were replaced and colour codes stripped (e.g.
+  # " &8• &f{current_task}" on a completed quest leaving a lone bullet).
+  # Deliberately blank lines and code-only separators are never touched.
+  drop-empty-lore-lines: false
 
 display-components:
   rewards:

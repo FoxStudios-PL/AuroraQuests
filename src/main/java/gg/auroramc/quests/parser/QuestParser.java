@@ -27,6 +27,8 @@ public class QuestParser {
                         rawSection(config, "in-progress-item")))
                 .completedMenuItem(MenuItemOverride.apply(config.getMenuItem(), config.getCompletedItem(),
                         rawSection(config, "completed-item")))
+                .lockedMenuItem(MenuItemOverride.apply(config.getMenuItem(), config.getLockedItem(),
+                        rawSection(config, "locked-item")))
                 .completedLore(config.getCompletedLore())
                 .lockedLore(config.getLockedLore())
                 .uncompletedLore(config.getUncompletedLore())
@@ -37,6 +39,7 @@ public class QuestParser {
                 .onTrack(config.getOnTrack())
                 .onUntrack(config.getOnUntrack())
                 .advancement(config.getAdvancement())
+                .objectiveList(config.getObjectiveList())
                 .build();
     }
 
