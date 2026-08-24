@@ -1,6 +1,7 @@
 package gg.auroramc.quests.parser;
 
 import gg.auroramc.aurora.api.reward.RewardFactory;
+import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.quest.QuestDefinition;
 import gg.auroramc.quests.api.questpool.Pool;
 import gg.auroramc.quests.api.questpool.PoolConfig;
@@ -35,7 +36,15 @@ public class PoolParser {
         LinkedHashMap<String, QuestDefinition> quests = new LinkedHashMap<>();
 
         for(var quest : map.values()) {
-            quests.put(quest.getId(), QuestParser.parse(quest, rewardFactory));
+            try {
+                quests.put(quest.getId(), QuestParser.parse(quest, rewardFactory));
+            } catch (IllegalArgumentException e) {
+                // Invalid reward-scale reference (or similar hard config error): refuse
+                // the quest at load time instead of silently paying zero later.
+                var poolId = quest.getPoolConfig() != null ? quest.getPoolConfig().getId() : "?";
+                AuroraQuests.logger().severe("Quest not loaded: quest_pools/" + poolId + "/quests/"
+                        + quest.getId() + ".yml - " + e.getMessage());
+            }
         }
 
         return quests;

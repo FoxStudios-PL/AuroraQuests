@@ -217,6 +217,53 @@ quest-book:
       pitch: 1.2
 
 # ===========================================================================
+# Reward scales
+# ---------------------------------------------------------------------------
+# Tables that index a reward amount on a value read on the player at the
+# moment the reward is PAID (and displayed): an AuroraLevels level, or any
+# numeric placeholder. Use them on any numeric reward (money, levels_xp,
+# stats, ...) or on a command reward with "scale: <table>" instead of
+# "amount:". Tokens usable in "display" and "command":
+#   {value}            resolved amount, clean/raw (1700 - safe in commands)
+#   {value_raw}        alias of {value}
+#   {value_formatted}  pretty-formatted amount (for displays)
+#   {scale_source}     the value read on the player (e.g. the level)
+#   {scale_tier}       1-based index of the matched tier (debugging)
+# The first tier whose "up-to" is >= the source value wins; the last tier has
+# no "up-to" and acts as the cap. "mode: linear" interpolates between tiers.
+# An unreadable source uses "fallback" (or the first tier) with one warning
+# per load. Tables reload live with /quests reload; a quest referencing an
+# unknown table is refused at load time.
+#
+# Example:
+# reward-scales:
+#   aventure-facile:
+#     source: aurora-level        # or "placeholder" + placeholder: "%...%"
+#     mode: step                  # step (default) | linear
+#     tiers:
+#       - { up-to: 25,  value: 40 }
+#       - { up-to: 50,  value: 125 }
+#       - { up-to: 75,  value: 300 }
+#       - { up-to: 100, value: 550 }
+#       - { value: 850 }          # last tier: the cap
+#   metier-mineur:
+#     source: placeholder
+#     placeholder: "%jobs_level_mineur%"
+#     fallback: 1
+#     tiers:
+#       - { up-to: 10, value: 100 }
+#       - { value: 250 }
+#
+# And in a quest:
+# rewards:
+#   xp:
+#     type: command
+#     scale: aventure-facile
+#     command: "[console] lvl addxp {value} %player_name% true"
+#     display: "&#c2c2c2{value} XP"
+reward-scales: { }
+
+# ===========================================================================
 # Advancement GUI
 # ---------------------------------------------------------------------------
 # Mirrors quests into the VANILLA advancement screen (the one players open

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ObjectiveParser {
-    public static ObjectiveDefinition parse(String id, TaskConfig config, RewardFactory rewardFactory) {
+    public static ObjectiveDefinition parse(String id, TaskConfig config, RewardFactory rewardFactory, String context) {
         return ObjectiveDefinition.builder()
                 .id(id)
                 .display(config.getDisplay())
@@ -24,7 +24,7 @@ public class ObjectiveParser {
                 .filters(parseFilters(config.getFilters()))
                 .onProgress(config.getOnProgress())
                 .onComplete(config.getOnComplete())
-                .rewards(QuestParser.parseRewards(config.getRewards(), rewardFactory))
+                .rewards(QuestParser.parseRewards(config.getRewards(), rewardFactory, context + " task " + id))
                 .build();
     }
 

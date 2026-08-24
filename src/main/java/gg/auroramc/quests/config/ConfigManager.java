@@ -7,6 +7,8 @@ import gg.auroramc.aurora.api.localization.LocalizationProvider;
 import gg.auroramc.quests.AuroraQuests;
 import gg.auroramc.quests.api.questpool.PoolConfig;
 import gg.auroramc.quests.config.quest.QuestConfig;
+import gg.auroramc.quests.reward.RewardScales;
+import gg.auroramc.quests.reward.ScaleLog;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.bukkit.command.CommandSender;
@@ -34,6 +36,8 @@ public class ConfigManager {
     private CommonMenuConfig commonMenuConfig;
     private final Map<String, PoolConfig> questPools = Maps.newConcurrentMap();
     private Locale defaultLocale;
+    // reward-scales tables; rebuilt on every reload, before the quest pools re-parse.
+    private RewardScales rewardScales = RewardScales.empty();
 
     public ConfigManager(AuroraQuests plugin) {
         this.plugin = plugin;
@@ -45,6 +49,9 @@ public class ConfigManager {
         Config.saveDefault(plugin);
         config = new Config(plugin);
         config.load();
+
+        ScaleLog.install(msg -> AuroraQuests.logger().severe(msg), msg -> AuroraQuests.logger().warning(msg));
+        rewardScales = RewardScales.parse(config.getRawConfig().getConfigurationSection("reward-scales"));
 
         defaultLocale = Locale.forLanguageTag(config.getLanguage());
 
