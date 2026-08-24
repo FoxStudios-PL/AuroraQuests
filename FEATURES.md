@@ -321,6 +321,66 @@ Two consequences worth knowing:
 
 ---
 
+## Reward scales: amounts indexed on the player's level
+
+A fixed daily-quest reward that feels great at level 10 is worthless at level 110. A
+**reward scale** maps a value read on the player — an AuroraLevels level, or any numeric
+placeholder — to a reward amount, through tiers declared **once** in `config.yml`:
+
+```yaml
+# config.yml
+reward-scales:
+  aventure-facile:
+    source: aurora-level        # or "placeholder" + placeholder: "%jobs_level_mineur%"
+    mode: step                  # step (flat tiers, default) | linear (interpolated)
+    tiers:
+      - { up-to: 25,  value: 40 }
+      - { up-to: 50,  value: 125 }
+      - { up-to: 75,  value: 300 }
+      - { up-to: 100, value: 550 }
+      - { value: 850 }          # last tier, no bound: the cap
+
+# in a quest — any numeric reward (money, levels_xp, stats, ...):
+rewards:
+  xp:
+    type: levels_xp
+    scale: aventure-facile
+    display: "&#c2c2c2{value} XP"
+
+# ... or a command reward ({value} is filled BEFORE the dispatcher):
+  rubies:
+    type: command
+    scale: aventure-facile
+    command: "[console] lvl addxp {value} %player_name% true"
+    display: "&#c2c2c2{value} XP"
+```
+
+Rules and guarantees:
+
+- **Resolved at pay time, not at roll time**: level up mid-day and the completion pays
+  the new tier. The menu lore and the advancement-screen reward lines resolve through
+  the **same** code path, per player — what you see is what you get, and two players in
+  different tiers see different numbers on the same quest. A level-up also refreshes the
+  advancement screen live.
+- The first tier whose `up-to` is `>=` the source wins (`up-to` inclusive); the last
+  tier has no `up-to` and is the cap; a source `<= 0` lands in the first tier.
+  `mode: linear` interpolates between tier bounds (first/last tier behave like `step`).
+- Tokens in `display`/`command`: `{value}` (clean raw — `1700`, command-safe),
+  `{value_raw}` (alias), `{value_int}`, `{value_formatted}` (pretty, displays only),
+  `{scale_source}` (the value read), `{scale_tier}` (1-based, debugging).
+- **Fail loud, never pay zero**: an unknown `scale:` refuses the whole quest at load
+  time with an error naming the file and the reward key; invalid tables (empty tiers,
+  non-increasing `up-to`, missing `value`, ...) are rejected at startup with explicit
+  errors. `scale` + `amount` together → `scale` wins with a startup warning.
+- An unreadable source (AuroraLevels absent, placeholder not numeric) uses `fallback`
+  if declared, else the first tier — with **one** warning per table per load.
+- Tables reload live with `/quests reload`. The `scale` key is fully optional: configs
+  without it behave exactly as before (no config migration).
+- Threading: the source is read where the reward already executes (the player's
+  scheduling context, Folia-safe). AuroraLevels levels live in memory; a third-party
+  placeholder that queries a database would block that player's thread — keep
+  placeholder sources in-memory.
+
 ## Windowed objective list: the `{tasks}` token
 
 A long quest used to need one `{task_<id>}` lore line per step, so a 15-step quest
