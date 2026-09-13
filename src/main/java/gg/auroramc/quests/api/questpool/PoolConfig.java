@@ -24,6 +24,12 @@ public class PoolConfig extends AuroraConfig {
     private Map<String, Integer> difficulties;
     private String resetFrequency;
     private Boolean rerollOnCompletion = false;
+    /**
+     * When true, two quests sharing at least one tag can never come out of the same roll.
+     * Defaults to false in code as well as in the shipped config, so a pool whose config was
+     * written before this key existed keeps rolling exactly as it did.
+     */
+    private Boolean avoidDuplicateTags = false;
     private PoolMenuItem menuItem;
     private PoolMenu menu;
     private Leveling leveling;

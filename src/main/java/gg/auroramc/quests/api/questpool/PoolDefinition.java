@@ -18,6 +18,8 @@ public class PoolDefinition {
     private final Map<String, Integer> difficulties;
     private final String resetFrequency;
     private final Boolean rerollOnCompletion;
+    /** @see PoolConfig#getAvoidDuplicateTags() */
+    private final boolean avoidDuplicateTags;
     private final PoolConfig.PoolMenuItem menuItem;
     private final PoolConfig.PoolMenu menu;
     private final PoolConfig.Leveling leveling;
