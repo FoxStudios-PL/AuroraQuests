@@ -19,6 +19,12 @@ public class QuestDefinition {
     private final String name;
     private final String chapter;
     private final String difficulty;
+    /**
+     * Normalized (lowercase, trimmed) activity tags of this quest, used by pools with
+     * {@code avoid-duplicate-tags} to keep two quests of the same activity out of one roll.
+     * Never {@code null}: a quest without a {@code tags:} section simply has none.
+     */
+    private final List<String> tags;
     private final ItemConfig menuItem;
     /**
      * Icon shown while the quest is unlocked and not completed yet, {@code null} when the
@@ -51,4 +57,9 @@ public class QuestDefinition {
     private final QuestAdvancementConfig advancement;
     /** Per-quest {@code objective-list:} override for {@code {tasks}}, {@code null} when absent. */
     private final Config.ObjectiveListConfig objectiveList;
+
+    /** Never {@code null}, so callers can iterate without a guard. */
+    public List<String> getTags() {
+        return tags == null ? List.of() : tags;
+    }
 }

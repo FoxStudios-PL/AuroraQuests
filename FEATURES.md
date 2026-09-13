@@ -701,3 +701,47 @@ across all weapons). To restrict it to specific weapons, use their FoxSkills ids
       types:
         - "katana"
 ```
+
+## One activity per roll: quest `tags` + `avoid-duplicate-tags`
+
+A pool that rolls several difficulties picks each one independently, so an activity that
+exists at several tiers — fishing 10, 30 and 120 — regularly comes out twice on the same
+day. Both counters then advance together, which shortens the day and flattens its variety.
+
+Tag the quests by activity, switch the option on in the pool, and two quests sharing a tag
+can no longer be rolled together:
+
+```yaml
+# quest_pools/<pool>/config.yml
+avoid-duplicate-tags: true
+
+# quest_pools/<pool>/quests/daily_peche_30.yml
+name: "Le fond du filet"
+difficulty: "medium"
+tags:
+  - peche
+```
+
+Rules and guarantees:
+
+- `tags` is an optional list, empty by default. A quest may carry **several** tags (a
+  two-objective quest), and **all** of them block the other difficulties once it is picked.
+- Tags are normalized at parse time: lowercased and trimmed, so `Peche`, `peche` and
+  ` PECHE ` are the same tag. Nothing compares a raw tag anywhere else.
+- A quest **without** tags never enters an exclusion: it stays pickable and blocks nobody.
+- **The player always gets the promised number of quests.** If a difficulty cannot be
+  filled without reusing a tag, the remaining slots are filled from the same candidates
+  with the tags ignored, and a `debug` line names the pool, the difficulty and how many
+  quests were picked despite a conflict — the sign that the pool is too small or its tags
+  too broad. The fallback never picks the same quest twice; only a tag is duplicated.
+- Difficulties are served **from the least supplied to the most supplied** (ties broken
+  alphabetically on the difficulty id), not in `difficulties:` declaration order: the
+  difficulty with the fewest candidates would otherwise be systematically starved by the
+  exclusions the others posted. The order is stable and reproducible across restarts.
+- Only candidates that pass the usual filter take part, so a quest that can't be started
+  right now neither rolls nor blocks a tag.
+- `global` pools don't roll and are untouched.
+- **No config migration needed**: the key defaults to `false` in code as well as in the
+  shipped config, so a pool config written before this key existed — an already-migrated
+  server config included — keeps rolling exactly as it did. Both keys reload live with
+  `/quests reload`; new tags apply to the next roll, no restart.

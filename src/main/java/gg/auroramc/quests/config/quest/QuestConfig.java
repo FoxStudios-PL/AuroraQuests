@@ -19,6 +19,8 @@ public class QuestConfig extends AuroraConfig {
     private String name;
     private String chapter;
     private String difficulty;
+    /** Activity tags; pools with {@code avoid-duplicate-tags} keep two quests sharing one out of the same roll. */
+    private List<String> tags;
     private ItemConfig menuItem;
     private ItemConfig inProgressItem;
     private ItemConfig completedItem;

@@ -13,6 +13,14 @@ reset-frequency: 0 0 0 * * ?
 # Should quests be rolled again when all of them are completed?
 reroll-on-completion: false
 
+# Should two quests of the same activity be kept out of the same roll?
+# When true, two quests sharing at least one entry of their "tags:" list can never be
+# picked together. If a difficulty cannot be filled without reusing a tag, the roll is
+# completed anyway (the player always gets the promised number of quests) and a line is
+# written to the debug log — that is the sign the pool is too small or its tags too broad.
+# Defaults to false, so a config written before this key existed rolls exactly as before.
+avoid-duplicate-tags: false
+
 # Optional: how this pool appears in the VANILLA advancement screen when
 # "advancement-gui.enabled" is on in config.yml. Without this section the pool
 # still gets its own tab automatically (name + menu icon below).

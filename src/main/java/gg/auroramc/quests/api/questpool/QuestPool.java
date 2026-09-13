@@ -11,6 +11,7 @@ import gg.auroramc.quests.api.profile.Profile;
 import gg.auroramc.quests.api.quest.Quest;
 import gg.auroramc.quests.api.quest.QuestTracker;
 import gg.auroramc.quests.util.ChatUtil;
+import gg.auroramc.quests.util.QuestRollSelector;
 import gg.auroramc.quests.util.RewardUtil;
 import gg.auroramc.quests.util.RomanNumber;
 import gg.auroramc.quests.util.SoundUtil;
@@ -211,8 +212,6 @@ public class QuestPool {
         if (isGlobal()) return;
         if (!isUnlocked()) return;
         var definition = pool.getDefinition();
-        // difficulty -> quest
-        var pickedQuests = new HashMap<String, List<Quest>>();
         var difficulties = definition.getDifficulties();
 
         var questsToSelectFrom = quests.values().stream()
@@ -233,14 +232,13 @@ public class QuestPool {
             Collections.shuffle(quests);
         }
 
-        for (var difficulty : difficulties.entrySet()) {
-            var quests = pickableQuests.get(difficulty.getKey());
-            if (quests == null || quests.isEmpty()) {
-                pickedQuests.put(difficulty.getKey(), Collections.emptyList());
-                continue;
-            }
-            pickedQuests.put(difficulty.getKey(), quests.subList(0, Math.min(difficulty.getValue(), quests.size())));
-        }
+        // difficulty -> quest
+        var pickedQuests = QuestRollSelector.select(pickableQuests, difficulties, definition.isAvoidDuplicateTags(),
+                quest -> quest.getDefinition().getTags(),
+                (difficulty, count) -> AuroraQuests.logger().debug("Pool " + definition.getId()
+                        + " could not fill difficulty " + difficulty + " without reusing a tag for player "
+                        + profile.getPlayer().getName() + ": " + count
+                        + " quest(s) picked despite sharing a tag. The pool is too small or its tags too broad."));
 
         var data = profile.getData();
         var questIds = pickedQuests.values().stream().flatMap(List::stream).map(Quest::getId).toList();

@@ -1,6 +1,14 @@
 name: "Daily Example"
 difficulty: "easy"
 
+# Optional: activity tags. In a pool with "avoid-duplicate-tags: true", two quests sharing
+# at least one tag are never rolled on the same day - so the three fishing quests of a pool
+# all tagged "fishing" can no longer show up together. Case and surrounding spaces are
+# ignored ("Fishing", "fishing" and " FISHING " are the same tag), a quest may carry several
+# tags (all of them block), and a quest without tags is always pickable and blocks nobody.
+#tags:
+#  - fishing
+
 menu-item:
   material: paper
   name: "&f{name}"

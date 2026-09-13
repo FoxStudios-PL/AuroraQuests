@@ -11,6 +11,7 @@ import gg.auroramc.quests.config.quest.QuestConfig;
 import gg.auroramc.quests.config.quest.StartRequirementConfig;
 import gg.auroramc.quests.reward.ScaledReward;
 import gg.auroramc.quests.util.MenuItemOverride;
+import gg.auroramc.quests.util.QuestRollSelector;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 
@@ -24,6 +25,7 @@ public class QuestParser {
                 .name(config.getName())
                 .chapter(config.getChapter())
                 .difficulty(config.getDifficulty())
+                .tags(QuestRollSelector.normalizeTags(config.getTags()))
                 .requirements(parseRequirement(config.getStartRequirements()))
                 .rewards(parseRewards(config.getRewards(), rewardFactory, context))
                 .tasks(parseTasks(config, rewardFactory))
