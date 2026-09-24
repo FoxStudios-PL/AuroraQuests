@@ -163,8 +163,9 @@ public class Config extends AuroraConfig {
         private List<String> onUntrack = List.of();
         private List<String> trackedLore = List.of();
         private List<String> untrackedLore = List.of();
-        // When true, /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
-        // only if the player has no other quest in progress.
+        // When true, unlocking a quest (by command or by its start-requirements) adds it to
+        // the tracking queue if the queue is not full. Start-requirements unlocks only count
+        // in global pools, and only on the quest's first unlock.
         private boolean autoTrackOnUnlock = false;
         // Maximum number of quests a player can track at once (tracking queue).
         // Only the first is shown (placeholders/scoreboard); when it is completed, the
@@ -582,6 +583,15 @@ public class Config extends AuroraConfig {
                             "\" &8• &f{current_task}\" on a completed quest leaving a lone bullet).",
                             "Deliberately blank lines and code-only separators are never touched."));
                     yaml.set("config-version", 14);
+                },
+                (yaml) -> {
+                    // Comment only: the version 7 text described a behaviour the code never had.
+                    yaml.setComments("tracking.auto-track-on-unlock", List.of(
+                            "When true: unlocking a quest (by command or by its start-requirements) adds it",
+                            "to the tracking queue if the queue is not full. Start-requirements unlocks only",
+                            "count in global pools and on the quest's first unlock, so a quest the player",
+                            "untracked is never tracked again on the next login."));
+                    yaml.set("config-version", 15);
                 }
         );
     }

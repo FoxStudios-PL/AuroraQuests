@@ -157,10 +157,44 @@ public class QuestPool {
             for (var quest : getActiveQuests()) {
                 quest.start();
             }
-        } else {
-            for (var quest : quests.values()) {
-                quest.start(false);
+            return;
+        }
+
+        List<Quest> newlyUnlocked = new ArrayList<>(0);
+        for (var quest : quests.values()) {
+            // Read before start(): in a global pool start() persists the unlock flag, so this is
+            // false only on the quest's very first unlock, never on the re-start every login and
+            // reload performs (the player may have untracked the quest since). A quest without
+            // start-requirements is never locked, so it never counts as newly unlocked here.
+            boolean wasUnlocked = quest.isUnlocked();
+            if (quest.start(false) && !wasUnlocked) {
+                newlyUnlocked.add(quest);
             }
+        }
+        autoTrackUnlocked(newlyUnlocked);
+    }
+
+    /**
+     * Enqueues quests this global pool just unlocked through their start-requirements, like
+     * /quests unlock does when tracking.auto-track-on-unlock is on. Rolled (timed-random) quests
+     * never get here: they are replaced every period and must not fill the tracking queue.
+     */
+    private void autoTrackUnlocked(List<Quest> unlocked) {
+        if (unlocked.isEmpty()) return;
+
+        var tracking = AuroraQuests.getInstance().getConfigManager().getConfig().getTracking();
+        if (!tracking.isAutoTrackOnUnlock()) return;
+
+        var data = profile.getData();
+        boolean enqueued = false;
+        for (var quest : unlocked) {
+            // Refused (no-op) once max-tracked-quests is reached: the quest stays unlocked, untracked.
+            enqueued |= QuestTracker.enqueueFromUnlock(profile, this, quest, data, tracking.getMaxTrackedQuests());
+        }
+
+        var scoreboardManager = AuroraQuests.getInstance().getScoreboardManager();
+        if (enqueued && scoreboardManager != null) {
+            scoreboardManager.refresh(profile.getPlayer());
         }
     }
 

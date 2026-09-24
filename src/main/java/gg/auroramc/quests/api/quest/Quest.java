@@ -95,6 +95,9 @@ public class Quest extends EventBus {
     private void handleCompletion(@Nullable Objective trigger) {
         data.complete();
 
+        // Must stay before QuestCompletedEvent: its listener starts the quests this completion
+        // unlocks, and auto-track-on-unlock can only make one of them the head (and run its
+        // on-track commands) once this quest has left the tracking queue.
         autoUntrackOnComplete();
 
         Bukkit.getPluginManager().callEvent(new QuestCompletedEvent(data.profile().getPlayer(), pool, this));

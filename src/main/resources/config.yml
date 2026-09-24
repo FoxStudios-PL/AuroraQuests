@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 14
+config-version: 15
 
 debug: false
 language: en
@@ -38,8 +38,10 @@ tracking:
     - "&e&l► TRACKED"
   # Counterpart of tracked-lore. Only shown on unlocked, non-completed, untracked quests.
   untracked-lore: []
-  # When true: /quests unlock auto-tracks the unlocked quest (shows the scoreboard)
-  # ONLY if the player has no other quest in progress.
+  # When true: unlocking a quest (by command or by its start-requirements) adds it
+  # to the tracking queue if the queue is not full. Start-requirements unlocks only
+  # count in global pools and on the quest's first unlock, so a quest the player
+  # untracked is never tracked again on the next login.
   auto-track-on-unlock: false
   # Maximum number of quests a player can track at once (tracking queue).
   # Only the first tracked quest is shown (placeholders/scoreboard); when it is

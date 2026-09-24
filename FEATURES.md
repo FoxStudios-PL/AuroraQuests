@@ -87,6 +87,12 @@ These reflect the quest the player is currently tracking (`/quests track`).
 > quest is completed it is removed and the next tracked quest takes its place
 > automatically. The maximum queue size is set by `tracking.max-tracked-quests` in
 > `config.yml` (default `5`, use `0` or less for unlimited).
+>
+> With `tracking.auto-track-on-unlock: true`, a quest is added to the queue when it
+> unlocks, whether by `/quests unlock` or by its `start-requirements` (e.g. the next
+> quest of a chain once the previous one is completed). Requirements-based unlocks only
+> count in `global` pools and on the quest's first unlock: a quest the player untracked
+> is not tracked again on the next login. A full queue leaves the quest untracked.
 
 | Placeholder | Description |
 |---|---|
