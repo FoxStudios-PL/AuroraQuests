@@ -146,8 +146,8 @@ public class QuestsCommand extends BaseCommand {
                 plugin.getAdvancementGuiManager().refresh(target);
             }
 
-            // Auto-track the freshly unlocked quest, but only if the player has no quest tracked yet
-            // (one quest tracked at a time). Other unlock paths and the GUI/track command are untouched.
+            // Auto-track the freshly unlocked quest: queued behind the current head, refused when the
+            // queue is full. Unlocks through start-requirements are tracked by QuestPool.startQuests().
             var trackingConfig = plugin.getConfigManager().getConfig().getTracking();
             if (trackingConfig.isAutoTrackOnUnlock()) {
                 QuestData questData = AuroraAPI.getUser(target.getUniqueId()).getData(QuestData.class);
