@@ -154,7 +154,7 @@ scoreboard:
     - "<#dedede>{quest_name}"
     - ""
     - " &8• &fObjective: <yellow>{display}"
-    - " &8• &fRewards:"
+    - " &8• &fRewards:{reward_header}"  # hidden when the current step has no reward
     - "    &7- &f{reward}"        # this line repeats once per reward of the current step
     - ""
     - "<#F7B700>Description"
@@ -170,7 +170,8 @@ scoreboard:
 | `{quest_name}` | the quest's `name` |
 | `{step}` / `{step_total}` | current step number / total steps |
 | `{display}` | current step's `display`, without the `{status}` icon and `{current}`/`{required}` counters |
-| `{reward}` | repeats the line once per reward of the current step (its `display`) |
+| `{reward}` | repeats the line once per reward of the current step (its `display`); the line is dropped when the step has no reward |
+| `{reward_header}` | replaced by nothing; the line is shown only when the current step has at least one reward (use it on the rewards title line) |
 | `{description}` | repeats the line once per `description` line of the current step |
 
 Performance: only players with a tracked quest own a (per-player, Folia-safe) refresh task; everyone else costs nothing.
