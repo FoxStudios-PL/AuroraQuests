@@ -380,6 +380,9 @@ public class Config extends AuroraConfig {
                             "Max 15 lines (Minecraft limit). Available tokens:",
                             "  {chapter} {quest_name} {step} {step_total} {display}",
                             "  {reward}      -> a line with it repeats once per reward of the current step",
+                            "                   (dropped entirely when the step has no reward)",
+                            "  {reward_header} -> a line with it is shown (token removed) only if the current step",
+                            "                   has at least one reward; use it on the \"Rewards:\" title line",
                             "  {description} -> a line with it repeats once per description line of the current step",
                             "NOTE: enabling requires a restart; afterwards /quests reload applies changes live."));
                     yaml.set("scoreboard.refresh-interval", 20);
@@ -391,7 +394,7 @@ public class Config extends AuroraConfig {
                             "<#dedede>{quest_name}",
                             "",
                             " &8• &fObjective: <yellow>{display}",
-                            " &8• &fRewards:",
+                            " &8• &fRewards:{reward_header}",
                             "    &7- &f{reward}",
                             "",
                             "<#F7B700>Description",
