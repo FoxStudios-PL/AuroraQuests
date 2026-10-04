@@ -46,7 +46,7 @@ public class BukkitEventBus implements Listener {
                             } else if (evt.getClass() != eventType) {
                                 return;
                             }
-                            dispatch(priority, evt);
+                            dispatch(eventType, priority, evt);
                         },
                         AuroraQuests.getInstance(), ignoreCancelled
                 );
@@ -73,8 +73,10 @@ public class BukkitEventBus implements Listener {
     }
 
     @SuppressWarnings("unchecked")
-    private void dispatch(EventPriority priority, Event event) {
-        var prMap = subscribers.get(event.getClass());
+    private void dispatch(Class<? extends Event> eventType, EventPriority priority, Event event) {
+        // Keyed by the subscribed type, not event.getClass(): in handleSubclass mode
+        // a subclass instance must still reach the handlers registered for its parent.
+        var prMap = subscribers.get(eventType);
         if (prMap == null) {
             return;
         }
