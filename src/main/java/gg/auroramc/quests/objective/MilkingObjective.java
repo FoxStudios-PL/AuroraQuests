@@ -25,11 +25,20 @@ public class MilkingObjective extends TypedObjective {
 
     @Override
     protected void activate() {
-        onEvent(PlayerInteractEntityEvent.class, this::onMilk, EventPriority.MONITOR);
+        // Since 26.x Paper only fires the PlayerInteractAtEntityEvent subclass for entity
+        // right-clicks, so subclasses must be accepted or no milking is ever counted.
+        onEvent(PlayerInteractEntityEvent.class, this::onMilk, EventPriority.MONITOR, true, true);
     }
 
     public void onMilk(PlayerInteractEntityEvent event) {
-        if (!(event.getRightClicked() instanceof Cow || event.getRightClicked() instanceof Goat) || (event.getPlayer().getInventory().getItemInMainHand()).getType() != Material.BUCKET) {
+        if (!(event.getRightClicked() instanceof Cow || event.getRightClicked() instanceof Goat)) {
+            return;
+        }
+
+        // The item of the hand that interacted: counts an off-hand bucket, and never counts
+        // the same click twice when the event also fires for the other hand.
+        var item = event.getPlayer().getInventory().getItem(event.getHand());
+        if (item == null || item.getType() != Material.BUCKET) {
             return;
         }
 
