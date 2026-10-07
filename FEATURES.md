@@ -690,6 +690,22 @@ decreases** — another weapon leveling below the best one, or a prestige reset,
 lower it. Admin `/foxskills setlevel`/`addlevel` don't fire the event, so they neither
 credit nor reset the quest (admin `addxp` counts: it goes through the XP path).
 
+A weapon can already be past `amount` when the step opens (the player farmed before
+reaching the quest). So when the step becomes active (quest start, previous linear step
+completed, `/quests unlock` or `/quests complete`) and again on login while it is active,
+the player's class weapons (hands + inventory) are read **once**, one tick later on the
+player's own thread. The highest level found becomes the progress and completes the step
+if it reaches `amount` (same on-complete commands and rewards as a level-up). No weapon:
+the progress stays untouched. No repeating task is involved; levels set with the admin
+commands above are picked up by this read. Disable it to keep the event-only behaviour:
+
+```yaml
+# config.yml
+objectives:
+  reach-foxskills-weapon-level:
+    check-on-start: true
+```
+
 ```yaml
 tasks:
   weapon_level:
