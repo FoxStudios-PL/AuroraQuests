@@ -46,6 +46,7 @@ public class Config extends AuroraConfig {
     private ScoreboardConfig scoreboard = new ScoreboardConfig();
     private MenuConfig menus = new MenuConfig();
     private AdvancementGuiConfig advancementGui = new AdvancementGuiConfig();
+    private ObjectivesConfig objectives = new ObjectivesConfig();
 
     @IgnoreField
     private Map<String, Integer> sortOderMap;
@@ -189,6 +190,19 @@ public class Config extends AuroraConfig {
         // BetterHud popup groups (the popup file's `group:` value) that hide the sidebar
         // while active. Empty disables the feature even when hide-during-popups is true.
         private List<String> hideDuringPopupGroups = List.of("challenge");
+    }
+
+    @Getter
+    public static final class ObjectivesConfig {
+        private ReachFoxskillsWeaponLevelConfig reachFoxskillsWeaponLevel = new ReachFoxskillsWeaponLevelConfig();
+    }
+
+    @Getter
+    public static final class ReachFoxskillsWeaponLevelConfig {
+        // Read the player's class weapons once when a REACH_FOXSKILLS_WEAPON_LEVEL step
+        // becomes active (and again on login), so a weapon already at the target level
+        // completes it without waiting for its next level-up.
+        private Boolean checkOnStart = true;
     }
 
     @Getter
@@ -595,6 +609,17 @@ public class Config extends AuroraConfig {
                             "count in global pools and on the quest's first unlock, so a quest the player",
                             "untracked is never tracked again on the next login."));
                     yaml.set("config-version", 15);
+                },
+                (yaml) -> {
+                    yaml.set("objectives.reach-foxskills-weapon-level.check-on-start", true);
+                    yaml.setComments("objectives", List.of("Settings of specific objective (task) types."));
+                    yaml.setComments("objectives.reach-foxskills-weapon-level.check-on-start", List.of(
+                            "When true: when a REACH_FOXSKILLS_WEAPON_LEVEL step becomes active (quest start,",
+                            "previous linear step completed, /quests unlock or complete) and on login, the",
+                            "player's class weapons (hands + inventory) are read once. The highest level found",
+                            "becomes the progress, and completes the step if it already reaches the amount.",
+                            "When false: the step only progresses on the next weapon level-up."));
+                    yaml.set("config-version", 16);
                 }
         );
     }

@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 15
+config-version: 16
 
 debug: false
 language: en
@@ -8,6 +8,16 @@ prevent-creative-mode: true
 
 # Only enable this if you are heavily modifying your quest pools/quests data in production (WHICH YOU SHOULDN'T)
 purge-invalid-data-on-login: false
+
+# Settings of specific objective (task) types.
+objectives:
+  reach-foxskills-weapon-level:
+    # When true: when a REACH_FOXSKILLS_WEAPON_LEVEL step becomes active (quest start,
+    # previous linear step completed, /quests unlock or complete) and on login, the
+    # player's class weapons (hands + inventory) are read once. The highest level found
+    # becomes the progress, and completes the step if it already reaches the amount.
+    # When false: the step only progresses on the next weapon level-up.
+    check-on-start: true
 
 # Timer to try to unlock global quests and quest pools if for some reason the event driven method doesn't work
 unlock-task:

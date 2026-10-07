@@ -95,6 +95,23 @@ public abstract class Objective extends EventBus {
         tasks.add(task);
     }
 
+    /**
+     * Runs {@code runnable} once, {@code delay} ticks from now, on the player's own thread
+     * (entity scheduler). Cancelled with the objective's other tasks on {@link #dispose()}.
+     */
+    protected void syncDelayed(Runnable runnable, long delay) {
+        var task = data.profile().getPlayer().getScheduler().runDelayed(AuroraQuests.getInstance(), (t) -> {
+            runnable.run();
+        }, null, delay);
+        // null when the player entity is already retired (left the server): nothing to run.
+        if (task == null) return;
+
+        if (tasks == null) {
+            tasks = new ArrayList<>();
+        }
+        tasks.add(task);
+    }
+
     protected void asyncInterval(Runnable runnable, int delay, int interval) {
         if (tasks == null) {
             tasks = new ArrayList<>();
