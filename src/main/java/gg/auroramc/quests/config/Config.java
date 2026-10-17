@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemFlag;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +52,13 @@ public class Config extends AuroraConfig {
     @IgnoreField
     private Map<String, Integer> sortOderMap;
 
+    // scoreboard.hide-when, parsed by hand on load: a list of {placeholder, equals} maps.
+    @IgnoreField
+    private List<HideCondition> scoreboardHideWhen = List.of();
+
+    @IgnoreField
+    private File sourceFile;
+
     // Resolved once on load so menus don't re-validate flag names on every item.
     @IgnoreField
     private Set<ItemFlag> menuItemFlags = Set.of();
@@ -64,6 +72,31 @@ public class Config extends AuroraConfig {
         }
         sortOderMap = difficultyOrder;
         menuItemFlags = resolveMenuItemFlags();
+        scoreboardHideWhen = resolveHideWhen();
+    }
+
+    /**
+     * One {@code scoreboard.hide-when} entry: the quest sidebar is hidden while
+     * {@code placeholder} (resolved through PlaceholderAPI) equals {@code equalsValue}.
+     */
+    public record HideCondition(String placeholder, String equalsValue) {
+    }
+
+    private List<HideCondition> resolveHideWhen() {
+        if (sourceFile == null || !sourceFile.exists()) return List.of();
+        List<HideCondition> conditions = new ArrayList<>();
+        var raw = YamlConfiguration.loadConfiguration(sourceFile).getMapList("scoreboard.hide-when");
+        for (Map<?, ?> entry : raw) {
+            Object placeholder = entry.get("placeholder");
+            Object expected = entry.get("equals");
+            if (placeholder == null || String.valueOf(placeholder).isBlank() || expected == null) {
+                AuroraQuests.logger().warning("Invalid scoreboard.hide-when entry " + entry
+                        + " (expected: placeholder + equals) - ignored");
+                continue;
+            }
+            conditions.add(new HideCondition(String.valueOf(placeholder), String.valueOf(expected).trim()));
+        }
+        return List.copyOf(conditions);
     }
 
     private Set<ItemFlag> resolveMenuItemFlags() {
@@ -91,6 +124,7 @@ public class Config extends AuroraConfig {
 
     public Config(AuroraQuests plugin) {
         super(getFile(plugin));
+        this.sourceFile = getFile(plugin);
     }
 
     @Getter
@@ -620,6 +654,19 @@ public class Config extends AuroraConfig {
                             "becomes the progress, and completes the step if it already reaches the amount.",
                             "When false: the step only progresses on the next weapon level-up."));
                     yaml.set("config-version", 16);
+                },
+                (yaml) -> {
+                    if (!yaml.contains("scoreboard.hide-when")) {
+                        yaml.set("scoreboard.hide-when", List.of(
+                                Map.of("placeholder", "%foxdungeons_in_dungeon%", "equals", "true")));
+                    }
+                    yaml.setComments("scoreboard.hide-when", List.of(
+                            "Hide the quest sidebar while one of these conditions is true, then show it",
+                            "again automatically. Requires PlaceholderAPI (ignored otherwise).",
+                            "placeholder is resolved for the player and compared to equals (trimmed,",
+                            "case-insensitive). While hidden, nothing is sent on the sidebar slot, so",
+                            "another plugin's sidebar (e.g. the FoxDungeons dungeon sidebar) stays visible."));
+                    yaml.set("config-version", 17);
                 }
         );
     }
