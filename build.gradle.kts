@@ -31,7 +31,7 @@ paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArt
 
 group = "gg.auroramc"
 // Suffixed so the 26.2 artifact is never mistaken for the 1.21.11 one built from main.
-version = "2.2.1-26.2"
+version = "2.2.2-26.2"
 
 java {
     toolchain {
@@ -63,6 +63,7 @@ repositories {
     maven("https://repo.nexomc.com/releases/")
     maven("https://repo.nightexpressdev.com/releases")
     maven("https://repo.pyr.lol/snapshots")
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
 }
 
 dependencies {
@@ -70,6 +71,9 @@ dependencies {
     // paper-api AND the Mojang-mapped paper-server on the compile classpath.
     paperweight.paperDevBundle("26.2.build.31-alpha")
     compileOnly("gg.auroramc:Aurora:2.6.0-SNAPSHOT")
+    // scoreboard.hide-when: only referenced from PlaceholderConditionHook, behind an
+    // isPluginEnabled("PlaceholderAPI") gate.
+    compileOnly("me.clip:placeholderapi:2.12.2") { isTransitive = false }
     compileOnly("gg.auroramc:AuroraLevels:1.6.2")
     compileOnly("net.luckperms:api:5.4")
     compileOnly("dev.aurelium:auraskills-api-bukkit:2.2.0")

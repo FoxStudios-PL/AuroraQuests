@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 16
+config-version: 17
 
 debug: false
 language: en
@@ -370,6 +370,14 @@ scoreboard:
   # disable hiding even when hide-during-popups is true.
   hide-during-popup-groups:
     - "challenge"
+  # Hide the quest sidebar while one of these conditions is true, then show it
+  # again automatically. Requires PlaceholderAPI (ignored otherwise).
+  # placeholder is resolved for the player and compared to equals (trimmed,
+  # case-insensitive). While hidden, nothing is sent on the sidebar slot, so
+  # another plugin's sidebar (e.g. the FoxDungeons dungeon sidebar) stays visible.
+  hide-when:
+    - placeholder: "%foxdungeons_in_dungeon%"
+      equals: "true"
   title: "&6&lQUEST"
   lines:
     - ""

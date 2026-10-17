@@ -33,6 +33,9 @@ public class QuestScoreboardManager {
     // tracks the popup with no perceptible lag. Content rendering stays throttled to
     // refresh-interval regardless (see renderCycles), keeping each poll cheap.
     private static final long POPUP_POLL_INTERVAL = 2L;
+    // Poll cadence (ticks) used while scoreboard.hide-when conditions can apply, so the
+    // sidebar comes back well under a second after a condition turns false.
+    private static final long HIDE_WHEN_POLL_INTERVAL = 10L;
 
     private final AuroraQuests plugin;
     private final Map<UUID, QuestSidebar> sidebars = new ConcurrentHashMap<>();
@@ -134,8 +137,32 @@ public class QuestScoreboardManager {
      * servers without the feature keep exactly their previous behaviour and cost.
      */
     private long pollInterval() {
-        int refresh = effectiveRefreshInterval();
-        return popupSuppressionPossible() ? Math.min(POPUP_POLL_INTERVAL, refresh) : refresh;
+        long interval = effectiveRefreshInterval();
+        if (popupSuppressionPossible()) interval = Math.min(POPUP_POLL_INTERVAL, interval);
+        if (hideWhenPossible()) interval = Math.min(HIDE_WHEN_POLL_INTERVAL, interval);
+        return interval;
+    }
+
+    /**
+     * Whether scoreboard.hide-when can apply at all: at least one condition and
+     * PlaceholderAPI installed and enabled. References no PlaceholderAPI class.
+     */
+    private boolean hideWhenPossible() {
+        var cfg = plugin.getConfigManager().getConfig();
+        if (cfg == null || cfg.getScoreboardHideWhen().isEmpty()) return false;
+        return Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
+    }
+
+    /**
+     * Whether a scoreboard.hide-when condition currently holds for the player. The
+     * {@code isPluginEnabled("PlaceholderAPI")} gate runs before
+     * {@link PlaceholderConditionHook} is referenced, so PlaceholderAPI types are never
+     * linked when it is absent (conditions are then simply ignored).
+     */
+    private boolean isHiddenByCondition(Player player) {
+        if (!hideWhenPossible()) return false;
+        return PlaceholderConditionHook.anyMatches(player,
+                plugin.getConfigManager().getConfig().getScoreboardHideWhen());
     }
 
     /** Number of poll cycles between full content renders (>= 1). */
@@ -153,6 +180,16 @@ public class QuestScoreboardManager {
         }
         if (!enabled()) {
             hide(player);
+            return;
+        }
+
+        // hide-when guard (e.g. %foxdungeons_in_dungeon% == true): while a condition holds,
+        // nothing at all is sent on the SIDEBAR slot -- another plugin owns it. An existing
+        // sidebar is only suspended (its objective unregistered from its own board); the
+        // first tick where every condition is false resumes it, re-rendered at once.
+        if (isHiddenByCondition(player)) {
+            QuestSidebar sidebar = sidebars.get(id);
+            if (sidebar != null) sidebar.suspend();
             return;
         }
 
@@ -180,7 +217,7 @@ public class QuestScoreboardManager {
         // Throttle the (relatively costly) content render to refresh-interval. A missing
         // sidebar -- first show, or return from a popup -- always renders immediately, so
         // hiding/restoring stays instant while steady-state fast polling stays cheap.
-        if (sidebar != null && !renderDue(id)) {
+        if (sidebar != null && !sidebar.isSuspended() && !renderDue(id)) {
             return;
         }
 
@@ -191,6 +228,8 @@ public class QuestScoreboardManager {
         if (sidebar == null) {
             sidebar = new QuestSidebar(player, title);
             sidebars.put(id, sidebar);
+        } else if (sidebar.isSuspended()) {
+            sidebar.resume(title);
         }
         sidebar.update(title, lines);
         renderCountdown.put(id, renderCycles());

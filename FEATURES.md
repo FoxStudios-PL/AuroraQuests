@@ -176,6 +176,19 @@ scoreboard:
 
 Performance: only players with a tracked quest own a (per-player, Folia-safe) refresh task; everyone else costs nothing.
 
+### Hiding the sidebar on a condition: `hide-when`
+
+```yaml
+scoreboard:
+  # Hide the quest sidebar while one of these conditions is true, then show it
+  # again automatically. Requires PlaceholderAPI (ignored otherwise).
+  hide-when:
+    - placeholder: "%foxdungeons_in_dungeon%"
+      equals: "true"
+```
+
+Each entry's `placeholder` is resolved for the player through PlaceholderAPI on every poll (every 10 ticks while conditions exist) and compared to `equals` (trimmed, case-insensitive); one matching entry is enough. While hidden, AuroraQuests sends **nothing** on the sidebar slot: its objective is only removed from its own scoreboard, so another plugin's sidebar (the FoxDungeons dungeon sidebar, sent as packets) stays visible. When every condition is false again, the quest sidebar is shown at the next poll. No dependency on FoxDungeons: everything goes through PlaceholderAPI.
+
 ---
 
 ## Extended `/quests complete`
