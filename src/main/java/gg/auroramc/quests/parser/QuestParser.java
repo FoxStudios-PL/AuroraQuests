@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 public class QuestParser {
     public static QuestDefinition parse(QuestConfig config, RewardFactory rewardFactory) {
         var context = (config.getPoolConfig() != null ? config.getPoolConfig().getId() + "/" : "") + config.getId();
+        var tasks = parseTasks(config, rewardFactory);
         return QuestDefinition.builder()
                 .id(config.getId())
                 .name(config.getName())
@@ -28,7 +29,7 @@ public class QuestParser {
                 .tags(QuestRollSelector.normalizeTags(config.getTags()))
                 .requirements(parseRequirement(config.getStartRequirements()))
                 .rewards(parseRewards(config.getRewards(), rewardFactory, context))
-                .tasks(parseTasks(config, rewardFactory))
+                .tasks(tasks)
                 .menuItem(config.getMenuItem())
                 .inProgressMenuItem(MenuItemOverride.apply(config.getMenuItem(), config.getInProgressItem(),
                         rawSection(config, "in-progress-item")))
@@ -47,6 +48,7 @@ public class QuestParser {
                 .onUntrack(config.getOnUntrack())
                 .advancement(config.getAdvancement())
                 .objectiveList(config.getObjectiveList())
+                .itemRecoveries(ItemRecoveryParser.parse(config, tasks.keySet(), context))
                 .build();
     }
 

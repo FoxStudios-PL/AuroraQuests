@@ -28,7 +28,7 @@ public class ObjectiveParser {
                 .build();
     }
 
-    private static List<ObjectiveFilter> parseFilters(FilterConfig config) {
+    static List<ObjectiveFilter> parseFilters(FilterConfig config) {
         var taskFilters = new ArrayList<ObjectiveFilter>();
 
         if (config == null) return taskFilters;

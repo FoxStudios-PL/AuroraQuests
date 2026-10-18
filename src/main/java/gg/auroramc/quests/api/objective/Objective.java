@@ -41,6 +41,13 @@ public abstract class Objective extends EventBus {
 
     protected List<ObjectiveFilter> filters;
 
+    /**
+     * Set when this objective only serves as an item-recovery trigger: matching actions
+     * are reported here instead of being recorded as progress.
+     */
+    @Getter(AccessLevel.NONE)
+    private Consumer<ObjectiveMeta> triggerListener;
+
     public Objective(Quest quest, ObjectiveDefinition definition, Profile.TaskDataWrapper data) {
         this.quest = quest;
         this.definition = definition;
@@ -145,7 +152,20 @@ public abstract class Objective extends EventBus {
         return definition.getId();
     }
 
+    /**
+     * Turns this objective into a trigger: it keeps listening to the same events through
+     * the same filters, but never stores progress nor completes; every matching action
+     * is handed to {@code listener} instead.
+     */
+    public void asTrigger(Consumer<ObjectiveMeta> listener) {
+        this.triggerListener = listener;
+    }
+
     public void progress(double progress, ObjectiveMeta meta) {
+        if (triggerListener != null) {
+            if (passesFilters(meta)) triggerListener.accept(meta);
+            return;
+        }
         if (isCompleted()) return;
 
         if (passesFilters(meta)) {
@@ -203,6 +223,7 @@ public abstract class Objective extends EventBus {
     }
 
     public boolean isCompleted() {
+        if (triggerListener != null) return false;
         return data.isCompleted(target);
     }
 
@@ -211,12 +232,14 @@ public abstract class Objective extends EventBus {
     }
 
     public void complete(boolean silent) {
+        if (triggerListener != null) return;
         data.setProgress(target);
         dispose();
         if (!silent) this.publish(EventType.TASK_COMPLETED, this);
     }
 
     public void setProgress(double progress) {
+        if (triggerListener != null) return;
         data.setProgress(Math.min(progress, target));
         this.publish(EventType.TASK_PROGRESS, this);
         if (isCompleted()) {
@@ -226,6 +249,7 @@ public abstract class Objective extends EventBus {
     }
 
     public void resetProgress() {
+        if (triggerListener != null) return;
         data.resetProgress();
         this.publish(EventType.TASK_PROGRESS, this);
     }
