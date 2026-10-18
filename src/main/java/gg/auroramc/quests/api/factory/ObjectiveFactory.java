@@ -17,6 +17,10 @@ public class ObjectiveFactory {
         objectives.put(name.toLowerCase(Locale.ROOT), objective);
     }
 
+    public static boolean isRegistered(String name) {
+        return name != null && objectives.containsKey(name.toLowerCase(Locale.ROOT));
+    }
+
     public static Objective createObjective(Quest holder, ObjectiveDefinition definition) {
         var taskData = holder.getData().toTaskDataWrapper(definition.getId());
 

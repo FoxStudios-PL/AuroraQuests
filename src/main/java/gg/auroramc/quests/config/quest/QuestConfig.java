@@ -40,6 +40,8 @@ public class QuestConfig extends AuroraConfig {
     private QuestAdvancementConfig advancement;
     /** Per-quest override of {@code menus.objective-list}; absent keys fall back to it. */
     private Config.ObjectiveListConfig objectiveList;
+    /** Optional {@code item-recovery:} entries, keyed by entry id. */
+    private Map<String, ItemRecoveryConfig> itemRecovery;
 
     @Setter
     @IgnoreField

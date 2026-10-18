@@ -57,9 +57,16 @@ public class QuestDefinition {
     private final QuestAdvancementConfig advancement;
     /** Per-quest {@code objective-list:} override for {@code {tasks}}, {@code null} when absent. */
     private final Config.ObjectiveListConfig objectiveList;
+    /** Valid {@code item-recovery:} entries, empty when absent. */
+    private final List<ItemRecoveryDefinition> itemRecoveries;
 
     /** Never {@code null}, so callers can iterate without a guard. */
     public List<String> getTags() {
         return tags == null ? List.of() : tags;
+    }
+
+    /** Never {@code null}, so callers can iterate without a guard. */
+    public List<ItemRecoveryDefinition> getItemRecoveries() {
+        return itemRecoveries == null ? List.of() : itemRecoveries;
     }
 }

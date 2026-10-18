@@ -31,6 +31,7 @@ public class Quest extends EventBus {
     private final Profile.QuestDataWrapper data;
     private final List<Objective> objectives;
     private final QuestPool pool;
+    private final List<ItemRecovery> itemRecoveries;
     private boolean started = false;
 
     public Quest(QuestPool pool, QuestDefinition definition, Profile.QuestDataWrapper data) {
@@ -40,6 +41,9 @@ public class Quest extends EventBus {
         this.objectives = definition.getTasks().values().stream()
                 .map(d -> ObjectiveFactory.createObjective(this, d))
                 .filter(Objects::nonNull)
+                .toList();
+        this.itemRecoveries = definition.getItemRecoveries().stream()
+                .map(d -> new ItemRecovery(this, d))
                 .toList();
 
         for (var obj : objectives) {
@@ -74,6 +78,7 @@ public class Quest extends EventBus {
                 }
 
                 grantTaskRewards(objective);
+                notifyItemRecoveries(objective);
 
                 if (definition.isLinearObjectives()) {
                     startNextObjective();
@@ -108,6 +113,15 @@ public class Quest extends EventBus {
         this.publish(EventType.QUEST_COMPLETED, trigger);
     }
 
+    /** Opens the windows starting at this task and stops listening for those it closes. */
+    private void notifyItemRecoveries(Objective objective) {
+        for (var recovery : itemRecoveries) {
+            var recoveryDefinition = recovery.getDefinition();
+            if (objective.getId().equals(recoveryDefinition.getAfter())) recovery.onWindowOpened();
+            if (objective.getId().equals(recoveryDefinition.getUntil())) recovery.dispose();
+        }
+    }
+
     private void grantTaskRewards(Objective objective) {
         var rewards = objective.getDefinition().getRewards();
         if (rewards == null || rewards.isEmpty()) return;
@@ -131,6 +145,12 @@ public class Quest extends EventBus {
 
         if (!force && !definition.getRequirements().canStart(data)) {
             return false;
+        }
+
+        // Before the objectives: on the action completing the 'after' task, the recovery
+        // is notified first and still sees its window closed.
+        for (var recovery : itemRecoveries) {
+            recovery.start();
         }
 
         if (definition.isLinearObjectives()) {
@@ -168,6 +188,9 @@ public class Quest extends EventBus {
             obj.dispose();
             obj.resetProgress();
         }
+        for (var recovery : itemRecoveries) {
+            recovery.dispose();
+        }
         data.reset();
         started = false;
         // Re-activate only if the quest can legitimately start again. For a
@@ -192,6 +215,9 @@ public class Quest extends EventBus {
         for (var obj : objectives) {
             obj.dispose();
         }
+        for (var recovery : itemRecoveries) {
+            recovery.dispose();
+        }
 
         started = false;
     }
@@ -201,6 +227,9 @@ public class Quest extends EventBus {
 
         for (var obj : objectives) {
             obj.destroy();
+        }
+        for (var recovery : itemRecoveries) {
+            recovery.destroy();
         }
 
         started = false;

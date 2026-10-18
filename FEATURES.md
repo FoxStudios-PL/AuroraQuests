@@ -566,6 +566,71 @@ tasks:
 
 ---
 
+## Recoverable quest items: `item-recovery`
+
+A quest that hands out an item to bring back later (a `DELIVER_ITEM` step) can get stuck
+for good when the player loses that item: the step that gave it is already completed and
+never runs again. An `item-recovery` entry gives the item back when the player **repeats
+the action that originally granted it**, as long as they still need it and no longer have
+it.
+
+```yaml
+# at the root of a quest file, one entry per item
+item-recovery:
+  gland:
+    after: couper_bois        # window opens once this task is completed...
+    until: rendre_gland       # ...and closes once this one is (excluded)
+    item:                     # same syntax AND same matcher as DELIVER_ITEM's args.item
+      material: "PAPER"
+      custom-model-data: 880125
+    trigger:                  # same keys as a task of that type
+      task: BLOCK_BREAK
+      types:
+        - "minecraft:oak_log"
+        - "minecraft:spruce_log"
+      filters:
+        worlds:
+          type: whitelist
+          value: ["world_iris_ressource_overworld"]
+    chance: 1.0               # per action, default 1.0
+    cooldown-seconds: 5       # per player and entry, default 5
+    on-recover:               # same prefixes and placeholders as on-complete
+      - "[console] nexo give gland_dore 1 %player_name%"
+```
+
+On every action matching `trigger` (same events, same `types`/`mode`, same `filters` —
+worlds, regions, biomes, y-levels, hand, requirements — and same WorldGuard / permission
+checks as a task of that type), `on-recover` runs once when **all** of these hold:
+
+1. the quest is unlocked and not completed for the player;
+2. the `after` task is completed (no `after` = from the quest's unlock);
+3. the `until` task is not completed (no `until` = until the quest is completed);
+4. the player holds **no** item matching `item` (main inventory, hotbar, armor and
+   offhand — the exact slots and comparator `/quests deliver` uses, so a recovered item is
+   always accepted at the turn-in; the ender chest does not count);
+5. the `chance` roll succeeds;
+6. the player's `cooldown-seconds` for that entry has elapsed. The cooldown also starts
+   when the `after` task completes, so the action that completes it never gives a second
+   item on top of the one its own `on-complete` hands out.
+
+Only task completion is looked at, so the window works the same with or without
+`linear-objectives` (with the config above it covers every step from the one after
+`couper_bois` up to `rendre_gland` included). The original action is never cancelled or
+modified, and it does not count as progress for any task. Commands run on the player's
+region thread (Folia), like `on-complete`. Placeholders: `{player}`, `{quest_id}`,
+`{pool_id}`, `{recovery_id}`, plus PlaceholderAPI.
+
+**Validation.** An entry whose `after`/`until` is not a task of the quest, whose
+`trigger.task` is not a known task type, whose `item` has no valid criterion or whose
+`on-recover` is empty is reported in the console and ignored; the quest itself still
+loads. Entries reload with `/quests reload`.
+
+**Cost.** The trigger only listens while its window can still open: never for completed
+quests, and it stops as soon as the `until` task is completed. The inventory is only
+scanned once every other condition already passed.
+
+---
+
 ## New objective types
 
 Three plugin-integration objectives. Each is only active when the matching plugin is
