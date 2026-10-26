@@ -207,6 +207,22 @@ Each entry's `placeholder` is resolved for the player through PlaceholderAPI on 
 
 Backwards compatible  passing `true`/`false` as the 4th argument still works as the old silent flag.
 
+## `/quests progress`: add progress from the console
+
+```
+/quests progress <player> <pool_id> <quest_id> <objective_id> <amount> [silent]
+```
+
+Adds `amount` to one objective, as if the player had done its action `amount` times: the
+progress is capped at the objective's target, and reaching it runs exactly what a real action
+would (on-complete commands, rewards, next step of a linear quest). Unlike `complete`, the
+objective must be **active**: a quest still locked by its start requirements or a later step of
+a linear quest is refused with `objective-not-active`, the same way the player's action would
+not count there. Filters (`types`, `kind`…) are not checked: the caller decides what counts.
+
+Any plugin able to run a console command can feed a quest this way, without a hook. Permission
+`aurora.quests.admin.progress`.
+
 ---
 
 ## Auto chat centering: the `<center>` marker
@@ -801,6 +817,68 @@ across all weapons). To restrict it to specific weapons, use their FoxSkills ids
       amount: 10
       types:
         - "katana"
+```
+
+## FoxPets `FEED_PET` and `HATCH_PET_EGG` task types
+
+Require FoxPets ≥ 1.1.0, which fires `PetFeedEvent` and `PetHatchEvent`; the hook registers
+itself when FoxPets is present (`Hooked into FoxPets for FEED_PET, HATCH_PET_EGG`).
+
+`FEED_PET` progresses by 1 per meal FoxPets accepted and consumed. A refused meal (wrong ration,
+rank S, full energy, another player's pet, a ration given to an egg that is already full) never
+counts.
+
+| Argument | Effect |
+|---|---|
+| `types` | pet ids (`cubee-yellow`); for a meal given to an egg, which has no pet yet, the egg type (`classic_egg`). Empty: any |
+| `kind` | `RANK` (rank ration on a pet), `ENERGY` (energy food on a pet), `EGG` (ration on an egg); a list or one value. Empty: all |
+
+```yaml
+tasks:
+  nourrir_familier:
+    task: FEED_PET
+    display: "{status} <white>Nourris ton familier <dark_gray>[<#FFF5A1>{current}<dark_gray>/<#FFF5A1>{required}<dark_gray>]"
+    args:
+      amount: 3
+      kind: [RANK, ENERGY]
+```
+
+`HATCH_PET_EGG` progresses by 1 per hatch, as soon as the pet is given to the player. A hatch
+blocked by the pet limit or failed (`egg.hatch-error`) never counts.
+
+| Argument | Effect |
+|---|---|
+| `types` | egg types (`classic_egg`, `shiny_egg`). Empty: any |
+| `shiny` | `true`: only a shiny pet counts, `false`: only a regular one. Absent: both |
+
+## FoxArmors `APPLY_FOXARMORS_RUNE` and `USE_FOXARMORS_STONE` task types
+
+Require FoxArmors ≥ 1.21.0, which fires `RuneApplyEvent` and `ItemUpgradeEvent`; the hook
+registers itself when FoxArmors is present (`Hooked into FoxArmors for APPLY_FOXARMORS_RUNE,
+USE_FOXARMORS_STONE`).
+
+`APPLY_FOXARMORS_RUNE` progresses by 1 per rune actually consumed, from the inventory or the
+upgrade menu. A refused rune, which the player keeps, never counts. `types` filters on the rune
+id (`RuneEveil`, `RuneReversion`, `RunePreservation`); empty: any.
+
+`USE_FOXARMORS_STONE` progresses on every paid upgrade attempt, whatever its result. An attempt
+refused before payment (no stone, wrong stone, top level, not enough money) never counts.
+
+| Argument | Effect |
+|---|---|
+| `types` | stone ids from `upgrade-items` (`PierrePuissance`). Empty: any |
+| `outcome` | `SUCCESS`, `FAILURE`, `DESTROYED`; a list or one value. Empty: all |
+| `count` | `attempts` (default): +1 per attempt; `stones`: + the stones the attempt took |
+
+```yaml
+tasks:
+  pierre:
+    task: USE_FOXARMORS_STONE
+    display: "{status} <white>Utilise une Pierre de Puissance <dark_gray>[<#FFF5A1>{current}<dark_gray>/<#FFF5A1>{required}<dark_gray>]"
+    args:
+      amount: 1
+      types: ["PierrePuissance"]
+      count: attempts
 ```
 
 ## One activity per roll: quest `tags` + `avoid-duplicate-tags`

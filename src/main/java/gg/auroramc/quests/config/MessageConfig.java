@@ -52,6 +52,8 @@ public class MessageConfig extends AuroraConfig {
     private String questNotActive = "&cQuest {quest} is not active for player {player}.";
     private String objectiveNotFound = "&cObjective {objective} not found in quest {quest}.";
     private String objectiveAlreadyCompleted = "&cObjective {objective} is already completed for player {player}.";
+    private String objectiveNotActive = "&cObjective {objective} of quest {quest} is not active for player {player}.";
+    private String objectiveProgressed = "&aObjective {quest}/{objective} of {player}: {current}/{required}.";
     private String itemsDelivered = "&aTook the required items from {player} for {quest}/{objective}.";
     private String itemsMissing = "&cPlayer {player} doesn't have the required items for {quest}/{objective}.";
     private String deliverNoObjectives = "&cNo active DELIVER_ITEM objective matching {objective} in quest {quest} for {player}.";
@@ -215,6 +217,11 @@ public class MessageConfig extends AuroraConfig {
                     yaml.set("advancement-gui-hint", "&aYour quests are in the &fprogress screen&a! Press &f&lL&r&a (or Esc → Advancements) to browse them.");
                     yaml.set("advancement-locked-description", "&cLocked. Keep playing to unlock this quest.");
                     yaml.set("config-version", 8);
+                },
+                (yaml) -> {
+                    yaml.set("objective-not-active", "&cObjective {objective} of quest {quest} is not active for player {player}.");
+                    yaml.set("objective-progressed", "&aObjective {quest}/{objective} of {player}: {current}/{required}.");
+                    yaml.set("config-version", 9);
                 }
         );
     }

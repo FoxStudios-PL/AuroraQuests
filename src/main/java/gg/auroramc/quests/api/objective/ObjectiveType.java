@@ -55,4 +55,8 @@ public class ObjectiveType {
     public static final String OPEN_MENU = "OPEN_MENU";
     public static final String UNLOCK_FOXSKILLS_SKILL = "UNLOCK_FOXSKILLS_SKILL";
     public static final String REACH_FOXSKILLS_WEAPON_LEVEL = "REACH_FOXSKILLS_WEAPON_LEVEL";
+    public static final String FEED_PET = "FEED_PET";
+    public static final String HATCH_PET_EGG = "HATCH_PET_EGG";
+    public static final String APPLY_FOXARMORS_RUNE = "APPLY_FOXARMORS_RUNE";
+    public static final String USE_FOXARMORS_STONE = "USE_FOXARMORS_STONE";
 }

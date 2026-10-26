@@ -30,6 +30,8 @@ softdepend:
   - "ZNPCsPlus"
   - "EpicCraftingsPlus"
   - "FoxSkills"
+  - "FoxPets"
+  - "FoxArmors"
 
 website: https://auroramc.gg
 
@@ -46,6 +48,7 @@ permissions:
       - aurora.quests.admin.reroll
       - aurora.quests.admin.unlock
       - aurora.quests.admin.complete
+      - aurora.quests.admin.progress
       - aurora.quests.admin.deliver
       - aurora.quests.admin.reset
       - aurora.quests.admin.track
