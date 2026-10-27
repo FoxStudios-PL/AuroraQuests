@@ -105,6 +105,8 @@ dependencies {
     compileOnly("com.nexomc:nexo:1.8.0")
     compileOnly(files("libs/LuxRealms-1.2.4.jar"))
     compileOnly(files("libs/FoxSkills-1.2.0.jar"))
+    compileOnly(files("libs/FoxPets-1.1.0.jar"))
+    compileOnly(files("libs/FoxArmorsV2-1.21.0.jar"))
     compileOnly("su.nightexpress.excellentshop:api:5.1.2") {
         isTransitive = false
     }

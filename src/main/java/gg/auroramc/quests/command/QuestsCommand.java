@@ -236,6 +236,72 @@ public class QuestsCommand extends BaseCommand {
         }
     }
 
+    @Subcommand("progress")
+    @Description("Adds progress to one objective of a player's quest, as if they had done its action n times")
+    @CommandCompletion("@players @pools @quests @objectives @nothing true|false")
+    @CommandPermission("aurora.quests.admin.progress")
+    public void onObjectiveProgress(CommandSender sender, @Flags("other") Player target, String poolId, String questId, String objectiveId, double amount, @Default("false") Boolean silent) {
+        var messages = plugin.getConfigManager().getMessageConfig(sender);
+        if (amount <= 0) {
+            ChatUtil.sendMessage(sender, messages.getMustBeNumber());
+            return;
+        }
+
+        Profile profile = plugin.getProfileManager().getProfile(target);
+        if (profile == null) {
+            ChatUtil.sendMessage(sender, messages.getDataNotLoadedYet(), Placeholder.of("{target}", target.getName()));
+            return;
+        }
+
+        var pool = profile.getQuestPool(poolId);
+        if (pool == null) {
+            ChatUtil.sendMessage(sender, messages.getPoolNotFound(), Placeholder.of("{pool}", poolId));
+            return;
+        }
+
+        var quest = pool.getQuest(questId);
+        if (quest == null) {
+            ChatUtil.sendMessage(sender, messages.getQuestNotFound(), Placeholder.of("{pool}", pool.getId()), Placeholder.of("{quest}", questId));
+            return;
+        }
+
+        Objective objective = quest.getObjectives().stream()
+                .filter(o -> o.getId().equals(objectiveId))
+                .findFirst().orElse(null);
+        if (objective == null) {
+            ChatUtil.sendMessage(sender, messages.getObjectiveNotFound(),
+                    Placeholder.of("{objective}", objectiveId), Placeholder.of("{quest}", questId));
+            return;
+        }
+        if (objective.isCompleted()) {
+            ChatUtil.sendMessage(sender, messages.getObjectiveAlreadyCompleted(),
+                    Placeholder.of("{objective}", objectiveId), Placeholder.of("{player}", target.getName()));
+            return;
+        }
+        // Only an objective that is listening counts, exactly as for the player doing the action:
+        // a quest still locked by its requirements, or a later step of a linear quest, stays as is.
+        if (!objective.isStarted()) {
+            ChatUtil.sendMessage(sender, messages.getObjectiveNotActive(),
+                    Placeholder.of("{objective}", objectiveId), Placeholder.of("{quest}", questId), Placeholder.of("{player}", target.getName()));
+            return;
+        }
+
+        // setProgress publishes TASK_PROGRESS, then TASK_COMPLETED once the target is reached
+        // (on-complete actions, rewards, next step of a linear quest).
+        objective.setProgress(objective.getProgress() + amount);
+
+        if (!silent) {
+            ChatUtil.sendMessage(sender, messages.getObjectiveProgressed(),
+                    Placeholder.of("{player}", target.getName()), Placeholder.of("{quest}", questId), Placeholder.of("{objective}", objectiveId),
+                    Placeholder.of("{current}", AuroraAPI.formatNumber(objective.getProgress())),
+                    Placeholder.of("{required}", AuroraAPI.formatNumber(objective.getTarget())));
+        }
+
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().refresh(target);
+        }
+    }
+
     @Subcommand("deliver")
     @Description("Takes the items required by a quest's DELIVER_ITEM objectives from a player's inventory, all-or-nothing")
     @CommandCompletion("@players @pools @quests @objectives true|false")
