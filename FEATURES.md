@@ -881,6 +881,55 @@ tasks:
       count: attempts
 ```
 
+## FoxRecycle `RECYCLE_ITEM` task type
+
+Requires FoxRecycle with `FoxRecycleItemEvent` (October 2026 and later); the hook registers
+itself only when FoxRecycle is present (`Hooked into FoxRecycle for RECYCLE_ITEM`). Without
+FoxRecycle the type is simply not registered and AuroraQuests starts as usual; a quest or an
+`item-recovery` that uses it is reported as using an unknown task type.
+
+`RECYCLE_ITEM` progresses by 1 per item FoxRecycle actually destroyed. FoxRecycle fires one
+event per item after the second confirmation click, so two items recycled in one
+confirmation count twice. Cancelling, closing the menu, letting the confirmation expire or
+a refused recycle (full inventory) never counts.
+
+| Argument | Effect |
+|---|---|
+| `amount` | items to recycle (default 1) |
+| `types` | category of the FoxRecycle rule: `ARMOR`, `JEWEL`, `OTHER`; a list or one value, any case. Empty: any |
+| `mode` | `whitelist` (default) or `blacklist`, applied to `types` |
+| `require-reward` | `true`: only a recycle that gave at least one reward counts (a stone, a rune...). Default `false` |
+
+```yaml
+tasks:
+  recycler:
+    task: RECYCLE_ITEM
+    display: "{status} Recycle 2 pièces &#c2c2c2[&e{current}&#c2c2c2/&e{required}&#c2c2c2]"
+    args:
+      amount: 2
+      types: ["ARMOR", "JEWEL"]
+      require-reward: false
+```
+
+It also works as an `item-recovery` trigger, with the same arguments:
+
+```yaml
+item-recovery:
+  bon_recyclage:
+    after: parler_forgeron
+    until: rendre_bon
+    item: { material: "PAPER", custom-model-data: 880200 }
+    trigger:
+      task: RECYCLE_ITEM
+      types: ["ARMOR"]
+    on-recover:
+      - "[console] nexo give bon_recyclage 1 %player_name%"
+```
+
+To make the first try of a tutorial step always give a stone, run FoxRecycle's guarantee
+command when the step starts, e.g. in the `on-complete` of the previous task:
+`[console] fr guarantee %player_name% 1`.
+
 ## One activity per roll: quest `tags` + `avoid-duplicate-tags`
 
 A pool that rolls several difficulties picks each one independently, so an activity that
