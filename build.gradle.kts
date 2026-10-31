@@ -107,6 +107,9 @@ dependencies {
     compileOnly(files("libs/FoxSkills-1.2.0.jar"))
     compileOnly(files("libs/FoxPets-1.1.0.jar"))
     compileOnly(files("libs/FoxArmorsV2-1.21.0.jar"))
+    // FoxRecycleItemEvent (RECYCLE_ITEM). Compile-only: provided by FoxRecycle at runtime,
+    // the hook only loads when FoxRecycle is present.
+    compileOnly(files("libs/FoxRecycle-1.0.0-SNAPSHOT.jar"))
     compileOnly("su.nightexpress.excellentshop:api:5.1.2") {
         isTransitive = false
     }

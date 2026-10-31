@@ -13,6 +13,7 @@ import gg.auroramc.quests.hooks.excellentshop.ExcellentShopHook;
 import gg.auroramc.quests.hooks.fancynpcs.FancyNPCsHook;
 import gg.auroramc.quests.hooks.foxarmors.FoxArmorsHook;
 import gg.auroramc.quests.hooks.foxpets.FoxPetsHook;
+import gg.auroramc.quests.hooks.foxrecycle.FoxRecycleHook;
 import gg.auroramc.quests.hooks.foxskills.FoxSkillsHook;
 import gg.auroramc.quests.hooks.luckperms.LuckPermsHook;
 import gg.auroramc.quests.hooks.mmolib.MMOLibHook;
@@ -56,6 +57,7 @@ public enum Hooks {
     FOX_SKILLS(FoxSkillsHook.class, "FoxSkills"),
     FOX_PETS(FoxPetsHook.class, "FoxPets"),
     FOX_ARMORS(FoxArmorsHook.class, "FoxArmors"),
+    FOX_RECYCLE(FoxRecycleHook.class, "FoxRecycle"),
     DELUXE_MENUS(DeluxeMenusHook.class, "DeluxeMenus");
 
     private final Class<? extends Hook> clazz;

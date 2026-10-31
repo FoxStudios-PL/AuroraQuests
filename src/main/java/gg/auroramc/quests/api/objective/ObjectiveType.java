@@ -59,4 +59,5 @@ public class ObjectiveType {
     public static final String HATCH_PET_EGG = "HATCH_PET_EGG";
     public static final String APPLY_FOXARMORS_RUNE = "APPLY_FOXARMORS_RUNE";
     public static final String USE_FOXARMORS_STONE = "USE_FOXARMORS_STONE";
+    public static final String RECYCLE_ITEM = "RECYCLE_ITEM";
 }
