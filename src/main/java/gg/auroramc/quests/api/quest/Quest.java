@@ -144,7 +144,21 @@ public class Quest extends EventBus {
         if (started) return false;
 
         if (!force && !definition.getRequirements().canStart(data)) {
-            return false;
+            // Start requirements gate the FIRST start only. A global-pool quest that already
+            // started once carries the persisted unlock flag (see below) and shows as unlocked
+            // and in progress (isUnlocked()); it must be restarted on every login like any other,
+            // even if a requirement no longer holds right now (quest force-started by
+            // /quests unlock without meeting them, permission given back late or revoked).
+            // Refusing here left the quest displayed in progress with none of its objectives
+            // listening: no event, no login check, no error.
+            if (!(pool.isGlobal() && data.isUnlocked() && !isCompleted())) {
+                AuroraQuests.logger().debug("Quest " + pool.getId() + "/" + getId() + " not started for "
+                        + data.profile().getPlayer().getName() + ": start requirements not met");
+                return false;
+            }
+            AuroraQuests.logger().warning("Quest " + pool.getId() + "/" + getId() + " of " + data.profile().getPlayer().getName()
+                    + " is unlocked and in progress but its start requirements are not met right now"
+                    + " (permissions / required quests): restarting it anyway so its steps keep progressing.");
         }
 
         // Before the objectives: on the action completing the 'after' task, the recovery
