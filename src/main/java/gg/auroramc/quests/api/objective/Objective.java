@@ -111,7 +111,11 @@ public abstract class Objective extends EventBus {
             runnable.run();
         }, null, delay);
         // null when the player entity is already retired (left the server): nothing to run.
-        if (task == null) return;
+        if (task == null) {
+            AuroraQuests.logger().debug("Could not schedule a task for objective " + getId() + " of quest "
+                    + quest.getId() + ": player entity retired");
+            return;
+        }
 
         if (tasks == null) {
             tasks = new ArrayList<>();
@@ -184,6 +188,8 @@ public abstract class Objective extends EventBus {
         if (isCompleted()) return;
         this.activate();
         started = true;
+        AuroraQuests.logger().debug("Started objective " + quest.getId() + "/" + getId() + " (" + getType() + ") for "
+                + data.profile().getPlayer().getName() + ", progress " + data.getProgress() + "/" + target);
     }
 
     protected abstract void activate();

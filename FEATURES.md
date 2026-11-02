@@ -779,8 +779,10 @@ A skill can already be unlocked when the step opens (the player leveled the weap
 unlocked the skill in `/skills` before reaching the quest): FoxSkills will never fire the
 event for it again. So when the step becomes active (quest start, previous linear step
 completed, `/quests unlock` or `/quests complete`) and again on login while it is active,
-the player's class weapons (hands + inventory + armor + off hand) are read **once**, one
-tick later on the player's own thread, exactly like `REACH_FOXSKILLS_WEAPON_LEVEL`. Every
+the player's class weapons (hands + inventory + armor + off hand) are read one tick later
+on the player's own thread, exactly like `REACH_FOXSKILLS_WEAPON_LEVEL`, and once more two
+seconds later (on a network, a sync plugin can restore the inventory a moment after the
+join; the second read changes nothing when the first one already did the job). Every
 skill already unlocked on them counts, through the same `types` filter, and completes the
 step if it reaches `amount` (same on-complete commands and rewards as a live unlock).
 
@@ -793,7 +795,7 @@ step if it reaches `amount` (same on-complete commands and rewards as a live unl
   of skills currently unlocked, so a relog can't inflate it either.
 - Unlock state is stored on the weapon item by FoxSkills: a weapon left in a chest isn't
   seen by the read (it still counts on its next live unlock). No config key, no repeating
-  task.
+  task. With `debug: true`, every read and unlock event is logged with the skills found.
 
 ## FoxSkills `REACH_FOXSKILLS_WEAPON_LEVEL` task type
 
