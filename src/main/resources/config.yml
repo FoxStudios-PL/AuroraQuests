@@ -1,5 +1,5 @@
 # Don't touch this
-config-version: 17
+config-version: 18
 
 debug: false
 language: en
@@ -378,6 +378,9 @@ scoreboard:
   hide-when:
     - placeholder: "%foxdungeons_in_dungeon%"
       equals: "true"
+  # Remet le tableau de quête si un autre plugin l'a remplacé sur le joueur.
+  # Vérifié à chaque tick. Jamais pendant hide-when ni pendant un popup surveillé.
+  reclaim-when-replaced: true
   title: "&6&lQUEST"
   lines:
     - ""

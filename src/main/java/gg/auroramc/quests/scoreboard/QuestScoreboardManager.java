@@ -7,6 +7,7 @@ import gg.auroramc.quests.config.Config;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ public class QuestScoreboardManager {
     // Poll cadence (ticks) used while scoreboard.hide-when conditions can apply, so the
     // sidebar comes back well under a second after a condition turns false.
     private static final long HIDE_WHEN_POLL_INTERVAL = 10L;
+    // Debug trace of a reclaimed sidebar: at most one line per player per this many ms.
+    private static final long RECLAIM_TRACE_COOLDOWN_MS = 30_000L;
 
     private final AuroraQuests plugin;
     private final Map<UUID, QuestSidebar> sidebars = new ConcurrentHashMap<>();
@@ -43,6 +46,8 @@ public class QuestScoreboardManager {
     // Per-player poll countdown until the next full content render (Folia: only ever
     // touched on the player's own region thread, so plain reads/writes are safe).
     private final Map<UUID, Integer> renderCountdown = new ConcurrentHashMap<>();
+    // Last reclaim debug trace per player (epoch ms), for the 30 s cooldown.
+    private final Map<UUID, Long> lastReclaimTrace = new ConcurrentHashMap<>();
 
     public QuestScoreboardManager(AuroraQuests plugin) {
         this.plugin = plugin;
@@ -66,6 +71,7 @@ public class QuestScoreboardManager {
     public void onQuit(Player player) {
         stopTask(player);
         renderCountdown.remove(player.getUniqueId());
+        lastReclaimTrace.remove(player.getUniqueId());
         QuestSidebar sidebar = sidebars.remove(player.getUniqueId());
         if (sidebar != null) sidebar.destroy();
     }
@@ -89,6 +95,7 @@ public class QuestScoreboardManager {
             hide(player);
         }
         renderCountdown.clear();
+        lastReclaimTrace.clear();
         if (enabled()) {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 startTask(player);
@@ -214,10 +221,24 @@ public class QuestScoreboardManager {
         }
 
         QuestSidebar sidebar = sidebars.get(id);
+        // Another plugin may have replaced the player's scoreboard (player.setScoreboard(...)):
+        // our sidebar would then keep being filled on a board nobody sees. Checked on every
+        // tick, before the render throttle, and only here: never while a hide-when condition
+        // or a watched popup hides the sidebar (both returned above), so a dungeon sidebar
+        // set on purpose stays on screen. A reclaimed board is re-rendered at once.
+        boolean reclaimed = false;
+        if (sidebar != null && !sidebar.isSuspended() && reclaimEnabled()) {
+            Scoreboard replacedBy = sidebar.reclaim();
+            if (replacedBy != null) {
+                reclaimed = true;
+                traceReclaim(player, replacedBy);
+            }
+        }
+
         // Throttle the (relatively costly) content render to refresh-interval. A missing
         // sidebar -- first show, or return from a popup -- always renders immediately, so
         // hiding/restoring stays instant while steady-state fast polling stays cheap.
-        if (sidebar != null && !sidebar.isSuspended() && !renderDue(id)) {
+        if (sidebar != null && !sidebar.isSuspended() && !reclaimed && !renderDue(id)) {
             return;
         }
 
@@ -229,10 +250,34 @@ public class QuestScoreboardManager {
             sidebar = new QuestSidebar(player, title);
             sidebars.put(id, sidebar);
         } else if (sidebar.isSuspended()) {
-            sidebar.resume(title);
+            // Leaving a hide-when: the plugin that owned the slot (e.g. FoxDungeons) may have
+            // set its own scoreboard, then the main one, meanwhile; take ours back.
+            Scoreboard replacedBy = sidebar.resume(title, reclaimEnabled());
+            if (replacedBy != null) traceReclaim(player, replacedBy);
         }
         sidebar.update(title, lines);
         renderCountdown.put(id, renderCycles());
+    }
+
+    /** scoreboard.reclaim-when-replaced, read live so /quests reload applies it (default true). */
+    private boolean reclaimEnabled() {
+        var cfg = config();
+        return cfg == null || !Boolean.FALSE.equals(cfg.getReclaimWhenReplaced());
+    }
+
+    /**
+     * With {@code debug: true}, logs that the sidebar was taken back and from what, to find
+     * the plugin that keeps replacing it. At most one line per player every 30 s.
+     */
+    private void traceReclaim(Player player, Scoreboard replacedBy) {
+        var cfg = plugin.getConfigManager().getConfig();
+        if (cfg == null || !Boolean.TRUE.equals(cfg.getDebug())) return;
+        long now = System.currentTimeMillis();
+        Long last = lastReclaimTrace.get(player.getUniqueId());
+        if (last != null && now - last < RECLAIM_TRACE_COOLDOWN_MS) return;
+        lastReclaimTrace.put(player.getUniqueId(), now);
+        String by = replacedBy == Bukkit.getScoreboardManager().getMainScoreboard() ? "principal" : "autre tableau";
+        AuroraQuests.logger().info("Tableau de quête repris pour " + player.getName() + " (remplacé par : " + by + ")");
     }
 
     /**

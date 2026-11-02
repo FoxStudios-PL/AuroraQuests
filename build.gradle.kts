@@ -31,7 +31,7 @@ paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArt
 
 group = "gg.auroramc"
 // Suffixed so the 26.2 artifact is never mistaken for the 1.21.11 one built from main.
-version = "2.2.2-26.2"
+version = "2.2.3-26.2"
 
 java {
     toolchain {
