@@ -60,6 +60,25 @@ public class QuestSidebar {
         return suspended;
     }
 
+    public Scoreboard getBoard() {
+        return board;
+    }
+
+    /**
+     * Puts this board back on the player when another plugin replaced it with
+     * {@code player.setScoreboard(...)}: the sidebar would otherwise keep being filled on a
+     * board nobody sees. Reuses this board (no new scoreboard). Must run on the player's
+     * own thread (Folia), like every caller in {@link QuestScoreboardManager}.
+     *
+     * @return the scoreboard that had replaced ours, or {@code null} if nothing was done
+     */
+    public Scoreboard reclaim() {
+        Scoreboard current = player.getScoreboard();
+        if (current == board) return null;
+        player.setScoreboard(board);
+        return current;
+    }
+
     /**
      * Hides the sidebar without touching the player's SIDEBAR slot: the objective is
      * unregistered from this (the player's own) board, which only sends a removal of
@@ -77,11 +96,18 @@ public class QuestSidebar {
         shownLines = 0;
     }
 
-    /** Shows the sidebar again after {@link #suspend()}; lines are re-sent by the next update. */
-    public void resume(Component title) {
-        if (!suspended) return;
+    /**
+     * Shows the sidebar again after {@link #suspend()}; lines are re-sent by the next update.
+     * With {@code reclaim}, also puts this board back on the player if another plugin set its
+     * own scoreboard meanwhile (e.g. a dungeon sidebar, then the main scoreboard on exit).
+     *
+     * @return the scoreboard that had replaced ours when it was reclaimed, else {@code null}
+     */
+    public Scoreboard resume(Component title, boolean reclaim) {
+        if (!suspended) return null;
         objective = registerObjective(title);
         suspended = false;
+        return reclaim ? reclaim() : null;
     }
 
     public void update(Component title, List<Component> lines) {

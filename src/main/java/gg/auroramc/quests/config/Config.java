@@ -224,6 +224,10 @@ public class Config extends AuroraConfig {
         // BetterHud popup groups (the popup file's `group:` value) that hide the sidebar
         // while active. Empty disables the feature even when hide-during-popups is true.
         private List<String> hideDuringPopupGroups = List.of("challenge");
+        // Put the quest sidebar back when another plugin replaced the player's scoreboard
+        // (player.setScoreboard(...)). Checked on every refresh tick, never while a hide-when
+        // condition holds nor while a watched popup hides the sidebar. False = 2.2.2 behaviour.
+        private Boolean reclaimWhenReplaced = true;
     }
 
     @Getter
@@ -667,6 +671,15 @@ public class Config extends AuroraConfig {
                             "case-insensitive). While hidden, nothing is sent on the sidebar slot, so",
                             "another plugin's sidebar (e.g. the FoxDungeons dungeon sidebar) stays visible."));
                     yaml.set("config-version", 17);
+                },
+                (yaml) -> {
+                    if (!yaml.contains("scoreboard.reclaim-when-replaced")) {
+                        yaml.set("scoreboard.reclaim-when-replaced", true);
+                    }
+                    yaml.setComments("scoreboard.reclaim-when-replaced", List.of(
+                            "Remet le tableau de quête si un autre plugin l'a remplacé sur le joueur.",
+                            "Vérifié à chaque tick. Jamais pendant hide-when ni pendant un popup surveillé."));
+                    yaml.set("config-version", 18);
                 }
         );
     }

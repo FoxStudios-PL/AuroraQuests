@@ -189,6 +189,19 @@ scoreboard:
 
 Each entry's `placeholder` is resolved for the player through PlaceholderAPI on every poll (every 10 ticks while conditions exist) and compared to `equals` (trimmed, case-insensitive); one matching entry is enough. While hidden, AuroraQuests sends **nothing** on the sidebar slot: its objective is only removed from its own scoreboard, so another plugin's sidebar (the FoxDungeons dungeon sidebar, sent as packets) stays visible. When every condition is false again, the quest sidebar is shown at the next poll. No dependency on FoxDungeons: everything goes through PlaceholderAPI.
 
+### Taking the sidebar back: `reclaim-when-replaced` (2.2.3)
+
+```yaml
+scoreboard:
+  # Remet le tableau de quête si un autre plugin l'a remplacé sur le joueur.
+  # Vérifié à chaque tick. Jamais pendant hide-when ni pendant un popup surveillé.
+  reclaim-when-replaced: true
+```
+
+The quest sidebar lives on its own per-player scoreboard. Any plugin calling `player.setScoreboard(...)` (its own board, or the server's main one) used to make it vanish for good: the sidebar kept being filled on a board nobody saw until the player relogged or retracked the quest. Now, on every refresh tick of a player tracking a quest, if the player is no longer on the quest board it is put back and re-rendered at once (so within `refresh-interval`, one second by default). The same check runs when a `hide-when` condition turns false again: a dungeon plugin that set its own board, then the main one on exit, no longer leaves the player without the quest sidebar.
+
+No reclaim ever happens while a `hide-when` condition holds or while a watched BetterHud popup hides the sidebar (the other plugin's board stays on screen), nor for a player tracking nothing. `false` keeps the 2.2.2 behaviour; `/quests reload` applies a change. With `debug: true`, each reclaim logs `Tableau de quête repris pour <joueur> (remplacé par : principal | autre tableau)`, at most once per player every 30 s, to find the plugin replacing the board. Two plugins both forcing their board on every tick would fight; the log names the case.
+
 ---
 
 ## Extended `/quests complete`
