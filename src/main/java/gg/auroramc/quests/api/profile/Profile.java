@@ -16,7 +16,12 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public class Profile {
     private final AuroraUser user;
+    // The Player object of the session this profile was created for. Read through getPlayer(),
+    // never directly: see there.
+    @Getter(lombok.AccessLevel.NONE)
     private final Player player;
+    @Getter(lombok.AccessLevel.NONE)
+    private volatile boolean staleWarned = false;
 
     private final Map<String, QuestPool> data = new LinkedHashMap<>();
 
@@ -51,11 +56,11 @@ public class Profile {
             questPool.startQuests();
         }
 
-        if (!rolledPools.isEmpty() && player.hasPlayedBefore()) {
+        if (!rolledPools.isEmpty() && getPlayer().hasPlayedBefore()) {
             var placeholder = Placeholder.of("{pool}", String.join(", ", rolledPools.stream().map(QuestPool::getName).toList()));
-            var msg = AuroraQuests.getInstance().getConfigManager().getMessageConfig(player).getReRolledTarget();
+            var msg = AuroraQuests.getInstance().getConfigManager().getMessageConfig(getPlayer()).getReRolledTarget();
             msg = Placeholder.execute(msg, placeholder);
-            ChatUtil.sendMessage(player, AuroraQuests.getInstance().getLocalizationProvider().fillVariables(player, msg, placeholder));
+            ChatUtil.sendMessage(getPlayer(), AuroraQuests.getInstance().getLocalizationProvider().fillVariables(getPlayer(), msg, placeholder));
         }
 
         if (AuroraQuests.getInstance().getConfigManager().getConfig().getPurgeInvalidDataOnLogin()) {
@@ -63,7 +68,28 @@ public class Profile {
         }
 
         Bukkit.getAsyncScheduler().runDelayed(AuroraQuests.getInstance(),
-                (t) -> AuroraQuests.getInstance().getPoolManager().getRewardAutoCorrector().correctRewards(player), 50, TimeUnit.MILLISECONDS);
+                (t) -> AuroraQuests.getInstance().getPoolManager().getRewardAutoCorrector().correctRewards(getPlayer()), 50, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * The player's current {@link Player} object, looked up by UUID.
+     * <p>
+     * Bukkit creates a new Player object on every login, and objectives match events with
+     * {@code event.getPlayer() == profile.getPlayer()} and schedule their tasks on this
+     * player's entity scheduler. A profile still holding the Player of a previous session
+     * would make every event mismatch and every scheduled task (login checks) silently do
+     * nothing after a reconnection, so the live object wins whenever the player is online.
+     * Falls back to the stored object when offline (quit handling, async tasks finishing).
+     */
+    public Player getPlayer() {
+        var live = Bukkit.getPlayer(user.getUniqueId());
+        if (live == null) return player;
+        if (live != player && !staleWarned) {
+            staleWarned = true;
+            AuroraQuests.logger().warning("Quest profile of " + live.getName() + " was holding the Player object of "
+                    + "a previous session; using the current one. Please report this with the timing of the reconnection.");
+        }
+        return live;
     }
 
     public Collection<QuestPool> getQuestPools() {
