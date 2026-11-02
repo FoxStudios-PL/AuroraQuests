@@ -775,6 +775,26 @@ Unlocks are only counted once per skill per weapon item: FoxSkills' unlock manag
 guards against re-unlocking an already-unlocked skill, so the event never fires twice
 for the same weapon + skill pair.
 
+A skill can already be unlocked when the step opens (the player leveled the weapon and
+unlocked the skill in `/skills` before reaching the quest): FoxSkills will never fire the
+event for it again. So when the step becomes active (quest start, previous linear step
+completed, `/quests unlock` or `/quests complete`) and again on login while it is active,
+the player's class weapons (hands + inventory + armor + off hand) are read **once**, one
+tick later on the player's own thread, exactly like `REACH_FOXSKILLS_WEAPON_LEVEL`. Every
+skill already unlocked on them counts, through the same `types` filter, and completes the
+step if it reaches `amount` (same on-complete commands and rewards as a live unlock).
+
+- Only skills the player had to unlock count: skills with `unlocked-by-default: true` in
+  FoxSkills' weapon config (basic attack, passive) are ignored, so a fresh weapon leaves
+  the step at 0.
+- No double count: a `<weaponId>:<skillId>` pair is credited once while the step is
+  active, whether by the read or by the event, and the same skill on two copies of the
+  weapon counts once. The read never adds to the progress, it only raises it to the number
+  of skills currently unlocked, so a relog can't inflate it either.
+- Unlock state is stored on the weapon item by FoxSkills: a weapon left in a chest isn't
+  seen by the read (it still counts on its next live unlock). No config key, no repeating
+  task.
+
 ## FoxSkills `REACH_FOXSKILLS_WEAPON_LEVEL` task type
 
 Progresses when a FoxSkills class weapon levels up **through XP gain** (FoxSkills ≥ 1.2.0,
